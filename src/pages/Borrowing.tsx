@@ -26,54 +26,54 @@ const mockBorrowings = [
     assetCode: "INV-MON-018",
     assetName: "Dell UltraSharp 27\" 4K",
     borrowerName: "Budi Santoso",
-    department: "Engineering",
+    department: "Teknik / Engineering",
     requestDate: "2026-08-24",
     dueDate: "2026-09-07",
-    status: "Pending Approval",
-    notes: "Needed for remote workstation setup",
+    status: "Menunggu Persetujuan",
+    notes: "Dibutuhkan untuk workstation setup remote",
   },
   {
     id: "BOR-1049",
     assetCode: "INV-MAC-042",
     assetName: "MacBook Pro 16\" M3 Max",
     borrowerName: "Siti Rahma",
-    department: "Product Design",
+    department: "Desain Produk",
     requestDate: "2026-08-20",
     dueDate: "2026-08-28",
-    status: "Borrowed",
-    notes: "Design sprint client presentations",
+    status: "Dipinjam",
+    notes: "Presentasi sprint desain ke klien",
   },
   {
     id: "BOR-1045",
     assetCode: "INV-SRV-003",
     assetName: "Ubiquiti UniFi 24-Port Switch",
     borrowerName: "Aidil Pratama",
-    department: "IT Infrastructure",
+    department: "Infrastruktur IT",
     requestDate: "2026-08-10",
     dueDate: "2026-08-24",
-    status: "Overdue",
-    notes: "Testing branch office migration",
+    status: "Terlambat",
+    notes: "Uji coba migrasi kantor cabang",
   },
   {
     id: "BOR-1042",
     assetCode: "INV-CAM-005",
     assetName: "Sony Alpha A7 IV Kit",
     borrowerName: "Rian Hidayat",
-    department: "Marketing",
+    department: "Pemasaran",
     requestDate: "2026-08-15",
     dueDate: "2026-08-22",
-    status: "Returned",
-    notes: "Product photoshoot batch 3",
+    status: "Dikembalikan",
+    notes: "Photoshoot produk batch 3",
   },
 ]
 
 export function BorrowingPage() {
   const { isAdmin } = useAuth()
-  const [statusFilter, setStatusFilter] = useState("All")
+  const [statusFilter, setStatusFilter] = useState("Semua")
   const [searchTerm, setSearchTerm] = useState("")
 
   const filtered = mockBorrowings.filter((b) => {
-    const matchesStatus = statusFilter === "All" || b.status === statusFilter
+    const matchesStatus = statusFilter === "Semua" || b.status === statusFilter
     const matchesSearch = 
       b.assetName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       b.assetCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -86,14 +86,14 @@ export function BorrowingPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">Asset Borrowing Lifecycle</h1>
+          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">Siklus Peminjaman Aset</h1>
           <p className="text-xs text-muted-foreground">
-            Manage asset requests, approval delegations, active checkouts, and return logs.
+            Kelola permohonan pinjam, delegasi persetujuan, aset aktif dipinjam, dan log pengembalian.
           </p>
         </div>
         <Button size="sm" className="h-8 text-xs font-medium gap-1.5 bg-primary text-primary-foreground shadow-xs w-full sm:w-auto">
           <Plus className="h-3.5 w-3.5" />
-          <span>New Borrow Request</span>
+          <span>Permohonan Pinjam Baru</span>
         </Button>
       </div>
 
@@ -102,22 +102,22 @@ export function BorrowingPage() {
         <div className="flex items-center justify-between min-w-[540px] gap-2 text-xs font-mono">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 text-primary font-bold border border-primary/20 shrink-0">
             <span className="h-5 w-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-[10px]">1</span>
-            <span>Request</span>
+            <span>Pengajuan</span>
           </div>
           <span className="text-muted-foreground shrink-0">→</span>
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-600 font-bold border border-amber-500/20 shrink-0">
             <span className="h-5 w-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px]">2</span>
-            <span>Pending Approval</span>
+            <span>Menunggu Persetujuan</span>
           </div>
           <span className="text-muted-foreground shrink-0">→</span>
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-600 font-bold border border-blue-500/20 shrink-0">
             <span className="h-5 w-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px]">3</span>
-            <span>Borrowed</span>
+            <span>Dipinjam</span>
           </div>
           <span className="text-muted-foreground shrink-0">→</span>
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 font-bold border border-emerald-500/20 shrink-0">
             <span className="h-5 w-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px]">4</span>
-            <span>Returned</span>
+            <span>Dikembalikan</span>
           </div>
         </div>
       </div>
@@ -128,14 +128,14 @@ export function BorrowingPage() {
           <div className="relative w-full md:w-80">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
-              placeholder="Search by asset, code, or borrower..."
+              placeholder="Cari berdasarkan aset, kode, atau peminjam..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-8 h-8 text-xs bg-muted/30 border-border/80 w-full"
             />
           </div>
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 w-full md:w-auto">
-            {["All", "Pending Approval", "Borrowed", "Overdue", "Returned"].map((status) => (
+            {["Semua", "Menunggu Persetujuan", "Dipinjam", "Terlambat", "Dikembalikan"].map((status) => (
               <Button
                 key={status}
                 variant={statusFilter === status ? "default" : "outline"}
@@ -156,13 +156,13 @@ export function BorrowingPage() {
           <Table className="min-w-[820px] w-full">
             <TableHeader className="bg-muted/40">
               <TableRow className="border-border/60">
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Borrow ID</TableHead>
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Asset Details</TableHead>
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Borrower & Dept</TableHead>
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Requested</TableHead>
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Due Date</TableHead>
+                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">ID Pinjam</TableHead>
+                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Detail Aset</TableHead>
+                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Peminjam & Divisi</TableHead>
+                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Tgl Pengajuan</TableHead>
+                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Tenggat Waktu</TableHead>
                 <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Status</TableHead>
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9 text-right">Action</TableHead>
+                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9 text-right">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -183,17 +183,17 @@ export function BorrowingPage() {
                     {item.requestDate}
                   </TableCell>
                   <TableCell className="py-3 text-xs font-mono">
-                    <span className={item.status === "Overdue" ? "text-destructive font-bold flex items-center gap-1" : "text-foreground"}>
-                      {item.status === "Overdue" && <AlertTriangle className="h-3 w-3 inline" />}
+                    <span className={item.status === "Terlambat" ? "text-destructive font-bold flex items-center gap-1" : "text-foreground"}>
+                      {item.status === "Terlambat" && <AlertTriangle className="h-3 w-3 inline" />}
                       {item.dueDate}
                     </span>
                   </TableCell>
                   <TableCell className="py-3">
                     <Badge 
                       variant={
-                        item.status === "Borrowed" ? "default" :
-                        item.status === "Pending Approval" ? "secondary" :
-                        item.status === "Overdue" ? "destructive" : "outline"
+                        item.status === "Dipinjam" ? "default" :
+                        item.status === "Menunggu Persetujuan" ? "secondary" :
+                        item.status === "Terlambat" ? "destructive" : "outline"
                       }
                       className="text-[10px] font-mono px-2 py-0 h-5"
                     >
@@ -201,25 +201,25 @@ export function BorrowingPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="py-3 text-right">
-                    {item.status === "Pending Approval" ? (
+                    {item.status === "Menunggu Persetujuan" ? (
                       isAdmin ? (
                         <div className="flex items-center justify-end gap-1.5">
                           <Button size="sm" className="h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-2.5">
-                            Approve
+                            Setujui
                           </Button>
                           <Button size="sm" variant="outline" className="h-7 text-xs text-destructive hover:bg-destructive/10 px-2 border-border/80">
-                            Reject
+                            Tolak
                           </Button>
                         </div>
                       ) : (
                         <span className="text-[10px] font-mono text-muted-foreground bg-muted px-2 py-1 rounded border border-border/60">
-                          Awaiting Admin
+                          Menunggu Admin
                         </span>
                       )
-                    ) : item.status === "Borrowed" || item.status === "Overdue" ? (
+                    ) : item.status === "Dipinjam" || item.status === "Terlambat" ? (
                       <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-primary hover:bg-primary/10 border-primary/30">
                         <RotateCcw className="h-3 w-3" />
-                        <span>Return</span>
+                        <span>Kembalikan</span>
                       </Button>
                     ) : (
                       <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground">

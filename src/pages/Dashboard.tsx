@@ -29,40 +29,40 @@ export function Dashboard() {
   // Mock KPI Metrics
   const stats = [
     {
-      title: "Total Inventory",
-      value: "2,450",
-      subtext: "2,120 Available in stock",
-      change: "+14 new items",
+      title: "Total Inventaris",
+      value: "2.450",
+      subtext: "2.120 Tersedia di gudang",
+      change: "+14 item baru",
       trend: "up",
       icon: Package,
       accentColor: "bg-blue-500/10 text-blue-600 border-blue-200",
       metricColor: "text-foreground",
     },
     {
-      title: "Active Borrowings",
+      title: "Peminjaman Aktif",
       value: "142",
-      subtext: "4 Overdue for return",
-      change: "3 pending approval",
+      subtext: "4 Terlambat dikembalikan",
+      change: "3 menunggu persetujuan",
       trend: "alert",
       icon: ArrowLeftRight,
       accentColor: "bg-amber-500/10 text-amber-600 border-amber-200",
       metricColor: "text-foreground",
     },
     {
-      title: "Active Subscriptions",
+      title: "Langganan Aktif",
       value: "24",
-      subtext: "Est. $3,450 / month",
-      change: "2 renewals in 7 days",
+      subtext: "Est. $3.450 / bulan",
+      change: "2 perpanjangan dlm 7 hari",
       trend: "neutral",
       icon: CreditCard,
       accentColor: "bg-emerald-500/10 text-emerald-600 border-emerald-200",
       metricColor: "text-foreground",
     },
     {
-      title: "Action Reminders",
+      title: "Pengingat Perlu Tindakan",
       value: "5",
-      subtext: "2 Due today",
-      change: "1 warranty expiring",
+      subtext: "2 Jatuh tempo hari ini",
+      change: "1 garansi berakhir",
       trend: "danger",
       icon: Bell,
       accentColor: "bg-rose-500/10 text-rose-600 border-rose-200",
@@ -76,33 +76,33 @@ export function Dashboard() {
       id: "BOR-1049",
       itemCode: "INV-MAC-042",
       itemName: "MacBook Pro M3 16\"",
-      category: "Laptops",
-      borrower: "Siti Rahma (Design)",
+      category: "Laptop",
+      borrower: "Siti Rahma (Desain)",
       borrowDate: "2026-08-20",
       dueDate: "2026-08-28",
-      status: "Borrowed",
+      status: "Dipinjam",
       statusVariant: "default",
     },
     {
       id: "BOR-1050",
       itemCode: "INV-MON-018",
       itemName: "Dell UltraSharp 27\" 4K",
-      category: "Peripherals",
+      category: "Periferal",
       borrower: "Budi Santoso (Eng)",
       borrowDate: "2026-08-24",
       dueDate: "2026-09-07",
-      status: "Pending Approval",
+      status: "Menunggu Persetujuan",
       statusVariant: "secondary",
     },
     {
       id: "BOR-1045",
       itemCode: "INV-SRV-003",
       itemName: "Ubiquiti UniFi Switch 24P",
-      category: "Networking",
+      category: "Jaringan",
       borrower: "Aidil (IT Ops)",
       borrowDate: "2026-08-10",
       dueDate: "2026-08-24",
-      status: "Overdue",
+      status: "Terlambat",
       statusVariant: "destructive",
     },
     {
@@ -113,7 +113,7 @@ export function Dashboard() {
       borrower: "Rian (Marketing)",
       borrowDate: "2026-08-15",
       dueDate: "2026-08-22",
-      status: "Returned",
+      status: "Dikembalikan",
       statusVariant: "outline",
     },
   ]
@@ -122,38 +122,38 @@ export function Dashboard() {
   const upcomingReminders = [
     {
       id: "REM-001",
-      title: "AWS Cloud Infrastructure Billing",
-      module: "Subscription",
-      dueDate: "Today, 18:00",
+      title: "Tagihan Bulanan AWS Cloud Infrastructure",
+      module: "Langganan",
+      dueDate: "Hari Ini, 18:00",
       priority: "high",
-      cost: "$1,250.00",
+      cost: "$1.250,00",
       isUrgent: true,
     },
     {
       id: "REM-002",
-      title: "Dell XPS 15 Warranty Expiration",
-      module: "Inventory",
-      dueDate: "Tomorrow",
+      title: "Garansi Dell XPS 15 Berakhir",
+      module: "Inventaris",
+      dueDate: "Besok",
       priority: "medium",
       cost: "INV-XPS-009",
       isUrgent: false,
     },
     {
       id: "REM-003",
-      title: "Return: Ubiquiti UniFi Switch",
-      module: "Borrowing",
-      dueDate: "Overdue 2 days",
+      title: "Pengembalian: Ubiquiti UniFi Switch",
+      module: "Peminjaman",
+      dueDate: "Terlambat 2 hari",
       priority: "high",
       cost: "Aidil Pratama",
       isUrgent: true,
     },
     {
       id: "REM-004",
-      title: "Google Workspace 50 Seats Renewal",
-      module: "Subscription",
-      dueDate: "in 5 days",
+      title: "Perpanjangan Google Workspace 50 Akun",
+      module: "Langganan",
+      dueDate: "dalam 5 hari",
       priority: "low",
-      cost: "$360.00",
+      cost: "$360,00",
       isUrgent: false,
     },
   ]
@@ -164,26 +164,26 @@ export function Dashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-5 rounded-xl border border-border/80 bg-gradient-to-r from-card via-card to-primary/5 shadow-xs">
         <div className="space-y-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-base sm:text-lg font-bold tracking-tight text-foreground">Operational Overview</h2>
+            <h2 className="text-base sm:text-lg font-bold tracking-tight text-foreground">Ringkasan Operasional</h2>
             <Badge variant="outline" className="text-[10px] font-mono border-primary/30 text-primary bg-primary/5">
-              Live Realtime
+              Langsung Realtime
             </Badge>
           </div>
           <p className="text-xs text-muted-foreground max-w-xl">
-            Centralized hub for inventory items, ongoing borrowings, software licenses, and automated alerts.
+            Pusat terpadu manajemen inventaris, sirkulasi peminjaman aset, lisensi software, dan pengingat otomatis.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Link to="/inventory" className="flex-1 sm:flex-initial">
             <Button size="sm" variant="outline" className="w-full sm:w-auto h-8 text-xs font-medium gap-1.5 border-border/80">
               <Package className="h-3.5 w-3.5" />
-              <span>Asset Directory</span>
+              <span>Daftar Aset</span>
             </Button>
           </Link>
           <Link to="/borrowing" className="flex-1 sm:flex-initial">
             <Button size="sm" className="w-full sm:w-auto h-8 text-xs font-medium gap-1.5 bg-primary text-primary-foreground shadow-xs">
               <ArrowLeftRight className="h-3.5 w-3.5" />
-              <span>Borrowing Flow</span>
+              <span>Alur Pinjam</span>
             </Button>
           </Link>
         </div>
@@ -230,15 +230,15 @@ export function Dashboard() {
               <div className="space-y-0.5">
                 <CardTitle className="text-sm font-bold flex items-center gap-2">
                   <ArrowLeftRight className="h-4 w-4 text-primary" />
-                  <span>Borrowing & Asset Tracking</span>
+                  <span>Pelacakan Peminjaman & Aset</span>
                 </CardTitle>
                 <CardDescription className="text-xs">
-                  Active asset checkouts and pending approvals across departments
+                  Aset yang sedang dipinjam dan permohonan yang menunggu persetujuan
                 </CardDescription>
               </div>
               <Link to="/borrowing">
                 <Button variant="ghost" size="sm" className="h-7 text-xs font-medium gap-1 text-primary hover:text-primary/90">
-                  <span>View All</span>
+                  <span>Lihat Semua</span>
                   <ArrowUpRight className="h-3.5 w-3.5" />
                 </Button>
               </Link>
@@ -247,11 +247,11 @@ export function Dashboard() {
               <Table className="min-w-[620px] w-full">
                 <TableHeader className="bg-muted/40">
                   <TableRow className="border-border/60 hover:bg-transparent">
-                    <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Code / Asset</TableHead>
-                    <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Borrower</TableHead>
-                    <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Due Date</TableHead>
+                    <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Kode / Aset</TableHead>
+                    <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Peminjam</TableHead>
+                    <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Tenggat Waktu</TableHead>
                     <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Status</TableHead>
-                    <TableHead className="text-[11px] font-mono uppercase font-semibold h-9 text-right">Action</TableHead>
+                    <TableHead className="text-[11px] font-mono uppercase font-semibold h-9 text-right">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -272,9 +272,9 @@ export function Dashboard() {
                       <TableCell className="py-2.5">
                         <Badge 
                           variant={
-                            act.status === "Borrowed" ? "default" :
-                            act.status === "Pending Approval" ? "secondary" :
-                            act.status === "Overdue" ? "destructive" : "outline"
+                            act.status === "Dipinjam" ? "default" :
+                            act.status === "Menunggu Persetujuan" ? "secondary" :
+                            act.status === "Terlambat" ? "destructive" : "outline"
                           }
                           className="text-[10px] font-mono px-2 py-0 h-5"
                         >
@@ -282,7 +282,7 @@ export function Dashboard() {
                         </Badge>
                       </TableCell>
                       <TableCell className="py-2.5 text-right">
-                        {act.status === "Pending Approval" ? (
+                        {act.status === "Menunggu Persetujuan" ? (
                           <div className="flex items-center justify-end gap-1">
                             <Button size="icon" variant="outline" className="h-6 w-6 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-300">
                               <Check className="h-3 w-3" />
@@ -293,7 +293,7 @@ export function Dashboard() {
                           </div>
                         ) : (
                           <Button variant="ghost" size="sm" className="h-6 text-[11px] font-mono px-2 text-muted-foreground hover:text-foreground">
-                            Details
+                            Detail
                           </Button>
                         )}
                       </TableCell>
@@ -311,8 +311,8 @@ export function Dashboard() {
                 <Laptop className="h-5 w-5" />
               </div>
               <div className="space-y-0.5">
-                <p className="text-xs font-semibold text-foreground">Laptops & PCs</p>
-                <p className="text-[11px] font-mono text-muted-foreground">84 / 92 Available</p>
+                <p className="text-xs font-semibold text-foreground">Laptop & Komputer</p>
+                <p className="text-[11px] font-mono text-muted-foreground">84 / 92 Tersedia</p>
               </div>
             </Card>
             <Card className="p-3.5 border-border/80 shadow-xs flex items-center gap-3">
@@ -320,8 +320,8 @@ export function Dashboard() {
                 <Monitor className="h-5 w-5" />
               </div>
               <div className="space-y-0.5">
-                <p className="text-xs font-semibold text-foreground">Monitors & Displays</p>
-                <p className="text-[11px] font-mono text-muted-foreground">42 / 50 Available</p>
+                <p className="text-xs font-semibold text-foreground">Monitor & Display</p>
+                <p className="text-[11px] font-mono text-muted-foreground">42 / 50 Tersedia</p>
               </div>
             </Card>
             <Card className="p-3.5 border-border/80 shadow-xs flex items-center gap-3">
@@ -329,8 +329,8 @@ export function Dashboard() {
                 <Key className="h-5 w-5" />
               </div>
               <div className="space-y-0.5">
-                <p className="text-xs font-semibold text-foreground">Software Licenses</p>
-                <p className="text-[11px] font-mono text-muted-foreground">24 Active SaaS</p>
+                <p className="text-xs font-semibold text-foreground">Lisensi Software</p>
+                <p className="text-[11px] font-mono text-muted-foreground">24 SaaS Aktif</p>
               </div>
             </Card>
           </div>
@@ -344,10 +344,10 @@ export function Dashboard() {
               <div className="space-y-0.5">
                 <CardTitle className="text-sm font-bold flex items-center gap-2">
                   <Bell className="h-4 w-4 text-accent" />
-                  <span>Important Reminders</span>
+                  <span>Pengingat Penting</span>
                 </CardTitle>
                 <CardDescription className="text-xs">
-                  Unified alerts across all modules
+                  Notifikasi terpadu lintas modul
                 </CardDescription>
               </div>
               <Badge variant="destructive" className="text-[10px] font-mono px-1.5 py-0 h-4">
@@ -387,7 +387,7 @@ export function Dashboard() {
               ))}
               <Link to="/reminders" className="block pt-1">
                 <Button variant="outline" size="sm" className="w-full h-8 text-xs font-medium text-muted-foreground hover:text-foreground border-dashed">
-                  Manage All Reminders
+                  Kelola Semua Pengingat
                 </Button>
               </Link>
             </CardContent>
@@ -398,33 +398,33 @@ export function Dashboard() {
             <CardHeader className="p-4 pb-3 border-b border-border/60">
               <CardTitle className="text-sm font-bold flex items-center gap-2">
                 <CreditCard className="h-4 w-4 text-emerald-600" />
-                <span>Monthly Subscriptions</span>
+                <span>Langganan Bulanan</span>
               </CardTitle>
               <CardDescription className="text-xs">
-                Next recurring renewal dates
+                Jadwal perpanjangan berikutnya
               </CardDescription>
             </CardHeader>
             <CardContent className="p-4 space-y-3 text-xs">
               <div className="flex items-center justify-between pb-2 border-b border-border/50">
                 <div>
                   <p className="font-semibold text-foreground">GitHub Enterprise</p>
-                  <p className="text-[10px] text-muted-foreground font-mono">Renews: Sep 01, 2026</p>
+                  <p className="text-[10px] text-muted-foreground font-mono">Perpanjang: 01 Sep 2026</p>
                 </div>
-                <span className="font-bold font-mono text-foreground">$420.00 / mo</span>
+                <span className="font-bold font-mono text-foreground">$420.00 / bln</span>
               </div>
               <div className="flex items-center justify-between pb-2 border-b border-border/50">
                 <div>
                   <p className="font-semibold text-foreground">Figma Organization</p>
-                  <p className="text-[10px] text-muted-foreground font-mono">Renews: Sep 05, 2026</p>
+                  <p className="text-[10px] text-muted-foreground font-mono">Perpanjang: 05 Sep 2026</p>
                 </div>
-                <span className="font-bold font-mono text-foreground">$180.00 / mo</span>
+                <span className="font-bold font-mono text-foreground">$180.00 / bln</span>
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-semibold text-foreground">Vercel Pro Team</p>
-                  <p className="text-[10px] text-muted-foreground font-mono">Renews: Sep 12, 2026</p>
+                  <p className="text-[10px] text-muted-foreground font-mono">Perpanjang: 12 Sep 2026</p>
                 </div>
-                <span className="font-bold font-mono text-foreground">$60.00 / mo</span>
+                <span className="font-bold font-mono text-foreground">$60.00 / bln</span>
               </div>
             </CardContent>
           </Card>

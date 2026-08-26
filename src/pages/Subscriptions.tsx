@@ -24,10 +24,10 @@ const mockSubscriptions = [
     provider: "Amazon Web Services",
     category: "Cloud Hosting",
     cost: 1250.00,
-    cycle: "Monthly",
-    nextBillingDate: "2026-09-01",
-    paymentMethod: "Corporate Visa (..4242)",
-    status: "Active",
+    cycle: "Bulanan",
+    nextBillingDate: "01 Sep 2026",
+    paymentMethod: "Visa Korporat (..4242)",
+    status: "Aktif",
   },
   {
     id: "SUB-02",
@@ -35,43 +35,43 @@ const mockSubscriptions = [
     provider: "GitHub / Microsoft",
     category: "Developer Tools",
     cost: 420.00,
-    cycle: "Monthly",
-    nextBillingDate: "2026-09-01",
-    paymentMethod: "Corporate Mastercard",
-    status: "Active",
+    cycle: "Bulanan",
+    nextBillingDate: "01 Sep 2026",
+    paymentMethod: "Mastercard Korporat",
+    status: "Aktif",
   },
   {
     id: "SUB-03",
-    serviceName: "Google Workspace (50 Seats)",
+    serviceName: "Google Workspace (50 Akun)",
     provider: "Google LLC",
-    category: "Productivity",
+    category: "Produktivitas",
     cost: 360.00,
-    cycle: "Monthly",
-    nextBillingDate: "2026-08-31",
-    paymentMethod: "Direct Bank Debit",
-    status: "Active",
+    cycle: "Bulanan",
+    nextBillingDate: "31 Agu 2026",
+    paymentMethod: "Debit Rekening Bank",
+    status: "Aktif",
   },
   {
     id: "SUB-04",
     serviceName: "Figma Organization Plan",
     provider: "Figma Inc.",
-    category: "Design Software",
+    category: "Software Desain",
     cost: 180.00,
-    cycle: "Monthly",
-    nextBillingDate: "2026-09-05",
-    paymentMethod: "Corporate Visa (..4242)",
-    status: "Active",
+    cycle: "Bulanan",
+    nextBillingDate: "05 Sep 2026",
+    paymentMethod: "Visa Korporat (..4242)",
+    status: "Aktif",
   },
   {
     id: "SUB-05",
     serviceName: "Cloudflare Pro Domain DNS",
     provider: "Cloudflare",
-    category: "Networking",
+    category: "Jaringan",
     cost: 240.00,
-    cycle: "Yearly",
-    nextBillingDate: "2027-01-15",
-    paymentMethod: "PayPal Corporate",
-    status: "Active",
+    cycle: "Tahunan",
+    nextBillingDate: "15 Jan 2027",
+    paymentMethod: "PayPal Korporat",
+    status: "Aktif",
   },
 ]
 
@@ -87,7 +87,7 @@ export function SubscriptionsPage() {
   })
 
   const totalMonthlySpend = mockSubscriptions.reduce((acc, curr) => {
-    return curr.cycle === "Monthly" ? acc + curr.cost : acc + (curr.cost / 12)
+    return curr.cycle === "Bulanan" ? acc + curr.cost : acc + (curr.cost / 12)
   }, 0)
 
   return (
@@ -95,35 +95,35 @@ export function SubscriptionsPage() {
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">Subscriptions & Licenses</h1>
+          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">Langganan & Lisensi</h1>
           <p className="text-xs text-muted-foreground">
-            Manage recurring SaaS subscriptions, infrastructure costs, and renewal alerts.
+            Kelola langganan SaaS rutin, biaya infrastruktur cloud, dan pengingat tanggal perpanjangan.
           </p>
         </div>
         <Button size="sm" className="h-8 text-xs font-medium gap-1.5 bg-primary text-primary-foreground shadow-xs w-full sm:w-auto">
           <Plus className="h-3.5 w-3.5" />
-          <span>Add Subscription</span>
+          <span>Tambah Langganan</span>
         </Button>
       </div>
 
       {/* Overview Metric Banners */}
       <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         <Card className="p-4 border-border/80 shadow-xs">
-          <p className="text-xs font-medium text-muted-foreground">Total Monthly Spend</p>
+          <p className="text-xs font-medium text-muted-foreground">Total Pengeluaran Bulanan</p>
           <p className="text-2xl font-bold font-mono text-foreground mt-1">
-            ${totalMonthlySpend.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            ${totalMonthlySpend.toLocaleString('id-ID', { minimumFractionDigits: 2 })}
           </p>
-          <p className="text-[10px] text-muted-foreground mt-1">Across 5 active subscriptions</p>
+          <p className="text-[10px] text-muted-foreground mt-1">Dari 5 layanan aktif</p>
         </Card>
         <Card className="p-4 border-border/80 shadow-xs">
-          <p className="text-xs font-medium text-muted-foreground">Upcoming Renewals (7 Days)</p>
-          <p className="text-2xl font-bold font-mono text-emerald-600 mt-1">3 Services</p>
-          <p className="text-[10px] text-muted-foreground mt-1">Estimated charge: $2,030.00</p>
+          <p className="text-xs font-medium text-muted-foreground">Perpanjangan Mendatang (7 Hari)</p>
+          <p className="text-2xl font-bold font-mono text-emerald-600 mt-1">3 Layanan</p>
+          <p className="text-[10px] text-muted-foreground mt-1">Estimasi biaya: $2.030,00</p>
         </Card>
         <Card className="p-4 border-border/80 shadow-xs sm:col-span-2 lg:col-span-1">
-          <p className="text-xs font-medium text-muted-foreground">Primary Payment Account</p>
-          <p className="text-2xl font-bold font-mono text-foreground mt-1">Corporate Visa</p>
-          <p className="text-[10px] text-muted-foreground mt-1">Ends in ..4242</p>
+          <p className="text-xs font-medium text-muted-foreground">Akun Pembayaran Utama</p>
+          <p className="text-2xl font-bold font-mono text-foreground mt-1">Visa Korporat</p>
+          <p className="text-[10px] text-muted-foreground mt-1">Berakhir di ..4242</p>
         </Card>
       </div>
 
@@ -133,7 +133,7 @@ export function SubscriptionsPage() {
           <div className="relative w-full sm:w-80">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
-              placeholder="Search service, provider, category..."
+              placeholder="Cari layanan, penyedia, kategori..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-8 h-8 text-xs bg-muted/30 border-border/80 w-full"
@@ -148,14 +148,14 @@ export function SubscriptionsPage() {
           <Table className="min-w-[800px] w-full">
             <TableHeader className="bg-muted/40">
               <TableRow className="border-border/60">
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Service / Provider</TableHead>
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Category</TableHead>
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Billing Cycle</TableHead>
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Cost</TableHead>
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Next Billing Date</TableHead>
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Payment Method</TableHead>
+                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Layanan / Penyedia</TableHead>
+                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Kategori</TableHead>
+                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Siklus Tagihan</TableHead>
+                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Biaya</TableHead>
+                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Tgl Tagihan Berikutnya</TableHead>
+                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Metode Pembayaran</TableHead>
                 <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Status</TableHead>
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9 text-right">Actions</TableHead>
+                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9 text-right">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

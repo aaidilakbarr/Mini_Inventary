@@ -18,7 +18,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
       <div className="min-h-screen bg-background flex flex-col items-center justify-center space-y-4">
         <div className="h-10 w-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
         <p className="text-xs font-mono text-muted-foreground animate-pulse">
-          Verifying security credentials...
+          Memverifikasi kredensial keamanan...
         </p>
       </div>
     )
@@ -35,9 +35,9 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
           <ShieldAlert className="h-7 w-7" />
         </div>
         <div className="space-y-1.5 max-w-md">
-          <h2 className="text-lg font-bold tracking-tight text-foreground">Access Restricted</h2>
+          <h2 className="text-lg font-bold tracking-tight text-foreground">Akses Dibatasi</h2>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            This module requires <span className="font-semibold text-foreground uppercase">{allowedRoles.join(' or ')}</span> privileges. Your current role is <span className="font-semibold text-foreground uppercase">{role}</span>.
+            Halaman ini membutuhkan hak akses <span className="font-semibold text-foreground uppercase">{allowedRoles.join(' atau ')}</span>. Peran akun Anda saat ini adalah <span className="font-semibold text-foreground uppercase">{role}</span>.
           </p>
         </div>
         <Button 
@@ -47,7 +47,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
           className="text-xs gap-1.5 mt-2"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          <span>Go Back</span>
+          <span>Kembali</span>
         </Button>
       </div>
     )

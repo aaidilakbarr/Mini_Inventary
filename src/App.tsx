@@ -50,13 +50,13 @@ function App() {
                       <div className="p-6 rounded-xl border border-border/80 bg-card space-y-3">
                         <div className="flex items-center gap-2">
                           <ShieldCheck className="h-5 w-5 text-primary" />
-                          <h2 className="text-base font-bold text-foreground">System Audit Logs</h2>
+                          <h2 className="text-base font-bold text-foreground">Log Audit Sistem</h2>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Showing high-level system changes, inventory adjustments, and approval delegations recorded by the database trigger.
+                          Menampilkan riwayat perubahan sistem, mutasi inventaris, dan persetujuan yang dicatat otomatis oleh trigger database.
                         </p>
                         <div className="p-4 rounded-lg bg-muted/40 font-mono text-xs text-muted-foreground border border-border/60">
-                          [Audit Log Stream Active - Authorized for Administrator]
+                          [Aliran Log Audit Aktif - Akses Terbuka untuk Administrator]
                         </div>
                       </div>
                     </ProtectedRoute>
@@ -69,10 +69,10 @@ function App() {
                       <div className="p-6 rounded-xl border border-border/80 bg-card space-y-3">
                         <div className="flex items-center gap-2">
                           <Settings className="h-5 w-5 text-primary" />
-                          <h2 className="text-base font-bold text-foreground">System Administration Settings</h2>
+                          <h2 className="text-base font-bold text-foreground">Pengaturan Sistem Administrasi</h2>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Manage organization branding, Supabase webhooks, role delegations, and automated cron configurations.
+                          Kelola profil organisasi, integrasi webhook Supabase, delegasi peran, dan jadwal otomatisasi.
                         </p>
                       </div>
                     </ProtectedRoute>

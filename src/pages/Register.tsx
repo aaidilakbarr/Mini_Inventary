@@ -40,7 +40,7 @@ export function RegisterPage() {
     setSuccessMsg(null)
 
     if (password.length < 6) {
-      setErrorMsg('Password must be at least 6 characters long.')
+      setErrorMsg('Kata sandi harus terdiri dari minimal 6 karakter.')
       return
     }
 
@@ -49,15 +49,15 @@ export function RegisterPage() {
     try {
       const { error } = await signUp(email, password, fullName, role)
       if (error) {
-        setErrorMsg(error.message || 'Failed to create account.')
+        setErrorMsg(error.message || 'Gagal mendaftarkan akun baru.')
       } else {
-        setSuccessMsg('Account registered successfully! Redirecting to dashboard...')
+        setSuccessMsg('Akun berhasil didaftarkan! Mengarahkan ke dashboard...')
         setTimeout(() => {
           navigate('/dashboard', { replace: true })
         }, 1200)
       }
     } catch (err: any) {
-      setErrorMsg(err.message || 'An unexpected error occurred.')
+      setErrorMsg(err.message || 'Terjadi kesalahan yang tidak terduga.')
     } finally {
       setIsSubmitting(false)
     }
@@ -78,11 +78,11 @@ export function RegisterPage() {
           <div className="flex items-center justify-center gap-1.5">
             <span className="text-2xl font-bold font-mono tracking-tight text-foreground">INV.HUB</span>
             <Badge variant="outline" className="text-[10px] uppercase font-semibold px-1.5 py-0 bg-primary/10 text-primary border-primary/20">
-              RBAC Setup
+              Registrasi RBAC
             </Badge>
           </div>
           <p className="text-xs text-muted-foreground">
-            Create an account with role-based system access
+            Daftar akun baru dengan hak akses berbasis peran
           </p>
         </div>
 
@@ -94,20 +94,20 @@ export function RegisterPage() {
               to="/login"
               className="py-1.5 rounded-md text-muted-foreground hover:text-foreground transition-all text-center"
             >
-              Sign In
+              Masuk
             </Link>
             <button
               type="button"
               className="py-1.5 rounded-md bg-card text-foreground font-semibold shadow-xs transition-all text-center"
             >
-              Register
+              Daftar
             </button>
           </div>
 
           <div className="space-y-1">
-            <h2 className="text-lg font-bold tracking-tight text-foreground">Create Your Account</h2>
+            <h2 className="text-lg font-bold tracking-tight text-foreground">Buat Akun Anda</h2>
             <p className="text-xs text-muted-foreground">
-              Fill in your details and select your initial permission role.
+              Lengkapi data diri dan tentukan peran sistem awal Anda.
             </p>
           </div>
 
@@ -131,7 +131,7 @@ export function RegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="fullName" className="text-xs font-semibold text-foreground">
-                Full Name
+                Nama Lengkap
               </Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -150,7 +150,7 @@ export function RegisterPage() {
 
             <div className="space-y-1.5">
               <Label htmlFor="email" className="text-xs font-semibold text-foreground">
-                Email Address
+                Alamat Email
               </Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -159,7 +159,7 @@ export function RegisterPage() {
                   type="email"
                   required
                   autoComplete="email"
-                  placeholder="name@company.com"
+                  placeholder="nama@perusahaan.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-9 h-10 text-xs bg-muted/30 border-border/80 focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-primary/30"
@@ -169,7 +169,7 @@ export function RegisterPage() {
 
             <div className="space-y-1.5">
               <Label htmlFor="password" className="text-xs font-semibold text-foreground">
-                Password
+                Kata Sandi
               </Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -179,7 +179,7 @@ export function RegisterPage() {
                   required
                   minLength={6}
                   autoComplete="new-password"
-                  placeholder="Minimum 6 characters"
+                  placeholder="Minimal 6 karakter"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-9 pr-10 h-10 text-xs bg-muted/30 border-border/80 focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-primary/30"
@@ -188,7 +188,7 @@ export function RegisterPage() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
-                  aria-label="Toggle password visibility"
+                  aria-label="Tampilkan kata sandi"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -198,7 +198,7 @@ export function RegisterPage() {
             {/* RBAC Role Selector Cards */}
             <div className="space-y-1.5 pt-1">
               <Label className="text-xs font-semibold text-foreground">
-                Select Initial Role
+                Pilih Peran Sistem
               </Label>
               <div className="grid grid-cols-2 gap-2.5">
                 <div
@@ -213,14 +213,14 @@ export function RegisterPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
                       <UserCheck className={cn("h-4 w-4", role === 'staff' ? "text-primary font-bold" : "text-muted-foreground")} />
-                      <span className="text-xs font-bold text-foreground">Staff</span>
+                      <span className="text-xs font-bold text-foreground">Staf</span>
                     </div>
                     {role === 'staff' && (
                       <span className="h-2 w-2 rounded-full bg-primary" />
                     )}
                   </div>
                   <p className="text-[10px] text-muted-foreground leading-snug">
-                    Inventory tracking & borrow requests.
+                    Lacak inventaris & ajukan pinjaman aset.
                   </p>
                 </div>
 
@@ -243,7 +243,7 @@ export function RegisterPage() {
                     )}
                   </div>
                   <p className="text-[10px] text-muted-foreground leading-snug">
-                    Approvals, audit logs & settings.
+                    Persetujuan, log audit & pengaturan.
                   </p>
                 </div>
               </div>
@@ -257,11 +257,11 @@ export function RegisterPage() {
               {isSubmitting ? (
                 <div className="flex items-center gap-2">
                   <div className="h-3.5 w-3.5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                  <span>Registering user...</span>
+                  <span>Sedang mendaftarkan akun...</span>
                 </div>
               ) : (
                 <>
-                  <span>Create {role === 'admin' ? 'Administrator' : 'Staff'} Account</span>
+                  <span>Buat Akun {role === 'admin' ? 'Administrator' : 'Staf'}</span>
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
@@ -271,9 +271,9 @@ export function RegisterPage() {
           {/* Footer Note */}
           <div className="pt-2 border-t border-border/50 text-center">
             <p className="text-xs text-muted-foreground">
-              Already have an account?{' '}
+              Sudah memiliki akun?{' '}
               <Link to="/login" className="font-semibold text-primary hover:underline">
-                Sign In
+                Masuk
               </Link>
             </p>
           </div>

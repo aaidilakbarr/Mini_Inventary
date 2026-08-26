@@ -39,25 +39,25 @@ interface NavSection {
 
 const navSections: NavSection[] = [
   {
-    title: "Main Menu",
+    title: "Menu Utama",
     items: [
       { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-      { name: "Inventory", href: "/inventory", icon: Package, badge: "2,345" },
-      { name: "Borrowing", href: "/borrowing", icon: ArrowLeftRight, badge: "3 Pending", badgeVariant: "secondary" },
+      { name: "Inventaris", href: "/inventory", icon: Package, badge: "2.345" },
+      { name: "Peminjaman", href: "/borrowing", icon: ArrowLeftRight, badge: "3 Menunggu", badgeVariant: "secondary" },
     ]
   },
   {
-    title: "Operations & Alerts",
+    title: "Operasi & Pengingat",
     items: [
-      { name: "Subscriptions", href: "/subscriptions", icon: CreditCard, badge: "24 Active" },
-      { name: "Reminders", href: "/reminders", icon: Bell, badge: "5 Due", badgeVariant: "destructive" },
+      { name: "Langganan", href: "/subscriptions", icon: CreditCard, badge: "24 Aktif" },
+      { name: "Pengingat", href: "/reminders", icon: Bell, badge: "5 Jatuh Tempo", badgeVariant: "destructive" },
     ]
   },
   {
-    title: "Administration",
+    title: "Administrasi",
     items: [
-      { name: "Audit Logs", href: "/audit-logs", icon: History, adminOnly: true },
-      { name: "System Settings", href: "/settings", icon: Settings, adminOnly: true },
+      { name: "Log Audit", href: "/audit-logs", icon: History, adminOnly: true },
+      { name: "Pengaturan Sistem", href: "/settings", icon: Settings, adminOnly: true },
     ]
   }
 ]
@@ -79,7 +79,7 @@ export function BaseLayout() {
     .flatMap((s) => s.items)
     .find((item) => location.pathname === item.href || (item.href !== "/dashboard" && location.pathname.startsWith(item.href)))
 
-  const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || "User"
+  const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || "Pengguna"
   const displayEmail = profile?.email || user?.email || ""
 
   const navigationContent = (
@@ -95,14 +95,14 @@ export function BaseLayout() {
               <span className="font-bold text-sm tracking-tight text-foreground font-mono">INV.HUB</span>
               <span className="text-[10px] uppercase font-semibold px-1.5 py-0.2 bg-primary/10 text-primary rounded-full border border-primary/20">v1.0</span>
             </div>
-            <p className="text-[11px] text-muted-foreground leading-tight">Asset & Reminder System</p>
+            <p className="text-[11px] text-muted-foreground leading-tight">Manajemen Aset & Pengingat</p>
           </div>
         </Link>
         {/* Close Button for Mobile Drawer */}
         <button
           onClick={() => setIsMobileMenuOpen(false)}
           className="lg:hidden p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
-          aria-label="Close menu"
+          aria-label="Tutup menu"
         >
           <X className="h-5 w-5" />
         </button>
@@ -203,7 +203,7 @@ export function BaseLayout() {
           <div className="flex items-center justify-between pt-1 border-t border-border/50 text-[11px]">
             <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-mono">
               <Shield className="h-3 w-3 text-primary" />
-              <span>RBAC Active</span>
+              <span>RBAC Aktif</span>
             </div>
             <button
               type="button"
@@ -211,7 +211,7 @@ export function BaseLayout() {
               className="inline-flex items-center gap-1 text-[10px] font-medium text-destructive hover:text-destructive/80 px-2 py-0.5 rounded hover:bg-destructive/10 transition-colors"
             >
               <LogOut className="h-3 w-3" />
-              <span>Sign Out</span>
+              <span>Keluar</span>
             </button>
           </div>
         </div>
@@ -250,13 +250,13 @@ export function BaseLayout() {
             <button
               onClick={() => setIsMobileMenuOpen(true)}
               className="lg:hidden p-2 -ml-1 rounded-lg border border-border/70 bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shrink-0"
-              aria-label="Open menu"
+              aria-label="Buka menu"
             >
               <Menu className="h-4 w-4" />
             </button>
 
             <div className="flex items-center gap-1.5 min-w-0">
-              <span className="text-xs font-medium text-muted-foreground hidden sm:inline">Application</span>
+              <span className="text-xs font-medium text-muted-foreground hidden sm:inline">Aplikasi</span>
               <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50 hidden sm:inline shrink-0" />
               <h1 className="text-sm font-semibold text-foreground truncate">
                 {activeItem?.name || "Dashboard"}
@@ -265,7 +265,7 @@ export function BaseLayout() {
 
             <div className="hidden xl:flex items-center gap-1.5 ml-3 pl-3 border-l border-border/60">
               <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[11px] font-mono text-muted-foreground">Supabase Connected</span>
+              <span className="text-[11px] font-mono text-muted-foreground">Supabase Terhubung</span>
             </div>
           </div>
 
@@ -276,7 +276,7 @@ export function BaseLayout() {
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder="Search anything..."
+                placeholder="Cari apa saja..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-8 pr-10 h-8 text-xs bg-muted/40 border-border/80 focus-visible:bg-background"
@@ -290,7 +290,7 @@ export function BaseLayout() {
             <button
               onClick={() => setIsSearchOpenMobile(!isSearchOpenMobile)}
               className="sm:hidden p-2 rounded-lg border border-border/70 bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="Toggle search"
+              aria-label="Cari"
             >
               <Search className="h-4 w-4" />
             </button>
@@ -299,8 +299,8 @@ export function BaseLayout() {
             <Link to="/inventory">
               <Button size="sm" className="h-8 text-xs font-medium gap-1.5 shadow-xs bg-primary hover:bg-primary/90 text-primary-foreground px-2.5 sm:px-3">
                 <Plus className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">New Asset</span>
-                <span className="sm:hidden">New</span>
+                <span className="hidden sm:inline">Aset Baru</span>
+                <span className="sm:hidden">Tambah</span>
               </Button>
             </Link>
 
@@ -322,7 +322,7 @@ export function BaseLayout() {
               <Input
                 type="text"
                 autoFocus
-                placeholder="Search inventory, code, borrower..."
+                placeholder="Cari inventaris, kode, peminjam..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-8 pr-8 h-9 text-xs bg-muted/40 border-border/80 w-full"
@@ -355,7 +355,7 @@ export function BaseLayout() {
           )}
         >
           <LayoutDashboard className="h-4 w-4 mb-0.5" />
-          <span>Home</span>
+          <span>Beranda</span>
         </Link>
         <Link 
           to="/inventory"
@@ -365,7 +365,7 @@ export function BaseLayout() {
           )}
         >
           <Package className="h-4 w-4 mb-0.5" />
-          <span>Inventory</span>
+          <span>Inventaris</span>
         </Link>
         <Link 
           to="/borrowing"
@@ -375,7 +375,7 @@ export function BaseLayout() {
           )}
         >
           <ArrowLeftRight className="h-4 w-4 mb-0.5" />
-          <span>Borrow</span>
+          <span>Pinjam</span>
         </Link>
         <Link 
           to="/reminders"
@@ -388,14 +388,14 @@ export function BaseLayout() {
             <Bell className="h-4 w-4 mb-0.5" />
             <span className="absolute -top-1 -right-2 h-2 w-2 rounded-full bg-destructive" />
           </div>
-          <span>Alerts</span>
+          <span>Pengingat</span>
         </Link>
         <button 
           onClick={() => setIsMobileMenuOpen(true)}
           className="flex flex-col items-center justify-center py-1 px-3 rounded-lg text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
           <Menu className="h-4 w-4 mb-0.5" />
-          <span>More</span>
+          <span>Lainnya</span>
         </button>
       </nav>
     </div>

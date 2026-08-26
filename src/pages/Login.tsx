@@ -41,12 +41,18 @@ export function LoginPage() {
     try {
       const { error } = await signIn(email, password)
       if (error) {
-        setErrorMsg(error.message || 'Invalid email or password.')
+        if (error.message.toLowerCase().includes('invalid login credentials')) {
+          setErrorMsg('Email atau kata sandi tidak sesuai.')
+        } else if (error.message.toLowerCase().includes('email not confirmed')) {
+          setErrorMsg('Email belum dikonfirmasi di Supabase.')
+        } else {
+          setErrorMsg(error.message || 'Terjadi kesalahan saat masuk.')
+        }
       } else {
         navigate(from, { replace: true })
       }
     } catch (err: any) {
-      setErrorMsg(err.message || 'An unexpected error occurred.')
+      setErrorMsg(err.message || 'Terjadi kesalahan yang tidak terduga.')
     } finally {
       setIsSubmitting(false)
     }
@@ -54,7 +60,7 @@ export function LoginPage() {
 
   const handleResendConfirmation = async () => {
     if (!email) {
-      setErrorMsg('Please enter your email address first.')
+      setErrorMsg('Silakan masukkan alamat email Anda terlebih dahulu.')
       return
     }
     setIsResending(true)
@@ -67,16 +73,16 @@ export function LoginPage() {
       if (error) {
         setErrorMsg(error.message)
       } else {
-        setResendSuccess(`Confirmation link resent to ${email}. Please check your inbox or spam folder.`)
+        setResendSuccess(`Link verifikasi telah dikirim ulang ke ${email}. Silakan periksa kotak masuk atau spam email Anda.`)
       }
     } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to resend confirmation email.')
+      setErrorMsg(err.message || 'Gagal mengirim ulang email konfirmasi.')
     } finally {
       setIsResending(false)
     }
   }
 
-  const isEmailNotConfirmed = errorMsg?.toLowerCase().includes('email not confirmed')
+  const isEmailNotConfirmed = errorMsg?.toLowerCase().includes('email belum dikonfirmasi') || errorMsg?.toLowerCase().includes('email not confirmed')
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden antialiased">
@@ -97,7 +103,7 @@ export function LoginPage() {
             </Badge>
           </div>
           <p className="text-xs text-muted-foreground">
-            Asset Inventory & Automated Reminder System
+            Sistem Manajemen Aset & Pengingat Otomatis
           </p>
         </div>
 
@@ -109,20 +115,20 @@ export function LoginPage() {
               type="button"
               className="py-1.5 rounded-md bg-card text-foreground font-semibold shadow-xs transition-all text-center"
             >
-              Sign In
+              Masuk
             </button>
             <Link
               to="/register"
               className="py-1.5 rounded-md text-muted-foreground hover:text-foreground transition-all text-center"
             >
-              Register
+              Daftar
             </Link>
           </div>
 
           <div className="space-y-1">
-            <h2 className="text-lg font-bold tracking-tight text-foreground">Sign In to Your Workspace</h2>
+            <h2 className="text-lg font-bold tracking-tight text-foreground">Masuk ke Ruang Kerja</h2>
             <p className="text-xs text-muted-foreground">
-              Enter your registered email and password to continue.
+              Masukkan email dan kata sandi terdaftar untuk melanjutkan.
             </p>
           </div>
 
@@ -137,7 +143,7 @@ export function LoginPage() {
               {isEmailNotConfirmed && (
                 <div className="pt-2 border-t border-destructive/20 flex flex-col gap-2">
                   <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    Email confirmation is enabled on your Supabase project. Check your inbox or request a new confirmation link below:
+                    Fitur verifikasi email aktif pada Supabase. Periksa kotak masuk Anda atau minta link konfirmasi baru di bawah ini:
                   </p>
                   <Button
                     type="button"
@@ -148,7 +154,7 @@ export function LoginPage() {
                     className="h-7 text-xs border-destructive/30 text-destructive hover:bg-destructive/10 w-fit gap-1.5"
                   >
                     <RefreshCw className={`h-3 w-3 ${isResending ? 'animate-spin' : ''}`} />
-                    <span>{isResending ? 'Sending Link...' : 'Resend Confirmation Link'}</span>
+                    <span>{isResending ? 'Mengirim Link...' : 'Kirim Ulang Link Konfirmasi'}</span>
                   </Button>
                 </div>
               )}
@@ -167,7 +173,7 @@ export function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
               <Label htmlFor="email" className="text-xs font-semibold text-foreground">
-                Email Address
+                Alamat Email
               </Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -176,7 +182,7 @@ export function LoginPage() {
                   type="email"
                   required
                   autoComplete="email"
-                  placeholder="name@company.com"
+                  placeholder="nama@perusahaan.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-9 h-10 text-xs bg-muted/30 border-border/80 focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-primary/30"
@@ -187,7 +193,7 @@ export function LoginPage() {
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password" className="text-xs font-semibold text-foreground">
-                  Password
+                  Kata Sandi
                 </Label>
               </div>
               <div className="relative">
@@ -206,7 +212,7 @@ export function LoginPage() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
-                  aria-label="Toggle password visibility"
+                  aria-label="Tampilkan kata sandi"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -221,11 +227,11 @@ export function LoginPage() {
               {isSubmitting ? (
                 <div className="flex items-center gap-2">
                   <div className="h-3.5 w-3.5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                  <span>Signing in...</span>
+                  <span>Sedang masuk...</span>
                 </div>
               ) : (
                 <>
-                  <span>Sign In</span>
+                  <span>Masuk ke Sistem</span>
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
@@ -235,9 +241,9 @@ export function LoginPage() {
           {/* Footer Note */}
           <div className="pt-2 border-t border-border/50 text-center">
             <p className="text-xs text-muted-foreground">
-              Don't have an account?{' '}
+              Belum memiliki akun?{' '}
               <Link to="/register" className="font-semibold text-primary hover:underline">
-                Create Account
+                Daftar Akun Baru
               </Link>
             </p>
           </div>
