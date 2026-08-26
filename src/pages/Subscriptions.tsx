@@ -1,16 +1,10 @@
 import { useState } from "react"
 import { 
-  CreditCard, 
   Plus, 
   Search, 
-  Calendar, 
-  DollarSign, 
-  ExternalLink,
-  RefreshCw,
-  Clock,
   MoreHorizontal
 } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -84,6 +78,14 @@ const mockSubscriptions = [
 export function SubscriptionsPage() {
   const [searchTerm, setSearchTerm] = useState("")
 
+  const filteredSubscriptions = mockSubscriptions.filter((sub) => {
+    return (
+      sub.serviceName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      sub.provider.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      sub.category.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  })
+
   const totalMonthlySpend = mockSubscriptions.reduce((acc, curr) => {
     return curr.cycle === "Monthly" ? acc + curr.cost : acc + (curr.cost / 12)
   }, 0)
@@ -125,6 +127,21 @@ export function SubscriptionsPage() {
         </Card>
       </div>
 
+      {/* Search Bar Filter */}
+      <Card className="border-border/80 shadow-xs">
+        <CardContent className="p-3 sm:p-3.5 flex items-center justify-between">
+          <div className="relative w-full sm:w-80">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Search service, provider, category..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-8 h-8 text-xs bg-muted/30 border-border/80 w-full"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Main Table */}
       <Card className="border-border/80 shadow-xs">
         <div className="p-0 overflow-x-auto">
@@ -142,7 +159,7 @@ export function SubscriptionsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockSubscriptions.map((sub) => (
+              {filteredSubscriptions.map((sub) => (
                 <TableRow key={sub.id} className="border-border/50 hover:bg-muted/30">
                   <TableCell className="py-3">
                     <p className="font-semibold text-xs text-foreground">{sub.serviceName}</p>

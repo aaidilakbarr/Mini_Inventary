@@ -1,26 +1,17 @@
-import { useState } from "react"
 import { Link } from "react-router-dom"
 import { 
   Package, 
   ArrowLeftRight, 
   CreditCard, 
   Bell, 
-  TrendingUp, 
-  AlertTriangle, 
   CheckCircle2, 
   Clock, 
   ArrowUpRight, 
-  Filter, 
-  Search, 
-  MoreVertical,
-  Layers,
-  Laptop,
-  Monitor,
-  Key,
-  Calendar,
-  Check,
-  X,
-  Sparkles
+  Laptop, 
+  Monitor, 
+  Key, 
+  Check, 
+  X 
 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -35,8 +26,6 @@ import {
 } from "@/components/ui/table"
 
 export function Dashboard() {
-  const [filterCategory, setFilterCategory] = useState("all")
-
   // Mock KPI Metrics
   const stats = [
     {

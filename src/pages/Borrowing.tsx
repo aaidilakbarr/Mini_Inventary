@@ -1,18 +1,13 @@
 import { useState } from "react"
+import { useAuth } from "@/hooks/useAuth"
 import { 
-  ArrowLeftRight, 
   Plus, 
   Search, 
-  Check, 
-  X, 
   RotateCcw, 
-  Clock, 
   AlertTriangle,
-  User,
-  Calendar,
   MoreHorizontal
 } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -73,6 +68,7 @@ const mockBorrowings = [
 ]
 
 export function BorrowingPage() {
+  const { isAdmin } = useAuth()
   const [statusFilter, setStatusFilter] = useState("All")
   const [searchTerm, setSearchTerm] = useState("")
 
@@ -206,14 +202,20 @@ export function BorrowingPage() {
                   </TableCell>
                   <TableCell className="py-3 text-right">
                     {item.status === "Pending Approval" ? (
-                      <div className="flex items-center justify-end gap-1.5">
-                        <Button size="sm" className="h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-2.5">
-                          Approve
-                        </Button>
-                        <Button size="sm" variant="outline" className="h-7 text-xs text-destructive hover:bg-destructive/10 px-2 border-border/80">
-                          Reject
-                        </Button>
-                      </div>
+                      isAdmin ? (
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Button size="sm" className="h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-2.5">
+                            Approve
+                          </Button>
+                          <Button size="sm" variant="outline" className="h-7 text-xs text-destructive hover:bg-destructive/10 px-2 border-border/80">
+                            Reject
+                          </Button>
+                        </div>
+                      ) : (
+                        <span className="text-[10px] font-mono text-muted-foreground bg-muted px-2 py-1 rounded border border-border/60">
+                          Awaiting Admin
+                        </span>
+                      )
                     ) : item.status === "Borrowed" || item.status === "Overdue" ? (
                       <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-primary hover:bg-primary/10 border-primary/30">
                         <RotateCcw className="h-3 w-3" />

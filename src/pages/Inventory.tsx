@@ -1,19 +1,11 @@
 import { useState } from "react"
 import { 
-  Package, 
   Plus, 
   Search, 
-  Filter, 
-  ArrowUpDown, 
-  Laptop, 
-  Monitor, 
-  ShieldCheck, 
   MoreHorizontal,
-  Download,
-  CheckCircle2,
-  AlertCircle
+  Download
 } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
