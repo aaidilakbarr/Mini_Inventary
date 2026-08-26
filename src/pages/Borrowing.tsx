@@ -36,6 +36,7 @@ import {
 } from "@/lib/api/borrowings"
 import { fetchInventories } from "@/lib/api/inventories"
 import { fetchProfiles } from "@/lib/api/profiles"
+import { formatDateID } from "@/lib/formatters"
 import type { BorrowingItem, InventoryItem, CreateBorrowingPayload } from "@/types/database"
 import type { UserProfile } from "@/types/auth"
 
@@ -169,24 +170,23 @@ export function BorrowingPage() {
     return matchesSearch && matchesStatus
   })
 
-  // Format dates
-  const formatDate = (dateStr?: string | null) => {
-    if (!dateStr) return "-"
-    return new Date(dateStr).toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "short",
-      year: "numeric"
-    })
-  }
+  const statusOptions = [
+    "Semua",
+    "Menunggu Persetujuan",
+    "Dipinjam",
+    "Terlambat",
+    "Dikembalikan",
+    "Ditolak"
+  ]
 
   return (
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">Siklus Peminjaman Aset</h1>
+          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">Peminjaman Aset</h1>
           <p className="text-xs text-muted-foreground">
-            Kelola permohonan pinjam, delegasi persetujuan, aset aktif dipinjam, dan log pengembalian.
+            Kelola permintaan peminjaman, persetujuan, dan pelacakan pengembalian inventaris.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -203,78 +203,52 @@ export function BorrowingPage() {
           <Button 
             size="sm" 
             onClick={() => setIsModalOpen(true)}
-            className="h-8 text-xs font-medium gap-1.5 bg-primary text-primary-foreground shadow-xs w-full sm:w-auto"
+            className="h-8 text-xs font-medium gap-1.5 bg-primary text-primary-foreground shadow-xs"
           >
             <Plus className="h-3.5 w-3.5" />
-            <span>Permohonan Pinjam Baru</span>
+            <span>Pinjam Aset</span>
           </Button>
         </div>
       </div>
 
-      {/* Lifecycle Flow Indicator */}
-      <div className="p-3.5 rounded-xl border border-border/80 bg-card shadow-xs overflow-x-auto">
-        <div className="flex items-center justify-between min-w-[540px] gap-2 text-xs font-mono">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 text-primary font-bold border border-primary/20 shrink-0">
-            <span className="h-5 w-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-[10px]">1</span>
-            <span>Pengajuan</span>
-          </div>
-          <span className="text-muted-foreground shrink-0">→</span>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-600 font-bold border border-amber-500/20 shrink-0">
-            <span className="h-5 w-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px]">2</span>
-            <span>Menunggu Persetujuan</span>
-          </div>
-          <span className="text-muted-foreground shrink-0">→</span>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-600 font-bold border border-blue-500/20 shrink-0">
-            <span className="h-5 w-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px]">3</span>
-            <span>Dipinjam</span>
-          </div>
-          <span className="text-muted-foreground shrink-0">→</span>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 font-bold border border-emerald-500/20 shrink-0">
-            <span className="h-5 w-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px]">4</span>
-            <span>Dikembalikan</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Search and Status Filters */}
+      {/* Filter and Search Bar */}
       <Card className="border-border/80 shadow-xs">
         <CardContent className="p-3 sm:p-3.5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           <div className="relative w-full md:w-80">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
-              placeholder="Cari berdasarkan aset, kode, atau peminjam..."
+              placeholder="Cari aset atau nama peminjam..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-8 h-8 text-xs bg-muted/30 border-border/80 w-full"
             />
           </div>
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 w-full md:w-auto">
-            {["Semua", "Menunggu Persetujuan", "Dipinjam", "Terlambat", "Dikembalikan", "Ditolak"].map((st) => (
+            {statusOptions.map((status) => (
               <Button
-                key={st}
-                variant={statusFilter === st ? "default" : "outline"}
+                key={status}
+                variant={statusFilter === status ? "default" : "outline"}
                 size="sm"
-                onClick={() => setStatusFilter(st)}
+                onClick={() => setStatusFilter(status)}
                 className="h-7 text-xs px-2.5 rounded-md shrink-0 whitespace-nowrap"
               >
-                {st}
+                {status}
               </Button>
             ))}
           </div>
         </CardContent>
       </Card>
 
-      {/* Table */}
+      {/* Main Borrowings Table */}
       <Card className="border-border/80 shadow-xs">
         <div className="p-0 overflow-x-auto">
-          <Table className="min-w-[820px] w-full">
+          <Table className="min-w-[800px] w-full">
             <TableHeader className="bg-muted/40">
               <TableRow className="border-border/60">
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">ID Pinjam</TableHead>
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Detail Aset</TableHead>
+                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Aset</TableHead>
                 <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Peminjam</TableHead>
                 <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Tgl Pengajuan</TableHead>
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Tenggat Waktu</TableHead>
+                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Batas Kembali</TableHead>
                 <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Status</TableHead>
                 <TableHead className="text-[11px] font-mono uppercase font-semibold h-9 text-right">Aksi</TableHead>
               </TableRow>
@@ -282,7 +256,7 @@ export function BorrowingPage() {
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-36 text-center">
+                  <TableCell colSpan={6} className="h-36 text-center">
                     <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
                       <Loader2 className="h-6 w-6 animate-spin text-primary" />
                       <p className="text-xs">Memuat data peminjaman...</p>
@@ -291,11 +265,14 @@ export function BorrowingPage() {
                 </TableRow>
               ) : filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-36 text-center">
+                  <TableCell colSpan={6} className="h-36 text-center">
                     <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
                       <Inbox className="h-8 w-8 text-muted-foreground/60" />
-                      <p className="text-xs font-medium text-foreground">Tidak ada riwayat peminjaman</p>
-                      <p className="text-[11px]">Gunakan tombol di atas untuk mengajukan peminjaman aset baru.</p>
+                      <p className="text-xs font-medium text-foreground">Tidak ada data peminjaman</p>
+                      <p className="text-[11px]">Belum ada data peminjaman atau sesuai filter yang dipilih.</p>
+                      <Button size="sm" variant="outline" onClick={() => setIsModalOpen(true)} className="h-7 text-xs mt-1">
+                        <Plus className="h-3 w-3 mr-1" /> Ajukan Peminjaman
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -306,24 +283,21 @@ export function BorrowingPage() {
 
                   return (
                     <TableRow key={item.id} className="border-border/50 hover:bg-muted/30">
-                      <TableCell className="font-mono text-[11px] font-bold text-foreground py-3">
-                        BOR-{item.id.slice(0, 6).toUpperCase()}
-                      </TableCell>
                       <TableCell className="py-3">
                         <p className="font-medium text-xs text-foreground">{item.inventory?.name || "Aset Tidak Ditemukan"}</p>
-                        <p className="font-mono text-[10px] text-primary">{item.inventory?.code || "-"}</p>
+                        <p className="font-mono text-[10px] text-muted-foreground">{item.inventory?.code || "-"}</p>
                       </TableCell>
                       <TableCell className="py-3">
-                        <p className="text-xs text-foreground font-medium">{item.borrower?.full_name || "Pengguna"}</p>
+                        <p className="font-medium text-xs text-foreground">{item.borrower?.full_name || "Tanpa Nama"}</p>
                         <p className="text-[10px] text-muted-foreground">{item.borrower?.email || "-"}</p>
                       </TableCell>
                       <TableCell className="py-3 text-xs font-mono text-muted-foreground">
-                        {formatDate(item.request_date)}
+                        {formatDateID(item.request_date)}
                       </TableCell>
                       <TableCell className="py-3 text-xs font-mono">
                         <span className={overdue ? "text-destructive font-bold flex items-center gap-1" : "text-foreground"}>
                           {overdue && <AlertTriangle className="h-3 w-3 inline" />}
-                          {formatDate(item.due_date)}
+                          {formatDateID(item.due_date)}
                         </span>
                       </TableCell>
                       <TableCell className="py-3">
