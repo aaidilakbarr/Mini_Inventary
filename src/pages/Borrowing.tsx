@@ -1,11 +1,16 @@
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useAuth } from "@/hooks/useAuth"
 import { 
   Plus, 
   Search, 
   RotateCcw, 
   AlertTriangle,
-  MoreHorizontal
+  Loader2,
+  Inbox,
+  RefreshCw,
+  Trash2,
+  Check,
+  X
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -19,67 +24,160 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table"
-
-const mockBorrowings = [
-  {
-    id: "BOR-1050",
-    assetCode: "INV-MON-018",
-    assetName: "Dell UltraSharp 27\" 4K",
-    borrowerName: "Budi Santoso",
-    department: "Teknik / Engineering",
-    requestDate: "2026-08-24",
-    dueDate: "2026-09-07",
-    status: "Menunggu Persetujuan",
-    notes: "Dibutuhkan untuk workstation setup remote",
-  },
-  {
-    id: "BOR-1049",
-    assetCode: "INV-MAC-042",
-    assetName: "MacBook Pro 16\" M3 Max",
-    borrowerName: "Siti Rahma",
-    department: "Desain Produk",
-    requestDate: "2026-08-20",
-    dueDate: "2026-08-28",
-    status: "Dipinjam",
-    notes: "Presentasi sprint desain ke klien",
-  },
-  {
-    id: "BOR-1045",
-    assetCode: "INV-SRV-003",
-    assetName: "Ubiquiti UniFi 24-Port Switch",
-    borrowerName: "Aidil Pratama",
-    department: "Infrastruktur IT",
-    requestDate: "2026-08-10",
-    dueDate: "2026-08-24",
-    status: "Terlambat",
-    notes: "Uji coba migrasi kantor cabang",
-  },
-  {
-    id: "BOR-1042",
-    assetCode: "INV-CAM-005",
-    assetName: "Sony Alpha A7 IV Kit",
-    borrowerName: "Rian Hidayat",
-    department: "Pemasaran",
-    requestDate: "2026-08-15",
-    dueDate: "2026-08-22",
-    status: "Dikembalikan",
-    notes: "Photoshoot produk batch 3",
-  },
-]
+import { BorrowingModal } from "@/components/modals/BorrowingModal"
+import { DeleteConfirmDialog } from "@/components/modals/DeleteConfirmDialog"
+import { 
+  fetchBorrowings, 
+  createBorrowing, 
+  approveBorrowing, 
+  rejectBorrowing, 
+  returnBorrowing, 
+  deleteBorrowing 
+} from "@/lib/api/borrowings"
+import { fetchInventories } from "@/lib/api/inventories"
+import { fetchProfiles } from "@/lib/api/profiles"
+import type { BorrowingItem, InventoryItem, CreateBorrowingPayload } from "@/types/database"
+import type { UserProfile } from "@/types/auth"
 
 export function BorrowingPage() {
-  const { isAdmin } = useAuth()
+  const { user, isAdmin } = useAuth()
+  const [borrowings, setBorrowings] = useState<BorrowingItem[]>([])
+  const [inventories, setInventories] = useState<InventoryItem[]>([])
+  const [profiles, setProfiles] = useState<UserProfile[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState("Semua")
   const [searchTerm, setSearchTerm] = useState("")
 
-  const filtered = mockBorrowings.filter((b) => {
-    const matchesStatus = statusFilter === "Semua" || b.status === statusFilter
+  // Modal & action states
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null)
+
+  // Delete dialog state
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [deletingItem, setDeletingItem] = useState<BorrowingItem | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const loadData = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      const [borrowData, invData, profData] = await Promise.all([
+        fetchBorrowings(),
+        fetchInventories(),
+        fetchProfiles(),
+      ])
+      setBorrowings(borrowData)
+      setInventories(invData)
+      setProfiles(profData)
+    } catch (err) {
+      console.error("Gagal memuat data peminjaman:", err)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
+
+  const handleCreateBorrowing = async (payload: CreateBorrowingPayload) => {
+    await createBorrowing(payload)
+    await loadData()
+  }
+
+  const handleApprove = async (item: BorrowingItem) => {
+    try {
+      setActionLoadingId(item.id)
+      await approveBorrowing(item.id, item.inventory_id)
+      await loadData()
+    } catch (err) {
+      console.error("Gagal menyetujui peminjaman:", err)
+    } finally {
+      setActionLoadingId(null)
+    }
+  }
+
+  const handleReject = async (item: BorrowingItem) => {
+    try {
+      setActionLoadingId(item.id)
+      await rejectBorrowing(item.id)
+      await loadData()
+    } catch (err) {
+      console.error("Gagal menolak permohonan:", err)
+    } finally {
+      setActionLoadingId(null)
+    }
+  }
+
+  const handleReturn = async (item: BorrowingItem) => {
+    try {
+      setActionLoadingId(item.id)
+      await returnBorrowing(item.id, item.inventory_id)
+      await loadData()
+    } catch (err) {
+      console.error("Gagal memproses pengembalian aset:", err)
+    } finally {
+      setActionLoadingId(null)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!deletingItem) return
+    try {
+      setIsDeleting(true)
+      await deleteBorrowing(deletingItem.id)
+      setIsDeleteDialogOpen(false)
+      setDeletingItem(null)
+      await loadData()
+    } catch (err) {
+      console.error("Gagal menghapus log peminjaman:", err)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  // Filter available inventories (status Available)
+  const availableInventories = inventories.filter(i => i.status === "Available")
+
+  // Check if item is overdue
+  const isOverdue = (item: BorrowingItem) => {
+    if (item.status !== "Borrowed") return false
+    const due = new Date(item.due_date)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return due < today
+  }
+
+  const filtered = borrowings.filter((b) => {
+    const assetName = b.inventory?.name || ""
+    const assetCode = b.inventory?.code || ""
+    const borrowerName = b.borrower?.full_name || ""
+    const borrowerEmail = b.borrower?.email || ""
+
     const matchesSearch = 
-      b.assetName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      b.assetCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      b.borrowerName.toLowerCase().includes(searchTerm.toLowerCase())
-    return matchesStatus && matchesSearch
+      assetName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      assetCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      borrowerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      borrowerEmail.toLowerCase().includes(searchTerm.toLowerCase())
+
+    let matchesStatus = true
+    if (statusFilter === "Menunggu Persetujuan") matchesStatus = b.status === "Pending Approval"
+    else if (statusFilter === "Dipinjam") matchesStatus = b.status === "Borrowed" && !isOverdue(b)
+    else if (statusFilter === "Terlambat") matchesStatus = isOverdue(b)
+    else if (statusFilter === "Dikembalikan") matchesStatus = b.status === "Returned"
+    else if (statusFilter === "Ditolak") matchesStatus = b.status === "Rejected"
+
+    return matchesSearch && matchesStatus
   })
+
+  // Format dates
+  const formatDate = (dateStr?: string | null) => {
+    if (!dateStr) return "-"
+    return new Date(dateStr).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric"
+    })
+  }
 
   return (
     <div className="space-y-6">
@@ -91,10 +189,26 @@ export function BorrowingPage() {
             Kelola permohonan pinjam, delegasi persetujuan, aset aktif dipinjam, dan log pengembalian.
           </p>
         </div>
-        <Button size="sm" className="h-8 text-xs font-medium gap-1.5 bg-primary text-primary-foreground shadow-xs w-full sm:w-auto">
-          <Plus className="h-3.5 w-3.5" />
-          <span>Permohonan Pinjam Baru</span>
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={loadData}
+            disabled={isLoading}
+            className="h-8 text-xs font-medium gap-1.5 border-border/80"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
+            <span>Segarkan</span>
+          </Button>
+          <Button 
+            size="sm" 
+            onClick={() => setIsModalOpen(true)}
+            className="h-8 text-xs font-medium gap-1.5 bg-primary text-primary-foreground shadow-xs w-full sm:w-auto"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            <span>Permohonan Pinjam Baru</span>
+          </Button>
+        </div>
       </div>
 
       {/* Lifecycle Flow Indicator */}
@@ -135,15 +249,15 @@ export function BorrowingPage() {
             />
           </div>
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 w-full md:w-auto">
-            {["Semua", "Menunggu Persetujuan", "Dipinjam", "Terlambat", "Dikembalikan"].map((status) => (
+            {["Semua", "Menunggu Persetujuan", "Dipinjam", "Terlambat", "Dikembalikan", "Ditolak"].map((st) => (
               <Button
-                key={status}
-                variant={statusFilter === status ? "default" : "outline"}
+                key={st}
+                variant={statusFilter === st ? "default" : "outline"}
                 size="sm"
-                onClick={() => setStatusFilter(status)}
+                onClick={() => setStatusFilter(st)}
                 className="h-7 text-xs px-2.5 rounded-md shrink-0 whitespace-nowrap"
               >
-                {status}
+                {st}
               </Button>
             ))}
           </div>
@@ -158,7 +272,7 @@ export function BorrowingPage() {
               <TableRow className="border-border/60">
                 <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">ID Pinjam</TableHead>
                 <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Detail Aset</TableHead>
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Peminjam & Divisi</TableHead>
+                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Peminjam</TableHead>
                 <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Tgl Pengajuan</TableHead>
                 <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Tenggat Waktu</TableHead>
                 <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Status</TableHead>
@@ -166,73 +280,155 @@ export function BorrowingPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((item) => (
-                <TableRow key={item.id} className="border-border/50 hover:bg-muted/30">
-                  <TableCell className="font-mono text-xs font-bold text-foreground py-3">
-                    {item.id}
-                  </TableCell>
-                  <TableCell className="py-3">
-                    <p className="font-medium text-xs text-foreground">{item.assetName}</p>
-                    <p className="font-mono text-[10px] text-primary">{item.assetCode}</p>
-                  </TableCell>
-                  <TableCell className="py-3">
-                    <p className="text-xs text-foreground font-medium">{item.borrowerName}</p>
-                    <p className="text-[10px] text-muted-foreground">{item.department}</p>
-                  </TableCell>
-                  <TableCell className="py-3 text-xs font-mono text-muted-foreground">
-                    {item.requestDate}
-                  </TableCell>
-                  <TableCell className="py-3 text-xs font-mono">
-                    <span className={item.status === "Terlambat" ? "text-destructive font-bold flex items-center gap-1" : "text-foreground"}>
-                      {item.status === "Terlambat" && <AlertTriangle className="h-3 w-3 inline" />}
-                      {item.dueDate}
-                    </span>
-                  </TableCell>
-                  <TableCell className="py-3">
-                    <Badge 
-                      variant={
-                        item.status === "Dipinjam" ? "default" :
-                        item.status === "Menunggu Persetujuan" ? "secondary" :
-                        item.status === "Terlambat" ? "destructive" : "outline"
-                      }
-                      className="text-[10px] font-mono px-2 py-0 h-5"
-                    >
-                      {item.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="py-3 text-right">
-                    {item.status === "Menunggu Persetujuan" ? (
-                      isAdmin ? (
-                        <div className="flex items-center justify-end gap-1.5">
-                          <Button size="sm" className="h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-2.5">
-                            Setujui
-                          </Button>
-                          <Button size="sm" variant="outline" className="h-7 text-xs text-destructive hover:bg-destructive/10 px-2 border-border/80">
-                            Tolak
-                          </Button>
-                        </div>
-                      ) : (
-                        <span className="text-[10px] font-mono text-muted-foreground bg-muted px-2 py-1 rounded border border-border/60">
-                          Menunggu Admin
-                        </span>
-                      )
-                    ) : item.status === "Dipinjam" || item.status === "Terlambat" ? (
-                      <Button size="sm" variant="outline" className="h-7 text-xs gap-1 text-primary hover:bg-primary/10 border-primary/30">
-                        <RotateCcw className="h-3 w-3" />
-                        <span>Kembalikan</span>
-                      </Button>
-                    ) : (
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    )}
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-36 text-center">
+                    <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                      <p className="text-xs">Memuat data peminjaman...</p>
+                    </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : filtered.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="h-36 text-center">
+                    <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                      <Inbox className="h-8 w-8 text-muted-foreground/60" />
+                      <p className="text-xs font-medium text-foreground">Tidak ada riwayat peminjaman</p>
+                      <p className="text-[11px]">Gunakan tombol di atas untuk mengajukan peminjaman aset baru.</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filtered.map((item) => {
+                  const overdue = isOverdue(item)
+                  const isItemBusy = actionLoadingId === item.id
+
+                  return (
+                    <TableRow key={item.id} className="border-border/50 hover:bg-muted/30">
+                      <TableCell className="font-mono text-[11px] font-bold text-foreground py-3">
+                        BOR-{item.id.slice(0, 6).toUpperCase()}
+                      </TableCell>
+                      <TableCell className="py-3">
+                        <p className="font-medium text-xs text-foreground">{item.inventory?.name || "Aset Tidak Ditemukan"}</p>
+                        <p className="font-mono text-[10px] text-primary">{item.inventory?.code || "-"}</p>
+                      </TableCell>
+                      <TableCell className="py-3">
+                        <p className="text-xs text-foreground font-medium">{item.borrower?.full_name || "Pengguna"}</p>
+                        <p className="text-[10px] text-muted-foreground">{item.borrower?.email || "-"}</p>
+                      </TableCell>
+                      <TableCell className="py-3 text-xs font-mono text-muted-foreground">
+                        {formatDate(item.request_date)}
+                      </TableCell>
+                      <TableCell className="py-3 text-xs font-mono">
+                        <span className={overdue ? "text-destructive font-bold flex items-center gap-1" : "text-foreground"}>
+                          {overdue && <AlertTriangle className="h-3 w-3 inline" />}
+                          {formatDate(item.due_date)}
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-3">
+                        <Badge 
+                          variant={
+                            overdue ? "destructive" :
+                            item.status === "Borrowed" ? "default" :
+                            item.status === "Pending Approval" ? "secondary" :
+                            item.status === "Returned" ? "outline" : "destructive"
+                          }
+                          className="text-[10px] font-mono px-2 py-0 h-5"
+                        >
+                          {overdue ? "Terlambat" :
+                           item.status === "Pending Approval" ? "Menunggu Persetujuan" :
+                           item.status === "Borrowed" ? "Dipinjam" :
+                           item.status === "Returned" ? "Dikembalikan" :
+                           item.status === "Rejected" ? "Ditolak" : item.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="py-3 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {item.status === "Pending Approval" ? (
+                            isAdmin ? (
+                              <>
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => handleApprove(item)}
+                                  disabled={isItemBusy}
+                                  className="h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 gap-1"
+                                >
+                                  {isItemBusy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                                  <span>Setujui</span>
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  onClick={() => handleReject(item)}
+                                  disabled={isItemBusy}
+                                  className="h-7 text-xs text-destructive hover:bg-destructive/10 px-2 border-border/80 gap-1"
+                                >
+                                  <X className="h-3 w-3" />
+                                  <span>Tolak</span>
+                                </Button>
+                              </>
+                            ) : (
+                              <span className="text-[10px] font-mono text-muted-foreground bg-muted px-2 py-1 rounded border border-border/60">
+                                Menunggu Admin
+                              </span>
+                            )
+                          ) : item.status === "Borrowed" ? (
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              onClick={() => handleReturn(item)}
+                              disabled={isItemBusy}
+                              className="h-7 text-xs gap-1 text-primary hover:bg-primary/10 border-primary/30"
+                            >
+                              {isItemBusy ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCcw className="h-3 w-3" />}
+                              <span>Kembalikan</span>
+                            </Button>
+                          ) : (
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => {
+                                setDeletingItem(item)
+                                setIsDeleteDialogOpen(true)
+                              }}
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                              title="Hapus Riwayat"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })
+              )}
             </TableBody>
           </Table>
         </div>
       </Card>
+
+      {/* Borrowing Request Modal */}
+      <BorrowingModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        availableInventories={availableInventories}
+        profiles={profiles}
+        currentUserId={user?.id || ""}
+        isAdmin={isAdmin}
+        onSubmit={handleCreateBorrowing}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title="Hapus Catatan Peminjaman"
+        description="Apakah Anda yakin ingin menghapus catatan log peminjaman ini?"
+        onConfirm={handleDelete}
+        isLoading={isDeleting}
+      />
     </div>
   )
 }

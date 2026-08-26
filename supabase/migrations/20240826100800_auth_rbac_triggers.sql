@@ -1,3 +1,5 @@
+-- 08. Auth Trigger & RBAC Policies
+
 -- Function to automatically handle new user registration from Supabase Auth
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
@@ -36,22 +38,20 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 
--- RLS Policy Adjustments for RBAC
--- Profiles: Everyone authenticated can read profiles; Users can update their own; Admins can update any
-DROP POLICY IF EXISTS "Allow full access to authenticated users" ON profiles;
-CREATE POLICY "Allow authenticated users to read all profiles" ON profiles
+-- Profiles Policies
+DROP POLICY IF EXISTS "Allow authenticated users to read all profiles" ON public.profiles;
+CREATE POLICY "Allow authenticated users to read all profiles" ON public.profiles
   FOR SELECT TO authenticated USING (true);
 
-CREATE POLICY "Allow users to update own profile" ON profiles
+DROP POLICY IF EXISTS "Allow users to update own profile" ON public.profiles;
+CREATE POLICY "Allow users to update own profile" ON public.profiles
   FOR UPDATE TO authenticated USING (auth.uid() = id);
 
-CREATE POLICY "Allow admin to manage all profiles" ON profiles
+DROP POLICY IF EXISTS "Allow admin to manage all profiles" ON public.profiles;
+CREATE POLICY "Allow admin to manage all profiles" ON public.profiles
   FOR ALL TO authenticated USING (public.is_admin());
 
--- Audit Logs: Only admins can read audit logs
-DROP POLICY IF EXISTS "Allow full access to authenticated users" ON audit_logs;
-CREATE POLICY "Allow admin to view audit logs" ON audit_logs
+-- Audit Logs Policies: Only admins can read audit logs
+DROP POLICY IF EXISTS "Allow admin to view audit logs" ON public.audit_logs;
+CREATE POLICY "Allow admin to view audit logs" ON public.audit_logs
   FOR SELECT TO authenticated USING (public.is_admin());
-
-CREATE POLICY "Allow system to insert audit logs" ON audit_logs
-  FOR INSERT TO authenticated WITH CHECK (true);

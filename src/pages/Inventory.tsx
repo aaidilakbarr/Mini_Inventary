@@ -1,9 +1,13 @@
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { 
   Plus, 
   Search, 
-  MoreHorizontal,
-  Download
+  Download,
+  Edit2,
+  Trash2,
+  Loader2,
+  PackageOpen,
+  RefreshCw
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -17,82 +21,124 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table"
-
-const mockInventories = [
-  {
-    id: "1",
-    code: "INV-MAC-001",
-    name: "MacBook Pro 14\" M3 Pro (18GB/512GB)",
-    category: "Laptop",
-    location: "Gudang IT - Rak A1",
-    quantity: 5,
-    condition: "Bagus",
-    status: "Tersedia",
-    supplier: "Apple Store ID",
-    warrantyUntil: "15 Feb 2027",
-  },
-  {
-    id: "2",
-    code: "INV-MAC-042",
-    name: "MacBook Pro 16\" M3 Max",
-    category: "Laptop",
-    location: "Dipinjam (Siti Rahma)",
-    quantity: 1,
-    condition: "Bagus",
-    status: "Dipinjam",
-    supplier: "iBox Indonesia",
-    warrantyUntil: "20 Nov 2026",
-  },
-  {
-    id: "3",
-    code: "INV-MON-018",
-    name: "Dell UltraSharp 27\" 4K USB-C Hub Monitor",
-    category: "Monitor",
-    location: "Lantai 3 - Pod Dev B",
-    quantity: 12,
-    condition: "Bagus",
-    status: "Tersedia",
-    supplier: "Dell Direct",
-    warrantyUntil: "10 Mei 2028",
-  },
-  {
-    id: "4",
-    code: "INV-SRV-003",
-    name: "Ubiquiti UniFi 24-Port PoE Switch",
-    category: "Jaringan",
-    location: "Ruang Server Rack 02",
-    quantity: 2,
-    condition: "Cukup",
-    status: "Perawatan",
-    supplier: "PT Integra Solusi",
-    warrantyUntil: "14 Agu 2025",
-  },
-  {
-    id: "5",
-    code: "INV-CAM-005",
-    name: "Sony Alpha A7 IV Mirrorless Camera Kit",
-    category: "Media",
-    location: "Lemari Studio B",
-    quantity: 1,
-    condition: "Bagus",
-    status: "Tersedia",
-    supplier: "Doss Camera",
-    warrantyUntil: "01 Des 2026",
-  },
-]
+import { InventoryModal } from "@/components/modals/InventoryModal"
+import { DeleteConfirmDialog } from "@/components/modals/DeleteConfirmDialog"
+import { fetchInventories, createInventory, updateInventory, deleteInventory } from "@/lib/api/inventories"
+import { fetchCategories } from "@/lib/api/categories"
+import type { InventoryItem, CreateInventoryPayload, Category } from "@/types/database"
 
 export function InventoryPage() {
+  const [inventories, setInventories] = useState<InventoryItem[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("Semua")
 
-  const filteredItems = mockInventories.filter((item) => {
+  // Modal states
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingItem, setEditingItem] = useState<InventoryItem | null>(null)
+
+  // Delete dialog state
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [deletingItem, setDeletingItem] = useState<InventoryItem | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const loadData = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      const [invData, catData] = await Promise.all([
+        fetchInventories(),
+        fetchCategories('inventory'),
+      ])
+      setInventories(invData)
+      setCategories(catData)
+    } catch (err) {
+      console.error("Gagal memuat data inventaris:", err)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadData()
+  }, [loadData])
+
+  const handleOpenAdd = () => {
+    setEditingItem(null)
+    setIsModalOpen(true)
+  }
+
+  const handleOpenEdit = (item: InventoryItem) => {
+    setEditingItem(item)
+    setIsModalOpen(true)
+  }
+
+  const handleOpenDelete = (item: InventoryItem) => {
+    setDeletingItem(item)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const handleSubmit = async (payload: CreateInventoryPayload) => {
+    if (editingItem) {
+      await updateInventory(editingItem.id, payload)
+    } else {
+      await createInventory(payload)
+    }
+    await loadData()
+  }
+
+  const handleDelete = async () => {
+    if (!deletingItem) return
+    try {
+      setIsDeleting(true)
+      await deleteInventory(deletingItem.id)
+      setIsDeleteDialogOpen(false)
+      setDeletingItem(null)
+      await loadData()
+    } catch (err) {
+      console.error("Gagal menghapus aset:", err)
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const exportCSV = () => {
+    if (inventories.length === 0) return
+    const headers = ["Kode Aset", "Nama Barang", "Kategori", "Lokasi", "Jumlah", "Kondisi", "Garansi", "Status", "Pemasok"]
+    const rows = inventories.map(i => [
+      `"${i.code}"`,
+      `"${i.name}"`,
+      `"${i.category?.name || '-'}"`,
+      `"${i.location || '-'}"`,
+      i.quantity,
+      `"${i.condition || '-'}"`,
+      `"${i.warranty_info || '-'}"`,
+      `"${i.status}"`,
+      `"${i.supplier || '-'}"`
+    ])
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n")
+    const encodedUri = encodeURI(csvContent)
+    const link = document.createElement("a")
+    link.setAttribute("href", encodedUri)
+    link.setAttribute("download", `inventaris_${new Date().toISOString().split("T")[0]}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  const filteredItems = inventories.filter((item) => {
+    const categoryName = item.category?.name || ""
     const matchesSearch = 
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.location.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = categoryFilter === "Semua" || item.category === categoryFilter
+      (item.location || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.supplier || "").toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesCategory = categoryFilter === "Semua" || categoryName === categoryFilter
     return matchesSearch && matchesCategory
   })
+
+  // Dynamic category options from DB
+  const categoryNames = ["Semua", ...Array.from(new Set(categories.map(c => c.name)))]
 
   return (
     <div className="space-y-6">
@@ -105,11 +151,31 @@ export function InventoryPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" className="flex-1 sm:flex-initial h-8 text-xs font-medium gap-1.5 border-border/80">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={loadData}
+            disabled={isLoading}
+            className="h-8 text-xs font-medium gap-1.5 border-border/80"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
+            <span>Segarkan</span>
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={exportCSV}
+            disabled={inventories.length === 0}
+            className="h-8 text-xs font-medium gap-1.5 border-border/80"
+          >
             <Download className="h-3.5 w-3.5" />
             <span>Ekspor CSV</span>
           </Button>
-          <Button size="sm" className="flex-1 sm:flex-initial h-8 text-xs font-medium gap-1.5 bg-primary text-primary-foreground shadow-xs">
+          <Button 
+            size="sm" 
+            onClick={handleOpenAdd}
+            className="h-8 text-xs font-medium gap-1.5 bg-primary text-primary-foreground shadow-xs"
+          >
             <Plus className="h-3.5 w-3.5" />
             <span>Tambah Aset</span>
           </Button>
@@ -129,13 +195,13 @@ export function InventoryPage() {
             />
           </div>
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 w-full md:w-auto">
-            {["Semua", "Laptop", "Monitor", "Jaringan", "Media"].map((cat) => (
+            {categoryNames.map((cat) => (
               <Button
                 key={cat}
                 variant={categoryFilter === cat ? "default" : "outline"}
                 size="sm"
                 onClick={() => setCategoryFilter(cat)}
-                className="h-7 text-xs px-2.5 rounded-md shrink-0"
+                className="h-7 text-xs px-2.5 rounded-md shrink-0 whitespace-nowrap"
               >
                 {cat}
               </Button>
@@ -161,52 +227,115 @@ export function InventoryPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredItems.map((item) => (
-                <TableRow key={item.id} className="border-border/50 hover:bg-muted/30">
-                  <TableCell className="font-mono text-xs font-bold text-primary py-3">
-                    {item.code}
-                  </TableCell>
-                  <TableCell className="py-3">
-                    <p className="font-medium text-xs text-foreground">{item.name}</p>
-                    <p className="text-[10px] text-muted-foreground">{item.supplier}</p>
-                  </TableCell>
-                  <TableCell className="py-3 text-xs text-muted-foreground">
-                    <Badge variant="outline" className="text-[10px] font-normal px-2 py-0 border-border/80">
-                      {item.category}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="py-3 text-xs text-foreground">
-                    {item.location}
-                  </TableCell>
-                  <TableCell className="py-3 text-xs font-mono font-bold text-center">
-                    {item.quantity}
-                  </TableCell>
-                  <TableCell className="py-3 text-xs font-mono text-muted-foreground">
-                    {item.warrantyUntil}
-                  </TableCell>
-                  <TableCell className="py-3">
-                    <Badge 
-                      variant={
-                        item.status === "Tersedia" ? "default" :
-                        item.status === "Dipinjam" ? "secondary" :
-                        item.status === "Perawatan" ? "destructive" : "outline"
-                      }
-                      className="text-[10px] font-mono px-2 py-0 h-5"
-                    >
-                      {item.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="py-3 text-right">
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-foreground">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="h-36 text-center">
+                    <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                      <p className="text-xs">Memuat data inventaris...</p>
+                    </div>
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : filteredItems.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="h-36 text-center">
+                    <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                      <PackageOpen className="h-8 w-8 text-muted-foreground/60" />
+                      <p className="text-xs font-medium text-foreground">Tidak ada aset ditemukan</p>
+                      <p className="text-[11px]">Tambahkan aset baru atau ubah kata kunci pencarian Anda.</p>
+                      <Button size="sm" variant="outline" onClick={handleOpenAdd} className="h-7 text-xs mt-1">
+                        <Plus className="h-3 w-3 mr-1" /> Tambah Aset Pertama
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredItems.map((item) => (
+                  <TableRow key={item.id} className="border-border/50 hover:bg-muted/30">
+                    <TableCell className="font-mono text-xs font-bold text-primary py-3">
+                      {item.code}
+                    </TableCell>
+                    <TableCell className="py-3">
+                      <p className="font-medium text-xs text-foreground">{item.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{item.supplier || "Vendor internal"}</p>
+                    </TableCell>
+                    <TableCell className="py-3 text-xs text-muted-foreground">
+                      <Badge variant="outline" className="text-[10px] font-normal px-2 py-0 border-border/80">
+                        {item.category?.name || "Umum"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="py-3 text-xs text-foreground">
+                      {item.location || "-"}
+                    </TableCell>
+                    <TableCell className="py-3 text-xs font-mono font-bold text-center">
+                      {item.quantity}
+                    </TableCell>
+                    <TableCell className="py-3 text-xs font-mono text-muted-foreground">
+                      {item.warranty_info || "-"}
+                    </TableCell>
+                    <TableCell className="py-3">
+                      <Badge 
+                        variant={
+                          item.status === "Available" ? "default" :
+                          item.status === "Borrowed" ? "secondary" :
+                          item.status === "Maintenance" ? "destructive" : "outline"
+                        }
+                        className="text-[10px] font-mono px-2 py-0 h-5"
+                      >
+                        {item.status === "Available" ? "Tersedia" :
+                         item.status === "Borrowed" ? "Dipinjam" :
+                         item.status === "Maintenance" ? "Perawatan" :
+                         item.status === "Lost" ? "Hilang" : item.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="py-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleOpenEdit(item)}
+                          className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted"
+                          title="Edit Aset"
+                        >
+                          <Edit2 className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleOpenDelete(item)}
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                          title="Hapus Aset"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
       </Card>
+
+      {/* Add / Edit Inventory Modal */}
+      <InventoryModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        initialData={editingItem}
+        categories={categories}
+        onSubmit={handleSubmit}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title="Hapus Aset Inventaris"
+        description={`Apakah Anda yakin ingin menghapus aset "${deletingItem?.name}" (${deletingItem?.code})? Data ini akan dihapus dari sistem.`}
+        onConfirm={handleDelete}
+        isLoading={isDeleting}
+      />
     </div>
   )
 }
