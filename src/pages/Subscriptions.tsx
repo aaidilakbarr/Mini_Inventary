@@ -91,21 +91,21 @@ export function SubscriptionsPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-foreground">Subscriptions & Licenses</h1>
+          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">Subscriptions & Licenses</h1>
           <p className="text-xs text-muted-foreground">
             Manage recurring SaaS subscriptions, infrastructure costs, and renewal alerts.
           </p>
         </div>
-        <Button size="sm" className="h-8 text-xs font-medium gap-1.5 bg-primary text-primary-foreground shadow-xs">
+        <Button size="sm" className="h-8 text-xs font-medium gap-1.5 bg-primary text-primary-foreground shadow-xs w-full sm:w-auto">
           <Plus className="h-3.5 w-3.5" />
           <span>Add Subscription</span>
         </Button>
       </div>
 
       {/* Overview Metric Banners */}
-      <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-3">
+      <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         <Card className="p-4 border-border/80 shadow-xs">
           <p className="text-xs font-medium text-muted-foreground">Total Monthly Spend</p>
           <p className="text-2xl font-bold font-mono text-foreground mt-1">
@@ -118,7 +118,7 @@ export function SubscriptionsPage() {
           <p className="text-2xl font-bold font-mono text-emerald-600 mt-1">3 Services</p>
           <p className="text-[10px] text-muted-foreground mt-1">Estimated charge: $2,030.00</p>
         </Card>
-        <Card className="p-4 border-border/80 shadow-xs">
+        <Card className="p-4 border-border/80 shadow-xs sm:col-span-2 lg:col-span-1">
           <p className="text-xs font-medium text-muted-foreground">Primary Payment Account</p>
           <p className="text-2xl font-bold font-mono text-foreground mt-1">Corporate Visa</p>
           <p className="text-[10px] text-muted-foreground mt-1">Ends in ..4242</p>
@@ -128,7 +128,7 @@ export function SubscriptionsPage() {
       {/* Main Table */}
       <Card className="border-border/80 shadow-xs">
         <div className="p-0 overflow-x-auto">
-          <Table>
+          <Table className="min-w-[800px] w-full">
             <TableHeader className="bg-muted/40">
               <TableRow className="border-border/60">
                 <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Service / Provider</TableHead>

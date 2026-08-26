@@ -172,27 +172,27 @@ export function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Top Banner / Welcome Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-xl border border-border/80 bg-gradient-to-r from-card via-card to-primary/5 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 sm:p-5 rounded-xl border border-border/80 bg-gradient-to-r from-card via-card to-primary/5 shadow-xs">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-bold tracking-tight text-foreground">Operational Overview</h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-base sm:text-lg font-bold tracking-tight text-foreground">Operational Overview</h2>
             <Badge variant="outline" className="text-[10px] font-mono border-primary/30 text-primary bg-primary/5">
               Live Realtime
             </Badge>
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground max-w-xl">
             Centralized hub for inventory items, ongoing borrowings, software licenses, and automated alerts.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Link to="/inventory">
-            <Button size="sm" variant="outline" className="h-8 text-xs font-medium gap-1.5 border-border/80">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link to="/inventory" className="flex-1 sm:flex-initial">
+            <Button size="sm" variant="outline" className="w-full sm:w-auto h-8 text-xs font-medium gap-1.5 border-border/80">
               <Package className="h-3.5 w-3.5" />
               <span>Asset Directory</span>
             </Button>
           </Link>
-          <Link to="/borrowing">
-            <Button size="sm" className="h-8 text-xs font-medium gap-1.5 bg-primary text-primary-foreground shadow-xs">
+          <Link to="/borrowing" className="flex-1 sm:flex-initial">
+            <Button size="sm" className="w-full sm:w-auto h-8 text-xs font-medium gap-1.5 bg-primary text-primary-foreground shadow-xs">
               <ArrowLeftRight className="h-3.5 w-3.5" />
               <span>Borrowing Flow</span>
             </Button>
@@ -255,7 +255,7 @@ export function Dashboard() {
               </Link>
             </CardHeader>
             <div className="p-0 overflow-x-auto">
-              <Table>
+              <Table className="min-w-[620px] w-full">
                 <TableHeader className="bg-muted/40">
                   <TableRow className="border-border/60 hover:bg-transparent">
                     <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Code / Asset</TableHead>

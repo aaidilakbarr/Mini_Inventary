@@ -88,14 +88,14 @@ export function BorrowingPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-foreground">Asset Borrowing Lifecycle</h1>
+          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">Asset Borrowing Lifecycle</h1>
           <p className="text-xs text-muted-foreground">
             Manage asset requests, approval delegations, active checkouts, and return logs.
           </p>
         </div>
-        <Button size="sm" className="h-8 text-xs font-medium gap-1.5 bg-primary text-primary-foreground shadow-xs">
+        <Button size="sm" className="h-8 text-xs font-medium gap-1.5 bg-primary text-primary-foreground shadow-xs w-full sm:w-auto">
           <Plus className="h-3.5 w-3.5" />
           <span>New Borrow Request</span>
         </Button>
@@ -103,23 +103,23 @@ export function BorrowingPage() {
 
       {/* Lifecycle Flow Indicator */}
       <div className="p-3.5 rounded-xl border border-border/80 bg-card shadow-xs overflow-x-auto">
-        <div className="flex items-center justify-between min-w-[580px] gap-2 text-xs font-mono">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 text-primary font-bold border border-primary/20">
+        <div className="flex items-center justify-between min-w-[540px] gap-2 text-xs font-mono">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary/10 text-primary font-bold border border-primary/20 shrink-0">
             <span className="h-5 w-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-[10px]">1</span>
             <span>Request</span>
           </div>
-          <span className="text-muted-foreground">→</span>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-600 font-bold border border-amber-500/20">
+          <span className="text-muted-foreground shrink-0">→</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-600 font-bold border border-amber-500/20 shrink-0">
             <span className="h-5 w-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px]">2</span>
             <span>Pending Approval</span>
           </div>
-          <span className="text-muted-foreground">→</span>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-600 font-bold border border-blue-500/20">
+          <span className="text-muted-foreground shrink-0">→</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-500/10 text-blue-600 font-bold border border-blue-500/20 shrink-0">
             <span className="h-5 w-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px]">3</span>
             <span>Borrowed</span>
           </div>
-          <span className="text-muted-foreground">→</span>
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 font-bold border border-emerald-500/20">
+          <span className="text-muted-foreground shrink-0">→</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 font-bold border border-emerald-500/20 shrink-0">
             <span className="h-5 w-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px]">4</span>
             <span>Returned</span>
           </div>
@@ -128,24 +128,24 @@ export function BorrowingPage() {
 
       {/* Search and Status Filters */}
       <Card className="border-border/80 shadow-xs">
-        <CardContent className="p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="relative w-full sm:w-80">
+        <CardContent className="p-3 sm:p-3.5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+          <div className="relative w-full md:w-80">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               placeholder="Search by asset, code, or borrower..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8 h-8 text-xs bg-muted/30 border-border/80"
+              className="pl-8 h-8 text-xs bg-muted/30 border-border/80 w-full"
             />
           </div>
-          <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 w-full md:w-auto">
             {["All", "Pending Approval", "Borrowed", "Overdue", "Returned"].map((status) => (
               <Button
                 key={status}
                 variant={statusFilter === status ? "default" : "outline"}
                 size="sm"
                 onClick={() => setStatusFilter(status)}
-                className="h-7 text-xs px-2.5 rounded-md"
+                className="h-7 text-xs px-2.5 rounded-md shrink-0 whitespace-nowrap"
               >
                 {status}
               </Button>
@@ -157,7 +157,7 @@ export function BorrowingPage() {
       {/* Table */}
       <Card className="border-border/80 shadow-xs">
         <div className="p-0 overflow-x-auto">
-          <Table>
+          <Table className="min-w-[820px] w-full">
             <TableHeader className="bg-muted/40">
               <TableRow className="border-border/60">
                 <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Borrow ID</TableHead>

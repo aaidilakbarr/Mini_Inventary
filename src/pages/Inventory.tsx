@@ -105,45 +105,45 @@ export function InventoryPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-foreground">Inventory Management</h1>
+          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">Inventory Management</h1>
           <p className="text-xs text-muted-foreground">
             Track, manage, and catalog company physical assets and hardware units.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="h-8 text-xs font-medium gap-1.5 border-border/80">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" className="flex-1 sm:flex-initial h-8 text-xs font-medium gap-1.5 border-border/80">
             <Download className="h-3.5 w-3.5" />
             <span>Export CSV</span>
           </Button>
-          <Button size="sm" className="h-8 text-xs font-medium gap-1.5 bg-primary text-primary-foreground shadow-xs">
+          <Button size="sm" className="flex-1 sm:flex-initial h-8 text-xs font-medium gap-1.5 bg-primary text-primary-foreground shadow-xs">
             <Plus className="h-3.5 w-3.5" />
-            <span>Add New Inventory</span>
+            <span>Add Asset</span>
           </Button>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
       <Card className="border-border/80 shadow-xs">
-        <CardContent className="p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="relative w-full sm:w-80">
+        <CardContent className="p-3 sm:p-3.5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+          <div className="relative w-full md:w-80">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               placeholder="Search by code, model, location..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8 h-8 text-xs bg-muted/30 border-border/80"
+              className="pl-8 h-8 text-xs bg-muted/30 border-border/80 w-full"
             />
           </div>
-          <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 w-full md:w-auto">
             {["All", "Laptops", "Monitors", "Networking", "Media"].map((cat) => (
               <Button
                 key={cat}
                 variant={categoryFilter === cat ? "default" : "outline"}
                 size="sm"
                 onClick={() => setCategoryFilter(cat)}
-                className="h-7 text-xs px-2.5 rounded-md"
+                className="h-7 text-xs px-2.5 rounded-md shrink-0"
               >
                 {cat}
               </Button>
@@ -155,7 +155,7 @@ export function InventoryPage() {
       {/* Main Inventory Table */}
       <Card className="border-border/80 shadow-xs">
         <div className="p-0 overflow-x-auto">
-          <Table>
+          <Table className="min-w-[800px] w-full">
             <TableHeader className="bg-muted/40">
               <TableRow className="border-border/60">
                 <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Asset Code</TableHead>

@@ -90,46 +90,46 @@ export function RemindersPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-foreground">Central Reminder Hub</h1>
+          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">Central Reminder Hub</h1>
           <p className="text-xs text-muted-foreground">
             Unified date tracking across asset warranties, borrowing deadlines, and subscription renewals.
           </p>
         </div>
-        <Button size="sm" className="h-8 text-xs font-medium gap-1.5 bg-primary text-primary-foreground shadow-xs">
+        <Button size="sm" className="h-8 text-xs font-medium gap-1.5 bg-primary text-primary-foreground shadow-xs w-full sm:w-auto">
           <Plus className="h-3.5 w-3.5" />
-          <span>New Manual Reminder</span>
+          <span>New Reminder</span>
         </Button>
       </div>
 
       {/* Filter Chips */}
       <Card className="border-border/80 shadow-xs">
-        <CardContent className="p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto">
-            <span className="text-xs font-medium text-muted-foreground mr-1">Source:</span>
+        <CardContent className="p-3 sm:p-3.5 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 w-full md:w-auto">
+            <span className="text-xs font-medium text-muted-foreground mr-1 shrink-0">Source:</span>
             {["All", "Subscription", "Borrowing", "Inventory", "Maintenance"].map((source) => (
               <Button
                 key={source}
                 variant={sourceFilter === source ? "default" : "outline"}
                 size="sm"
                 onClick={() => setSourceFilter(source)}
-                className="h-7 text-xs px-2.5 rounded-md"
+                className="h-7 text-xs px-2.5 rounded-md shrink-0 whitespace-nowrap"
               >
                 {source}
               </Button>
             ))}
           </div>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto">
-            <span className="text-xs font-medium text-muted-foreground mr-1">Status:</span>
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 w-full md:w-auto">
+            <span className="text-xs font-medium text-muted-foreground mr-1 shrink-0">Status:</span>
             {["All", "Due Today", "Overdue", "Upcoming", "Completed"].map((st) => (
               <Button
                 key={st}
                 variant={statusFilter === st ? "secondary" : "ghost"}
                 size="sm"
                 onClick={() => setStatusFilter(st)}
-                className="h-7 text-xs px-2.5 rounded-md text-muted-foreground hover:text-foreground"
+                className="h-7 text-xs px-2.5 rounded-md text-muted-foreground hover:text-foreground shrink-0 whitespace-nowrap"
               >
                 {st}
               </Button>
@@ -141,7 +141,7 @@ export function RemindersPage() {
       {/* Table */}
       <Card className="border-border/80 shadow-xs">
         <div className="p-0 overflow-x-auto">
-          <Table>
+          <Table className="min-w-[760px] w-full">
             <TableHeader className="bg-muted/40">
               <TableRow className="border-border/60">
                 <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Source</TableHead>
