@@ -13,3 +13,19 @@ export async function fetchProfiles(): Promise<UserProfile[]> {
   }
   return (data as UserProfile[]) || []
 }
+
+export async function updateUserProfileRole(userId: string, newRole: 'admin' | 'staff'): Promise<UserProfile | null> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ role: newRole, updated_at: new Date().toISOString() })
+    .eq('id', userId)
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error updating profile role:', error)
+    throw error
+  }
+  return data as UserProfile
+}
+
