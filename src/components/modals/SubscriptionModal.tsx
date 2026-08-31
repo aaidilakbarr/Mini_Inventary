@@ -164,7 +164,11 @@ export function SubscriptionModal({
                 }
               >
                 <SelectTrigger className="h-8 text-xs">
-                  <SelectValue placeholder="-- Pilih Kategori --" />
+                  <SelectValue placeholder="-- Pilih Kategori --">
+                    {formData.category_id && formData.category_id !== "none"
+                      ? categories.find((c) => c.id === formData.category_id)?.name || "-- Pilih Kategori --"
+                      : "-- Pilih Kategori --"}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">-- Pilih Kategori --</SelectItem>
@@ -175,6 +179,7 @@ export function SubscriptionModal({
                   ))}
                 </SelectContent>
               </Select>
+
             </div>
 
             <div className="space-y-1">
