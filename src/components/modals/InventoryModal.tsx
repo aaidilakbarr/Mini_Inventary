@@ -10,6 +10,13 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Loader2 } from "lucide-react"
 import type { InventoryItem, CreateInventoryPayload, Category, InventoryStatus } from "@/types/database"
 
@@ -92,7 +99,7 @@ export function InventoryModal({
       setErrorMsg("")
       await onSubmit({
         ...formData,
-        category_id: formData.category_id ? formData.category_id : null,
+        category_id: formData.category_id && formData.category_id !== "none" ? formData.category_id : null,
         quantity: Number(formData.quantity) || 1,
       })
       onOpenChange(false)
@@ -137,19 +144,24 @@ export function InventoryModal({
 
             <div className="space-y-1.5">
               <Label htmlFor="category" className="text-xs font-semibold">Kategori</Label>
-              <select
-                id="category"
-                value={formData.category_id || ""}
-                onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                className="w-full h-8 text-xs rounded-lg border border-input bg-background px-2.5 text-foreground outline-none focus:border-ring focus:ring-1 focus:ring-ring"
+              <Select
+                value={formData.category_id || "none"}
+                onValueChange={(val) =>
+                  setFormData({ ...formData, category_id: val === "none" ? null : (val as string) })
+                }
               >
-                <option value="">-- Pilih Kategori --</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="-- Pilih Kategori --" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">-- Pilih Kategori --</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -180,33 +192,39 @@ export function InventoryModal({
 
             <div className="space-y-1.5">
               <Label htmlFor="condition" className="text-xs font-semibold">Kondisi</Label>
-              <select
-                id="condition"
+              <Select
                 value={formData.condition || "Bagus"}
-                onChange={(e) => setFormData({ ...formData, condition: e.target.value })}
-                className="w-full h-8 text-xs rounded-lg border border-input bg-background px-2.5 text-foreground outline-none focus:border-ring"
+                onValueChange={(val) => setFormData({ ...formData, condition: val as string })}
               >
-                <option value="Bagus">Bagus</option>
-                <option value="Cukup">Cukup</option>
-                <option value="Perlu Perbaikan">Perlu Perbaikan</option>
-                <option value="Rusak">Rusak</option>
-              </select>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Bagus">Bagus</SelectItem>
+                  <SelectItem value="Cukup">Cukup</SelectItem>
+                  <SelectItem value="Perlu Perbaikan">Perlu Perbaikan</SelectItem>
+                  <SelectItem value="Rusak">Rusak</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="status" className="text-xs font-semibold">Status Aset</Label>
-              <select
-                id="status"
+              <Select
                 value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value as InventoryStatus })}
-                className="w-full h-8 text-xs rounded-lg border border-input bg-background px-2.5 text-foreground outline-none focus:border-ring"
+                onValueChange={(val) => setFormData({ ...formData, status: val as InventoryStatus })}
               >
-                <option value="Available">Tersedia (Available)</option>
-                <option value="Borrowed">Dipinjam (Borrowed)</option>
-                <option value="Maintenance">Perawatan (Maintenance)</option>
-                <option value="Lost">Hilang (Lost)</option>
-                <option value="Retired">Dinonaktifkan (Retired)</option>
-              </select>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Available">Tersedia (Available)</SelectItem>
+                  <SelectItem value="Borrowed">Dipinjam (Borrowed)</SelectItem>
+                  <SelectItem value="Maintenance">Perawatan (Maintenance)</SelectItem>
+                  <SelectItem value="Lost">Hilang (Lost)</SelectItem>
+                  <SelectItem value="Retired">Dinonaktifkan (Retired)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

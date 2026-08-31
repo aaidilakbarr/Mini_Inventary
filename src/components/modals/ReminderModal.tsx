@@ -10,6 +10,14 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { DatePicker } from "@/components/ui/date-picker"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Loader2 } from "lucide-react"
 import type { ReminderItem, CreateReminderPayload, ReminderPriority, ReminderStatus } from "@/types/database"
 
@@ -133,62 +141,68 @@ export function ReminderModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div className="space-y-1.5">
               <Label htmlFor="source_type" className="text-xs font-semibold">Kategori Sumber</Label>
-              <select
-                id="source_type"
-                value={formData.source_type}
-                onChange={(e) => setFormData({ ...formData, source_type: e.target.value })}
-                className="w-full h-8 text-xs rounded-lg border border-input bg-background px-2.5 text-foreground outline-none focus:border-ring"
+              <Select
+                value={formData.source_type || "manual"}
+                onValueChange={(val) => setFormData({ ...formData, source_type: val as string })}
               >
-                <option value="manual">Manual</option>
-                <option value="Inventaris">Inventaris</option>
-                <option value="Peminjaman">Peminjaman</option>
-                <option value="Langganan">Langganan</option>
-                <option value="Perawatan">Perawatan</option>
-              </select>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="manual">Manual</SelectItem>
+                  <SelectItem value="Inventaris">Inventaris</SelectItem>
+                  <SelectItem value="Peminjaman">Peminjaman</SelectItem>
+                  <SelectItem value="Langganan">Langganan</SelectItem>
+                  <SelectItem value="Perawatan">Perawatan</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="priority" className="text-xs font-semibold">Prioritas</Label>
-              <select
-                id="priority"
+              <Select
                 value={formData.priority}
-                onChange={(e) => setFormData({ ...formData, priority: e.target.value as ReminderPriority })}
-                className="w-full h-8 text-xs rounded-lg border border-input bg-background px-2.5 text-foreground outline-none focus:border-ring"
+                onValueChange={(val) => setFormData({ ...formData, priority: val as ReminderPriority })}
               >
-                <option value="Tinggi">Tinggi</option>
-                <option value="Sedang">Sedang</option>
-                <option value="Rendah">Rendah</option>
-              </select>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Tinggi">Tinggi</SelectItem>
+                  <SelectItem value="Sedang">Sedang</SelectItem>
+                  <SelectItem value="Rendah">Rendah</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div className="space-y-1.5">
               <Label htmlFor="due_date" className="text-xs font-semibold">Tanggal Jatuh Tempo *</Label>
-              <Input
-                id="due_date"
-                type="date"
+              <DatePicker
                 value={formData.due_date}
-                onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                className="h-8 text-xs font-mono"
-                required
+                onChange={(date) => setFormData({ ...formData, due_date: date })}
+                placeholder="Pilih tgl jatuh tempo..."
               />
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="status" className="text-xs font-semibold">Status</Label>
-              <select
-                id="status"
+              <Select
                 value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value as ReminderStatus })}
-                className="w-full h-8 text-xs rounded-lg border border-input bg-background px-2.5 text-foreground outline-none focus:border-ring"
+                onValueChange={(val) => setFormData({ ...formData, status: val as ReminderStatus })}
               >
-                <option value="Upcoming">Mendatang (Upcoming)</option>
-                <option value="Due Today">Hari Ini (Due Today)</option>
-                <option value="Overdue">Terlambat (Overdue)</option>
-                <option value="Completed">Selesai (Completed)</option>
-                <option value="Dismissed">Diabaikan (Dismissed)</option>
-              </select>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Upcoming">Mendatang (Upcoming)</SelectItem>
+                  <SelectItem value="Due Today">Hari Ini (Due Today)</SelectItem>
+                  <SelectItem value="Overdue">Terlambat (Overdue)</SelectItem>
+                  <SelectItem value="Completed">Selesai (Completed)</SelectItem>
+                  <SelectItem value="Dismissed">Diabaikan (Dismissed)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

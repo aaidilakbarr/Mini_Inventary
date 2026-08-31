@@ -10,6 +10,14 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { DatePicker } from "@/components/ui/date-picker"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Loader2 } from "lucide-react"
 import { formatNumberID } from "@/lib/formatters"
 import type { SubscriptionItem, CreateSubscriptionPayload, Category, BillingCycle, SubscriptionStatus } from "@/types/database"
@@ -149,18 +157,24 @@ export function SubscriptionModal({
 
             <div className="space-y-1">
               <Label className="text-xs font-semibold">Kategori</Label>
-              <select
-                value={formData.category_id || ""}
-                onChange={(e) => setFormData({ ...formData, category_id: e.target.value || null })}
-                className="w-full h-8 px-2.5 text-xs rounded-md border border-input bg-background font-sans focus:outline-none focus:ring-1 focus:ring-ring"
+              <Select
+                value={formData.category_id || "none"}
+                onValueChange={(val) =>
+                  setFormData({ ...formData, category_id: val === "none" ? null : (val as string) })
+                }
               >
-                <option value="">-- Pilih Kategori --</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="-- Pilih Kategori --" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">-- Pilih Kategori --</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-1">
@@ -185,37 +199,38 @@ export function SubscriptionModal({
 
             <div className="space-y-1">
               <Label className="text-xs font-semibold">Siklus Penagihan</Label>
-              <select
+              <Select
                 value={formData.billing_cycle}
-                onChange={(e) => setFormData({ ...formData, billing_cycle: e.target.value as BillingCycle })}
-                className="w-full h-8 px-2.5 text-xs rounded-md border border-input bg-background font-sans focus:outline-none focus:ring-1 focus:ring-ring"
+                onValueChange={(val) => setFormData({ ...formData, billing_cycle: val as BillingCycle })}
               >
-                <option value="Monthly">Bulanan (Monthly)</option>
-                <option value="Quarterly">Kuartalan (Quarterly)</option>
-                <option value="Semi-Annually">Semester (Semi-Annually)</option>
-                <option value="Yearly">Tahunan (Yearly)</option>
-                <option value="Custom">Kustom</option>
-              </select>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Monthly">Bulanan (Monthly)</SelectItem>
+                  <SelectItem value="Quarterly">Kuartalan (Quarterly)</SelectItem>
+                  <SelectItem value="Semi-Annually">Semester (Semi-Annually)</SelectItem>
+                  <SelectItem value="Yearly">Tahunan (Yearly)</SelectItem>
+                  <SelectItem value="Custom">Kustom</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-1">
               <Label className="text-xs font-semibold">Tgl Mulai Langganan</Label>
-              <Input
-                type="date"
+              <DatePicker
                 value={formData.start_date || ""}
-                onChange={(e) => setFormData({ ...formData, start_date: e.target.value })}
-                className="h-8 text-xs"
+                onChange={(date) => setFormData({ ...formData, start_date: date })}
+                placeholder="Pilih tgl mulai..."
               />
             </div>
 
             <div className="space-y-1">
               <Label className="text-xs font-semibold">Tagihan Berikutnya *</Label>
-              <Input
-                type="date"
+              <DatePicker
                 value={formData.next_billing_date}
-                onChange={(e) => setFormData({ ...formData, next_billing_date: e.target.value })}
-                className="h-8 text-xs"
-                required
+                onChange={(date) => setFormData({ ...formData, next_billing_date: date })}
+                placeholder="Pilih tgl tagihan..."
               />
             </div>
 
@@ -231,16 +246,20 @@ export function SubscriptionModal({
 
             <div className="space-y-1">
               <Label className="text-xs font-semibold">Status Langganan</Label>
-              <select
+              <Select
                 value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value as SubscriptionStatus })}
-                className="w-full h-8 px-2.5 text-xs rounded-md border border-input bg-background font-sans focus:outline-none focus:ring-1 focus:ring-ring"
+                onValueChange={(val) => setFormData({ ...formData, status: val as SubscriptionStatus })}
               >
-                <option value="Active">Aktif (Active)</option>
-                <option value="Past Due">Jatuh Tempo (Past Due)</option>
-                <option value="Cancelled">Dibatalkan (Cancelled)</option>
-                <option value="Expired">Kedaluwarsa (Expired)</option>
-              </select>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Active">Aktif (Active)</SelectItem>
+                  <SelectItem value="Past Due">Jatuh Tempo (Past Due)</SelectItem>
+                  <SelectItem value="Cancelled">Dibatalkan (Cancelled)</SelectItem>
+                  <SelectItem value="Expired">Kedaluwarsa (Expired)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-1 sm:col-span-2">

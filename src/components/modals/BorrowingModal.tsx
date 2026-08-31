@@ -8,8 +8,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Combobox, type ComboboxOption } from "@/components/ui/combobox"
+import { DatePicker } from "@/components/ui/date-picker"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Loader2 } from "lucide-react"
 import type { InventoryItem, CreateBorrowingPayload, BorrowingStatus } from "@/types/database"
 import type { UserProfile } from "@/types/auth"
@@ -86,6 +94,19 @@ export function BorrowingModal({
     }
   }
 
+  const inventoryOptions: ComboboxOption[] = availableInventories.map((inv) => ({
+    value: inv.id,
+    label: inv.name,
+    badge: inv.code,
+    sublabel: `Stok: ${inv.quantity} unit (${inv.location || "Gudang"})`,
+  }))
+
+  const profileOptions: ComboboxOption[] = profiles.map((p) => ({
+    value: p.id,
+    label: p.full_name || p.email,
+    sublabel: `${p.email} • ${p.role}`,
+  }))
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
@@ -110,65 +131,55 @@ export function BorrowingModal({
                 Tidak ada aset dengan status Tersedia saat ini. Tambah aset baru di menu Inventaris terlebih dahulu.
               </div>
             ) : (
-              <select
-                id="inventory"
+              <Combobox
+                options={inventoryOptions}
                 value={formData.inventory_id}
-                onChange={(e) => setFormData({ ...formData, inventory_id: e.target.value })}
-                className="w-full h-8 text-xs rounded-lg border border-input bg-background px-2.5 text-foreground outline-none focus:border-ring"
-                required
-              >
-                {availableInventories.map((inv) => (
-                  <option key={inv.id} value={inv.id}>
-                    [{inv.code}] {inv.name} • Sisa Stok: {inv.quantity} unit ({inv.location || 'Gudang'})
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setFormData({ ...formData, inventory_id: val })}
+                placeholder="Pilih atau cari aset..."
+                searchPlaceholder="Ketik nama atau kode aset..."
+                emptyMessage="Aset tidak ditemukan."
+              />
             )}
           </div>
 
           {isAdmin ? (
             <div className="space-y-1.5">
               <Label htmlFor="borrower" className="text-xs font-semibold">Peminjam (Staff / Akun) *</Label>
-              <select
-                id="borrower"
+              <Combobox
+                options={profileOptions}
                 value={formData.borrower_id}
-                onChange={(e) => setFormData({ ...formData, borrower_id: e.target.value })}
-                className="w-full h-8 text-xs rounded-lg border border-input bg-background px-2.5 text-foreground outline-none focus:border-ring"
-                required
-              >
-                {profiles.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.full_name} ({p.email}) - {p.role}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setFormData({ ...formData, borrower_id: val })}
+                placeholder="Pilih peminjam..."
+                searchPlaceholder="Cari nama atau email staff..."
+                emptyMessage="Staff tidak ditemukan."
+              />
             </div>
           ) : null}
 
           <div className="space-y-1.5">
             <Label htmlFor="due_date" className="text-xs font-semibold">Tenggat Waktu Pengembalian *</Label>
-            <Input
-              id="due_date"
-              type="date"
+            <DatePicker
               value={formData.due_date}
-              onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-              className="h-8 text-xs font-mono"
-              required
+              onChange={(date) => setFormData({ ...formData, due_date: date })}
+              placeholder="Pilih tenggat pengembalian..."
             />
           </div>
 
           {isAdmin && (
             <div className="space-y-1.5">
               <Label htmlFor="status" className="text-xs font-semibold">Status Awal Peminjaman</Label>
-              <select
-                id="status"
+              <Select
                 value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value as BorrowingStatus })}
-                className="w-full h-8 text-xs rounded-lg border border-input bg-background px-2.5 text-foreground outline-none focus:border-ring"
+                onValueChange={(val) => setFormData({ ...formData, status: val as BorrowingStatus })}
               >
-                <option value="Borrowed">Langsung Dipinjam (Disetujui)</option>
-                <option value="Pending Approval">Menunggu Persetujuan</option>
-              </select>
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Borrowed">Langsung Dipinjam (Disetujui)</SelectItem>
+                  <SelectItem value="Pending Approval">Menunggu Persetujuan</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           )}
 
