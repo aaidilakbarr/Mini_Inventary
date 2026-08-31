@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Loader2 } from "lucide-react"
+import { formatNumberID } from "@/lib/formatters"
 import type { SubscriptionItem, CreateSubscriptionPayload, Category, BillingCycle, SubscriptionStatus } from "@/types/database"
 
 interface SubscriptionModalProps {
@@ -164,15 +165,22 @@ export function SubscriptionModal({
 
             <div className="space-y-1">
               <Label className="text-xs font-semibold">Biaya (IDR)</Label>
-              <Input
-                type="number"
-                min="0"
-                step="1000"
-                placeholder="cth: 250000"
-                value={formData.cost}
-                onChange={(e) => setFormData({ ...formData, cost: Number(e.target.value) || 0 })}
-                className="h-8 text-xs"
-              />
+              <div className="relative">
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-mono select-none pointer-events-none">
+                  Rp
+                </span>
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={formData.cost ? formatNumberID(formData.cost) : ""}
+                  onChange={(e) => {
+                    const rawVal = e.target.value.replace(/\D/g, "")
+                    setFormData({ ...formData, cost: rawVal ? Number(rawVal) : 0 })
+                  }}
+                  className="h-8 text-xs pl-8 font-mono"
+                />
+              </div>
             </div>
 
             <div className="space-y-1">

@@ -119,7 +119,7 @@ export function BorrowingModal({
               >
                 {availableInventories.map((inv) => (
                   <option key={inv.id} value={inv.id}>
-                    [{inv.code}] {inv.name} ({inv.location || 'Gudang'})
+                    [{inv.code}] {inv.name} • Sisa Stok: {inv.quantity} unit ({inv.location || 'Gudang'})
                   </option>
                 ))}
               </select>

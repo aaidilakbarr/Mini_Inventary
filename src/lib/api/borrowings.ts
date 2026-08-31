@@ -1,6 +1,60 @@
 import { supabase } from '@/lib/supabase'
 import type { BorrowingItem, CreateBorrowingPayload } from '@/types/database'
 
+async function decreaseInventoryStock(inventoryId: string) {
+  try {
+    const { data: inv, error: fetchErr } = await supabase
+      .from('inventories')
+      .select('quantity, status')
+      .eq('id', inventoryId)
+      .single()
+
+    if (!fetchErr && inv) {
+      const currentQty = typeof inv.quantity === 'number' ? inv.quantity : 1
+      const newQty = Math.max(0, currentQty - 1)
+      const newStatus = newQty <= 0 ? 'Borrowed' : 'Available'
+
+      await supabase
+        .from('inventories')
+        .update({
+          quantity: newQty,
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', inventoryId)
+    }
+  } catch (err) {
+    console.error('Error decreasing inventory stock:', err)
+  }
+}
+
+async function increaseInventoryStock(inventoryId: string) {
+  try {
+    const { data: inv, error: fetchErr } = await supabase
+      .from('inventories')
+      .select('quantity, status')
+      .eq('id', inventoryId)
+      .single()
+
+    if (!fetchErr && inv) {
+      const currentQty = typeof inv.quantity === 'number' ? inv.quantity : 0
+      const newQty = currentQty + 1
+      const newStatus = inv.status === 'Borrowed' ? 'Available' : inv.status
+
+      await supabase
+        .from('inventories')
+        .update({
+          quantity: newQty,
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', inventoryId)
+    }
+  } catch (err) {
+    console.error('Error increasing inventory stock:', err)
+  }
+}
+
 export async function fetchBorrowings(): Promise<BorrowingItem[]> {
   const { data, error } = await supabase
     .from('borrowings')
@@ -41,12 +95,9 @@ export async function createBorrowing(payload: CreateBorrowingPayload): Promise<
     throw error
   }
 
-  // If created directly as 'Borrowed', update inventory status
+  // If created directly as 'Borrowed', reduce inventory stock
   if (payload.status === 'Borrowed') {
-    await supabase
-      .from('inventories')
-      .update({ status: 'Borrowed' })
-      .eq('id', payload.inventory_id)
+    await decreaseInventoryStock(payload.inventory_id)
   }
 
   return data as BorrowingItem
@@ -67,11 +118,8 @@ export async function approveBorrowing(borrowingId: string, inventoryId: string)
     throw borrowError
   }
 
-  // Update inventory status to 'Borrowed'
-  await supabase
-    .from('inventories')
-    .update({ status: 'Borrowed' })
-    .eq('id', inventoryId)
+  // Decrease inventory stock
+  await decreaseInventoryStock(inventoryId)
 }
 
 export async function rejectBorrowing(borrowingId: string): Promise<void> {
@@ -104,14 +152,17 @@ export async function returnBorrowing(borrowingId: string, inventoryId: string):
     throw borrowError
   }
 
-  // Set inventory status back to 'Available'
-  await supabase
-    .from('inventories')
-    .update({ status: 'Available' })
-    .eq('id', inventoryId)
+  // Restore inventory stock and set back to Available
+  await increaseInventoryStock(inventoryId)
 }
 
 export async function deleteBorrowing(borrowingId: string): Promise<void> {
+  const { data: borrowing } = await supabase
+    .from('borrowings')
+    .select('id, inventory_id, status')
+    .eq('id', borrowingId)
+    .single()
+
   const { error } = await supabase
     .from('borrowings')
     .delete()
@@ -120,5 +171,10 @@ export async function deleteBorrowing(borrowingId: string): Promise<void> {
   if (error) {
     console.error('Error deleting borrowing:', error)
     throw error
+  }
+
+  // If was currently borrowed, restore stock
+  if (borrowing && borrowing.status === 'Borrowed' && borrowing.inventory_id) {
+    await increaseInventoryStock(borrowing.inventory_id)
   }
 }

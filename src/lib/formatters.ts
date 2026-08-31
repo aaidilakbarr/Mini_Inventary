@@ -30,6 +30,14 @@ export function formatCurrencyID(amount?: number | null): string {
 }
 
 /**
+ * Formats a number with Indonesian thousand separators (e.g. 1.500.000)
+ */
+export function formatNumberID(amount?: number | null): string {
+  if (amount === undefined || amount === null || isNaN(amount)) return ''
+  return new Intl.NumberFormat('id-ID').format(amount)
+}
+
+/**
  * Formats a date-time string into Indonesian Locale (e.g. 26 Agu 2024, 14:30 WIB)
  */
 export function formatDateTimeID(dateString?: string | null): string {

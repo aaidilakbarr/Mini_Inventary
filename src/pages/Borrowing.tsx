@@ -136,8 +136,8 @@ export function BorrowingPage() {
     }
   }
 
-  // Filter available inventories (status Available)
-  const availableInventories = inventories.filter(i => i.status === "Available")
+  // Filter available inventories (status Available & quantity > 0)
+  const availableInventories = inventories.filter(i => i.status === "Available" && (i.quantity || 0) > 0)
 
   // Check if item is overdue
   const isOverdue = (item: BorrowingItem) => {
