@@ -137,7 +137,33 @@ export async function rejectBorrowing(borrowingId: string): Promise<void> {
   }
 }
 
-export async function returnBorrowing(borrowingId: string, inventoryId: string): Promise<void> {
+export async function returnBorrowing(
+  borrowingId: string, 
+  currentUserId?: string, 
+  isAdmin: boolean = false
+): Promise<void> {
+  // 1. Fetch current borrowing record to ensure exact item and borrower match
+  const { data: borrowing, error: fetchError } = await supabase
+    .from('borrowings')
+    .select('id, inventory_id, borrower_id, status, borrower:profiles(full_name)')
+    .eq('id', borrowingId)
+    .single()
+
+  if (fetchError || !borrowing) {
+    throw new Error('Data peminjaman tidak ditemukan.')
+  }
+
+  if (borrowing.status !== 'Borrowed') {
+    throw new Error(`Aset tidak dapat dikembalikan karena status saat ini adalah "${borrowing.status}".`)
+  }
+
+  // 2. Strict check: only borrower or admin can return
+  if (!isAdmin && currentUserId && borrowing.borrower_id !== currentUserId) {
+    const borrowerName = (borrowing.borrower as any)?.full_name || 'peminjam bersangkutan'
+    throw new Error(`Akses ditolak: Hanya ${borrowerName} atau Administrator yang berhak mengembalikan aset ini.`)
+  }
+
+  // 3. Mark as Returned
   const { error: borrowError } = await supabase
     .from('borrowings')
     .update({ 
@@ -152,8 +178,10 @@ export async function returnBorrowing(borrowingId: string, inventoryId: string):
     throw borrowError
   }
 
-  // Restore inventory stock and set back to Available
-  await increaseInventoryStock(inventoryId)
+  // 4. Restore inventory stock for the exact inventory_id linked in this record
+  if (borrowing.inventory_id) {
+    await increaseInventoryStock(borrowing.inventory_id)
+  }
 }
 
 export async function deleteBorrowing(borrowingId: string): Promise<void> {

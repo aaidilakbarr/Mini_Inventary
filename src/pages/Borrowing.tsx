@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/table"
 import { BorrowingModal } from "@/components/modals/BorrowingModal"
 import { DeleteConfirmDialog } from "@/components/modals/DeleteConfirmDialog"
+import { ReturnConfirmDialog } from "@/components/modals/ReturnConfirmDialog"
 import { 
   fetchBorrowings, 
   createBorrowing, 
@@ -58,6 +59,12 @@ export function BorrowingPage() {
   const [deletingItem, setDeletingItem] = useState<BorrowingItem | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
+  // Return dialog state
+  const [isReturnDialogOpen, setIsReturnDialogOpen] = useState(false)
+  const [returningItem, setReturningItem] = useState<BorrowingItem | null>(null)
+  const [isReturning, setIsReturning] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
+
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true)
@@ -87,11 +94,13 @@ export function BorrowingPage() {
 
   const handleApprove = async (item: BorrowingItem) => {
     try {
+      setActionError(null)
       setActionLoadingId(item.id)
       await approveBorrowing(item.id, item.inventory_id)
       await loadData()
-    } catch (err) {
+    } catch (err: any) {
       console.error("Gagal menyetujui peminjaman:", err)
+      setActionError(err.message || "Gagal menyetujui peminjaman.")
     } finally {
       setActionLoadingId(null)
     }
@@ -99,25 +108,38 @@ export function BorrowingPage() {
 
   const handleReject = async (item: BorrowingItem) => {
     try {
+      setActionError(null)
       setActionLoadingId(item.id)
       await rejectBorrowing(item.id)
       await loadData()
-    } catch (err) {
+    } catch (err: any) {
       console.error("Gagal menolak permohonan:", err)
+      setActionError(err.message || "Gagal menolak permohonan.")
     } finally {
       setActionLoadingId(null)
     }
   }
 
-  const handleReturn = async (item: BorrowingItem) => {
+  const handleOpenReturnModal = (item: BorrowingItem) => {
+    setActionError(null)
+    setReturningItem(item)
+    setIsReturnDialogOpen(true)
+  }
+
+  const handleConfirmReturn = async () => {
+    if (!returningItem) return
     try {
-      setActionLoadingId(item.id)
-      await returnBorrowing(item.id, item.inventory_id)
+      setIsReturning(true)
+      setActionError(null)
+      await returnBorrowing(returningItem.id, user?.id, isAdmin)
+      setIsReturnDialogOpen(false)
+      setReturningItem(null)
       await loadData()
-    } catch (err) {
+    } catch (err: any) {
       console.error("Gagal memproses pengembalian aset:", err)
+      setActionError(err.message || "Gagal memproses pengembalian aset.")
     } finally {
-      setActionLoadingId(null)
+      setIsReturning(false)
     }
   }
 
@@ -129,8 +151,9 @@ export function BorrowingPage() {
       setIsDeleteDialogOpen(false)
       setDeletingItem(null)
       await loadData()
-    } catch (err) {
+    } catch (err: any) {
       console.error("Gagal menghapus log peminjaman:", err)
+      setActionError(err.message || "Gagal menghapus log peminjaman.")
     } finally {
       setIsDeleting(false)
     }
@@ -211,6 +234,23 @@ export function BorrowingPage() {
         </div>
       </div>
 
+      {actionError && (
+        <div className="p-3 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            <span>{actionError}</span>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setActionError(null)} 
+            className="h-6 px-2 text-xs text-destructive hover:bg-destructive/20"
+          >
+            Tutup
+          </Button>
+        </div>
+      )}
+
       {/* Filter and Search Bar */}
       <Card className="border-border/80 shadow-xs">
         <CardContent className="p-3 sm:p-3.5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
@@ -281,6 +321,10 @@ export function BorrowingPage() {
                   const overdue = isOverdue(item)
                   const isItemBusy = actionLoadingId === item.id
 
+                  // Strict permission check for returning item
+                  const isBorrower = Boolean(user?.id && item.borrower_id === user.id)
+                  const canReturn = isAdmin || isBorrower
+
                   return (
                     <TableRow key={item.id} className="border-border/50 hover:bg-muted/30">
                       <TableCell className="py-3">
@@ -348,16 +392,25 @@ export function BorrowingPage() {
                               </span>
                             )
                           ) : item.status === "Borrowed" ? (
-                            <Button 
-                              size="sm" 
-                              variant="outline" 
-                              onClick={() => handleReturn(item)}
-                              disabled={isItemBusy}
-                              className="h-7 text-xs gap-1 text-primary hover:bg-primary/10 border-primary/30"
-                            >
-                              {isItemBusy ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCcw className="h-3 w-3" />}
-                              <span>Kembalikan</span>
-                            </Button>
+                            canReturn ? (
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                onClick={() => handleOpenReturnModal(item)}
+                                disabled={isItemBusy || isReturning}
+                                className="h-7 text-xs gap-1 text-primary hover:bg-primary/10 border-primary/30"
+                              >
+                                {isItemBusy ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCcw className="h-3 w-3" />}
+                                <span>Kembalikan</span>
+                              </Button>
+                            ) : (
+                              <span 
+                                className="text-[10px] font-mono text-muted-foreground bg-muted/60 px-2 py-1 rounded border border-border/40 select-none"
+                                title={`Aset dipinjam oleh ${item.borrower?.full_name || 'staf'}. Hanya peminjam atau Admin yang dapat memproses pengembalian.`}
+                              >
+                                Dipinjam ({item.borrower?.full_name?.split(' ')[0] || 'User'})
+                              </span>
+                            )
                           ) : (
                             <Button 
                               variant="ghost" 
@@ -392,6 +445,15 @@ export function BorrowingPage() {
         currentUserId={user?.id || ""}
         isAdmin={isAdmin}
         onSubmit={handleCreateBorrowing}
+      />
+
+      {/* Return Confirmation Dialog */}
+      <ReturnConfirmDialog
+        open={isReturnDialogOpen}
+        onOpenChange={setIsReturnDialogOpen}
+        item={returningItem}
+        onConfirm={handleConfirmReturn}
+        isLoading={isReturning}
       />
 
       {/* Delete Confirmation Dialog */}
