@@ -87,8 +87,14 @@ export function BorrowingPage() {
     loadData()
   }, [loadData])
 
-  const handleCreateBorrowing = async (payload: CreateBorrowingPayload) => {
-    await createBorrowing(payload)
+  const handleCreateBorrowing = async (payload: CreateBorrowingPayload | CreateBorrowingPayload[]) => {
+    if (Array.isArray(payload)) {
+      for (const item of payload) {
+        await createBorrowing(item)
+      }
+    } else {
+      await createBorrowing(payload)
+    }
     await loadData()
   }
 
