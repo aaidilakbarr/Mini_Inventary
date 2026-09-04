@@ -10,7 +10,8 @@ import {
   RefreshCw,
   Trash2,
   Check,
-  X
+  X,
+  FileText
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -26,7 +27,8 @@ import {
 } from "@/components/ui/table"
 import { BorrowingModal } from "@/components/modals/BorrowingModal"
 import { DeleteConfirmDialog } from "@/components/modals/DeleteConfirmDialog"
-import { ReturnConfirmDialog } from "@/components/modals/ReturnConfirmDialog"
+import { ReturnConfirmDialog, type ReturnConfirmPayload } from "@/components/modals/ReturnConfirmDialog"
+import { BorrowingDetailModal } from "@/components/modals/BorrowingDetailModal"
 import { 
   fetchBorrowings, 
   createBorrowing, 
@@ -64,6 +66,15 @@ export function BorrowingPage() {
   const [returningItem, setReturningItem] = useState<BorrowingItem | null>(null)
   const [isReturning, setIsReturning] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
+
+  // Detail form modal state
+  const [detailItem, setDetailItem] = useState<BorrowingItem | null>(null)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
+
+  const handleOpenDetailModal = (item: BorrowingItem) => {
+    setDetailItem(item)
+    setIsDetailModalOpen(true)
+  }
 
   const loadData = useCallback(async () => {
     try {
@@ -132,12 +143,36 @@ export function BorrowingPage() {
     setIsReturnDialogOpen(true)
   }
 
-  const handleConfirmReturn = async () => {
+  const getReturnInfo = (item: BorrowingItem) => {
+    if (item.status !== "Returned") return null
+    let condition = item.return_condition || null
+    let note = item.return_notes || null
+
+    if (!condition && item.notes) {
+      const match = item.notes.match(/\[Pengembalian - Kondisi:\s*([^\]|]+)\](?:\s*Catatan:\s*([^\n]+))?/)
+      if (match) {
+        condition = match[1]?.trim() || null
+        if (!note && match[2]) note = match[2]?.trim() || null
+      }
+    }
+
+    return {
+      condition: condition || "Bagus",
+      note,
+    }
+  }
+
+  const handleConfirmReturn = async (payload: ReturnConfirmPayload) => {
     if (!returningItem) return
     try {
       setIsReturning(true)
       setActionError(null)
-      await returnBorrowing(returningItem.id, user?.id, isAdmin)
+      await returnBorrowing(returningItem.id, {
+        condition: payload.condition,
+        notes: payload.notes,
+        currentUserId: user?.id,
+        isAdmin,
+      })
       setIsReturnDialogOpen(false)
       setReturningItem(null)
       await loadData()
@@ -351,21 +386,51 @@ export function BorrowingPage() {
                         </span>
                       </TableCell>
                       <TableCell className="py-3">
-                        <Badge 
-                          variant={
-                            overdue ? "destructive" :
-                            item.status === "Borrowed" ? "default" :
-                            item.status === "Pending Approval" ? "secondary" :
-                            item.status === "Returned" ? "outline" : "destructive"
-                          }
-                          className="text-[10px] font-mono px-2 py-0 h-5"
-                        >
-                          {overdue ? "Terlambat" :
-                           item.status === "Pending Approval" ? "Menunggu Persetujuan" :
-                           item.status === "Borrowed" ? "Dipinjam" :
-                           item.status === "Returned" ? "Dikembalikan" :
-                           item.status === "Rejected" ? "Ditolak" : item.status}
-                        </Badge>
+                        <div className="space-y-1">
+                          <Badge 
+                            variant={
+                              overdue ? "destructive" :
+                              item.status === "Borrowed" ? "default" :
+                              item.status === "Pending Approval" ? "secondary" :
+                              item.status === "Returned" ? "outline" : "destructive"
+                            }
+                            className="text-[10px] font-mono px-2 py-0 h-5"
+                          >
+                            {overdue ? "Terlambat" :
+                             item.status === "Pending Approval" ? "Menunggu Persetujuan" :
+                             item.status === "Borrowed" ? "Dipinjam" :
+                             item.status === "Returned" ? "Dikembalikan" :
+                             item.status === "Rejected" ? "Ditolak" : item.status}
+                          </Badge>
+
+                          {item.status === "Returned" && (() => {
+                            const retInfo = getReturnInfo(item)
+                            if (!retInfo) return null
+                            return (
+                              <div className="flex flex-col gap-0.5">
+                                <span 
+                                  className={`inline-flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 rounded border w-fit ${
+                                    retInfo.condition === "Bagus"
+                                      ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
+                                      : retInfo.condition === "Rusak Ringan"
+                                      ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30"
+                                      : "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/30"
+                                  }`}
+                                >
+                                  {retInfo.condition === "Bagus" ? "✓ Fisik: Bagus" : `⚠ ${retInfo.condition}`}
+                                </span>
+                                {retInfo.note && (
+                                  <span 
+                                    className="text-[10px] text-muted-foreground italic truncate max-w-[150px]" 
+                                    title={retInfo.note}
+                                  >
+                                    "{retInfo.note}"
+                                  </span>
+                                )}
+                              </div>
+                            )
+                          })()}
+                        </div>
                       </TableCell>
                       <TableCell className="py-3 text-right">
                         <div className="flex items-center justify-end gap-1.5">
@@ -398,38 +463,62 @@ export function BorrowingPage() {
                               </span>
                             )
                           ) : item.status === "Borrowed" ? (
-                            canReturn ? (
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                onClick={() => handleOpenReturnModal(item)}
-                                disabled={isItemBusy || isReturning}
-                                className="h-7 text-xs gap-1 text-primary hover:bg-primary/10 border-primary/30"
+                            <div className="flex items-center gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleOpenDetailModal(item)}
+                                className="h-7 text-xs px-2 gap-1 text-muted-foreground hover:text-foreground"
+                                title="Lihat Formulir Peminjaman"
                               >
-                                {isItemBusy ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCcw className="h-3 w-3" />}
-                                <span>Kembalikan</span>
+                                <FileText className="h-3.5 w-3.5" />
+                                <span className="hidden xl:inline">Form</span>
                               </Button>
-                            ) : (
-                              <span 
-                                className="text-[10px] font-mono text-muted-foreground bg-muted/60 px-2 py-1 rounded border border-border/40 select-none"
-                                title={`Aset dipinjam oleh ${item.borrower?.full_name || 'staf'}. Hanya peminjam atau Admin yang dapat memproses pengembalian.`}
-                              >
-                                Dipinjam ({item.borrower?.full_name?.split(' ')[0] || 'User'})
-                              </span>
-                            )
+                              {canReturn ? (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  onClick={() => handleOpenReturnModal(item)}
+                                  disabled={isItemBusy || isReturning}
+                                  className="h-7 text-xs gap-1 text-primary hover:bg-primary/10 border-primary/30"
+                                >
+                                  {isItemBusy ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCcw className="h-3 w-3" />}
+                                  <span>Kembalikan</span>
+                                </Button>
+                              ) : (
+                                <span 
+                                  className="text-[10px] font-mono text-muted-foreground bg-muted/60 px-2 py-1 rounded border border-border/40 select-none"
+                                  title={`Aset dipinjam oleh ${item.borrower?.full_name || 'staf'}. Hanya peminjam atau Admin yang dapat memproses pengembalian.`}
+                                >
+                                  Dipinjam ({item.borrower?.full_name?.split(' ')[0] || 'User'})
+                                </span>
+                              )}
+                            </div>
                           ) : (
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              onClick={() => {
-                                setDeletingItem(item)
-                                setIsDeleteDialogOpen(true)
-                              }}
-                              className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                              title="Hapus Riwayat"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleOpenDetailModal(item)}
+                                className="h-7 text-xs px-2.5 gap-1.5 border-border/80 hover:bg-muted text-foreground"
+                                title="Lihat Formulir Peminjaman"
+                              >
+                                <FileText className="h-3.5 w-3.5 text-primary" />
+                                <span>Lihat Form</span>
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                onClick={() => {
+                                  setDeletingItem(item)
+                                  setIsDeleteDialogOpen(true)
+                                }}
+                                className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                title="Hapus Riwayat"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </>
                           )}
                         </div>
                       </TableCell>
@@ -470,6 +559,13 @@ export function BorrowingPage() {
         description="Apakah Anda yakin ingin menghapus catatan log peminjaman ini?"
         onConfirm={handleDelete}
         isLoading={isDeleting}
+      />
+
+      {/* Borrowing Detail Form Modal */}
+      <BorrowingDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        item={detailItem}
       />
     </div>
   )

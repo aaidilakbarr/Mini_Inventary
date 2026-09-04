@@ -62,6 +62,8 @@ export interface BorrowingItem {
   return_date?: string | null
   status: BorrowingStatus
   notes?: string | null
+  return_condition?: string | null
+  return_notes?: string | null
   created_at: string
   updated_at: string
   // Joined relations
