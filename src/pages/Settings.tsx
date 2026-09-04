@@ -859,6 +859,7 @@ export function SettingsPage() {
                                 <SelectContent>
                                   <SelectItem value="admin">Admin (Full)</SelectItem>
                                   <SelectItem value="staff">Staff (Operator)</SelectItem>
+                                  <SelectItem value="user">User (Viewer)</SelectItem>
                                 </SelectContent>
                               </Select>
 

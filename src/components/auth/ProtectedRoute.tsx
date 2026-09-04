@@ -1,15 +1,14 @@
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import type { UserRole } from '@/types/auth'
-import { ShieldAlert, ArrowLeft } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
   allowedRoles?: UserRole[]
+  redirectTo?: string
 }
 
-export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
+export function ProtectedRoute({ children, allowedRoles, redirectTo }: ProtectedRouteProps) {
   const { user, role, isLoading } = useAuth()
   const location = useLocation()
 
@@ -29,28 +28,8 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   }
 
   if (allowedRoles && !allowedRoles.includes(role)) {
-    return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center p-6 text-center space-y-4">
-        <div className="h-14 w-14 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center text-destructive">
-          <ShieldAlert className="h-7 w-7" />
-        </div>
-        <div className="space-y-1.5 max-w-md">
-          <h2 className="text-lg font-bold tracking-tight text-foreground">Akses Dibatasi</h2>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Halaman ini membutuhkan hak akses <span className="font-semibold text-foreground uppercase">{allowedRoles.join(' atau ')}</span>. Peran akun Anda saat ini adalah <span className="font-semibold text-foreground uppercase">{role}</span>.
-          </p>
-        </div>
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => window.history.back()}
-          className="text-xs gap-1.5 mt-2"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          <span>Kembali</span>
-        </Button>
-      </div>
-    )
+    const fallbackPath = redirectTo || (role === 'admin' ? '/dashboard' : '/inventory')
+    return <Navigate to={fallbackPath} replace />
   }
 
   return <>{children}</>

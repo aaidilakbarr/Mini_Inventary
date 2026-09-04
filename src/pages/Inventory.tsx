@@ -25,9 +25,11 @@ import { InventoryModal } from "@/components/modals/InventoryModal"
 import { DeleteConfirmDialog } from "@/components/modals/DeleteConfirmDialog"
 import { fetchInventories, createInventory, updateInventory, deleteInventory } from "@/lib/api/inventories"
 import { fetchCategories } from "@/lib/api/categories"
+import { useAuth } from "@/hooks/useAuth"
 import type { InventoryItem, CreateInventoryPayload, Category } from "@/types/database"
 
 export function InventoryPage() {
+  const { isAdmin } = useAuth()
   const [inventories, setInventories] = useState<InventoryItem[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -171,14 +173,16 @@ export function InventoryPage() {
             <Download className="h-3.5 w-3.5" />
             <span>Ekspor CSV</span>
           </Button>
-          <Button 
-            size="sm" 
-            onClick={handleOpenAdd}
-            className="h-8 text-xs font-medium gap-1.5 bg-primary text-primary-foreground shadow-xs"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            <span>Tambah Aset</span>
-          </Button>
+          {isAdmin && (
+            <Button 
+              size="sm" 
+              onClick={handleOpenAdd}
+              className="h-8 text-xs font-medium gap-1.5 bg-primary text-primary-foreground shadow-xs"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>Tambah Aset</span>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -223,13 +227,13 @@ export function InventoryPage() {
                 <TableHead className="text-[11px] font-mono uppercase font-semibold h-9 text-center">Jumlah</TableHead>
                 <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Garansi</TableHead>
                 <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Status</TableHead>
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9 text-right">Aksi</TableHead>
+                {isAdmin && <TableHead className="text-[11px] font-mono uppercase font-semibold h-9 text-right">Aksi</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-36 text-center">
+                  <TableCell colSpan={isAdmin ? 8 : 7} className="h-36 text-center">
                     <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
                       <Loader2 className="h-6 w-6 animate-spin text-primary" />
                       <p className="text-xs">Memuat data inventaris...</p>
@@ -238,14 +242,16 @@ export function InventoryPage() {
                 </TableRow>
               ) : filteredItems.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="h-36 text-center">
+                  <TableCell colSpan={isAdmin ? 8 : 7} className="h-36 text-center">
                     <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
                       <PackageOpen className="h-8 w-8 text-muted-foreground/60" />
                       <p className="text-xs font-medium text-foreground">Tidak ada aset ditemukan</p>
-                      <p className="text-[11px]">Tambahkan aset baru atau ubah kata kunci pencarian Anda.</p>
-                      <Button size="sm" variant="outline" onClick={handleOpenAdd} className="h-7 text-xs mt-1">
-                        <Plus className="h-3 w-3 mr-1" /> Tambah Aset Pertama
-                      </Button>
+                      <p className="text-[11px]">Coba sesuaikan kata kunci pencarian atau filter kategori Anda.</p>
+                      {isAdmin && (
+                        <Button size="sm" variant="outline" onClick={handleOpenAdd} className="h-7 text-xs mt-1">
+                          <Plus className="h-3 w-3 mr-1" /> Tambah Aset Pertama
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -288,28 +294,30 @@ export function InventoryPage() {
                          item.status === "Lost" ? "Hilang" : item.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="py-3 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => handleOpenEdit(item)}
-                          className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted"
-                          title="Edit Aset"
-                        >
-                          <Edit2 className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => handleOpenDelete(item)}
-                          className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                          title="Hapus Aset"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </TableCell>
+                    {isAdmin && (
+                      <TableCell className="py-3 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleOpenEdit(item)}
+                            className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted"
+                            title="Edit Aset"
+                          >
+                            <Edit2 className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => handleOpenDelete(item)}
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                            title="Hapus Aset"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))
               )}

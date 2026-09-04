@@ -13,17 +13,13 @@ import {
   FileText, 
   PackageCheck, 
   UserCheck, 
-  Calendar, 
   RotateCcw, 
   CheckCircle2, 
-  AlertTriangle, 
-  AlertOctagon, 
   Printer, 
   Clock, 
   Wrench,
   ShieldCheck,
-  Building2,
-  Tag
+  Building2
 } from "lucide-react"
 import type { BorrowingItem } from "@/types/database"
 
@@ -63,7 +59,6 @@ export function BorrowingDetailModal({ isOpen, onClose, item }: BorrowingDetailM
   const { initialNotes, returnCondition, returnNotes } = parseNotes()
   const isReturned = item.status === "Returned"
   const isPending = item.status === "Pending Approval"
-  const isRejected = item.status === "Rejected"
   const isBorrowed = item.status === "Borrowed"
 
   const handlePrint = () => {

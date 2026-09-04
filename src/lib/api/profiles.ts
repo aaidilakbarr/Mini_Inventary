@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import type { UserProfile } from '@/types/auth'
+import type { UserProfile, UserRole } from '@/types/auth'
 
 export async function fetchProfiles(): Promise<UserProfile[]> {
   const { data, error } = await supabase
@@ -14,7 +14,7 @@ export async function fetchProfiles(): Promise<UserProfile[]> {
   return (data as UserProfile[]) || []
 }
 
-export async function updateUserProfileRole(userId: string, newRole: 'admin' | 'staff'): Promise<UserProfile | null> {
+export async function updateUserProfileRole(userId: string, newRole: UserRole): Promise<UserProfile | null> {
   const { data, error } = await supabase
     .from('profiles')
     .update({ role: newRole, updated_at: new Date().toISOString() })

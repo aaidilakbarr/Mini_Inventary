@@ -51,9 +51,10 @@ export function RegisterPage() {
       if (error) {
         setErrorMsg(error.message || 'Gagal mendaftarkan akun baru.')
       } else {
-        setSuccessMsg('Akun berhasil didaftarkan! Mengarahkan ke dashboard...')
+        const targetPath = role === 'admin' ? '/dashboard' : '/inventory'
+        setSuccessMsg(`Akun berhasil didaftarkan! Mengarahkan ke ${role === 'admin' ? 'dashboard' : 'portal'}...`)
         setTimeout(() => {
-          navigate('/dashboard', { replace: true })
+          navigate(targetPath, { replace: true })
         }, 1200)
       }
     } catch (err: any) {

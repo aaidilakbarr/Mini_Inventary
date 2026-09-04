@@ -1,5 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { BaseLayout } from '@/components/layout/BaseLayout'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { AppLayout } from '@/components/layout/AppLayout'
 import { Dashboard } from '@/pages/Dashboard'
 import { InventoryPage } from '@/pages/Inventory'
 import { BorrowingPage } from '@/pages/Borrowing'
@@ -9,6 +9,7 @@ import { LoginPage } from '@/pages/Login'
 import { RegisterPage } from '@/pages/Register'
 import { AuthProvider } from '@/context/AuthContext'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
+import { RoleBasedRedirect } from '@/components/auth/RoleBasedRedirect'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AuditLogsPage } from '@/pages/AuditLogs'
@@ -32,18 +33,35 @@ function App() {
                 path="/"
                 element={
                   <ProtectedRoute>
-                    <BaseLayout />
+                    <AppLayout />
                   </ProtectedRoute>
                 }
               >
-                <Route index element={<Navigate to="/dashboard" replace />} />
-                <Route path="dashboard" element={<Dashboard />} />
+                {/* Index Route redirects based on user role */}
+                <Route index element={<RoleBasedRedirect />} />
+
+                {/* Common Pages (Accessible by Admin, Staff, and User) */}
                 <Route path="inventory" element={<InventoryPage />} />
                 <Route path="borrowing" element={<BorrowingPage />} />
                 <Route path="subscriptions" element={<SubscriptionsPage />} />
-                <Route path="reminders" element={<RemindersPage />} />
-                
+
                 {/* Admin Only Protected Routes */}
+                <Route
+                  path="dashboard"
+                  element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route 
+                  path="reminders" 
+                  element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                      <RemindersPage />
+                    </ProtectedRoute>
+                  } 
+                />
                 <Route 
                   path="audit-logs" 
                   element={
@@ -62,9 +80,8 @@ function App() {
                 />
               </Route>
 
-
               {/* Fallback route */}
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              <Route path="*" element={<RoleBasedRedirect />} />
             </Routes>
           </BrowserRouter>
         </AuthProvider>

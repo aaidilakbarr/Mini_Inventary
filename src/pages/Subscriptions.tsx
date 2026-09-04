@@ -33,10 +33,12 @@ import {
   deleteSubscription
 } from "@/lib/api/subscriptions"
 import { fetchCategories } from "@/lib/api/categories"
+import { useAuth } from "@/hooks/useAuth"
 import { formatDateID, formatCurrencyID } from "@/lib/formatters"
 import type { SubscriptionItem, Category, CreateSubscriptionPayload } from "@/types/database"
 
 export function SubscriptionsPage() {
+  const { isAdmin } = useAuth()
   const [subscriptions, setSubscriptions] = useState<SubscriptionItem[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -193,14 +195,16 @@ export function SubscriptionsPage() {
             <Download className="h-3.5 w-3.5" />
             <span>Ekspor CSV</span>
           </Button>
-          <Button
-            size="sm"
-            onClick={handleOpenAdd}
-            className="h-8 text-xs font-medium gap-1.5 bg-primary text-primary-foreground shadow-xs"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            <span>Tambah Langganan</span>
-          </Button>
+          {isAdmin && (
+            <Button
+              size="sm"
+              onClick={handleOpenAdd}
+              className="h-8 text-xs font-medium gap-1.5 bg-primary text-primary-foreground shadow-xs"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>Tambah Langganan</span>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -255,7 +259,7 @@ export function SubscriptionsPage() {
           <div className="relative w-full md:w-80">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
-              placeholder="Cari layanan, vendor, atau kategori..."
+              placeholder="Cari langganan atau provider..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-8 h-8 text-xs bg-muted/30 border-border/80 w-full"
@@ -289,13 +293,13 @@ export function SubscriptionsPage() {
                 <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Siklus</TableHead>
                 <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Tagihan Berikutnya</TableHead>
                 <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Status</TableHead>
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9 text-right">Aksi</TableHead>
+                {isAdmin && <TableHead className="text-[11px] font-mono uppercase font-semibold h-9 text-right">Aksi</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-36 text-center">
+                  <TableCell colSpan={isAdmin ? 7 : 6} className="h-36 text-center">
                     <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
                       <Loader2 className="h-6 w-6 animate-spin text-primary" />
                       <p className="text-xs">Memuat data langganan...</p>
@@ -304,14 +308,16 @@ export function SubscriptionsPage() {
                 </TableRow>
               ) : filteredItems.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-36 text-center">
+                  <TableCell colSpan={isAdmin ? 7 : 6} className="h-36 text-center">
                     <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
                       <CreditCard className="h-8 w-8 text-muted-foreground/60" />
                       <p className="text-xs font-medium text-foreground">Tidak ada data langganan</p>
-                      <p className="text-[11px]">Tambahkan akun langganan pertama Anda atau sesuaikan filter pencarian.</p>
-                      <Button size="sm" variant="outline" onClick={handleOpenAdd} className="h-7 text-xs mt-1">
-                        <Plus className="h-3 w-3 mr-1" /> Tambah Langganan
-                      </Button>
+                      <p className="text-[11px]">Coba sesuaikan kata kunci pencarian atau filter status Anda.</p>
+                      {isAdmin && (
+                        <Button size="sm" variant="outline" onClick={handleOpenAdd} className="h-7 text-xs mt-1">
+                          <Plus className="h-3 w-3 mr-1" /> Tambah Langganan
+                        </Button>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -355,28 +361,30 @@ export function SubscriptionsPage() {
                            item.status === "Cancelled" ? "Dibatalkan" : "Kedaluwarsa"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="py-3 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleOpenEdit(item)}
-                            className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                            title="Edit Langganan"
-                          >
-                            <Edit2 className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleOpenDelete(item)}
-                            className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                            title="Hapus Langganan"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </TableCell>
+                      {isAdmin && (
+                        <TableCell className="py-3 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleOpenEdit(item)}
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                              title="Edit Langganan"
+                            >
+                              <Edit2 className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleOpenDelete(item)}
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                              title="Hapus Langganan"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      )}
                     </TableRow>
                   )
                 })
