@@ -10,7 +10,8 @@ import {
   Trash2,
   Edit2,
   Loader2,
-  BellRing
+  BellRing,
+  Wrench
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -290,19 +291,32 @@ export function RemindersPage() {
                           type="button"
                           onClick={() => handleToggleStatus(item)}
                           className="hover:scale-110 transition-transform focus:outline-none"
-                          title={isDone ? "Tandai Belum Selesai" : "Tandai Selesai"}
+                          title={
+                            isDone 
+                              ? "Tandai Belum Selesai" 
+                              : item.source_type === "inventory" 
+                                ? "Tandai Selesai Servis (Otomatis mengembalikan 1 unit ke stok inventaris)" 
+                                : "Tandai Selesai"
+                          }
                         >
                           {isDone ? (
                             <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                           ) : (
-                            <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/60 hover:border-primary" />
+                            <div className={`h-4 w-4 rounded-full border-2 ${item.source_type === "inventory" ? "border-amber-500 hover:border-amber-600 bg-amber-500/10" : "border-muted-foreground/60 hover:border-primary"}`} />
                           )}
                         </button>
                       </TableCell>
                       <TableCell className="py-3">
-                        <p className={`font-semibold text-xs text-foreground ${isDone ? "line-through text-muted-foreground" : ""}`}>
-                          {item.title}
-                        </p>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className={`font-semibold text-xs text-foreground ${isDone ? "line-through text-muted-foreground" : ""}`}>
+                            {item.title}
+                          </p>
+                          {item.source_type === "inventory" && !isDone && (
+                            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+                              (Centang jika servis selesai)
+                            </span>
+                          )}
+                        </div>
                         {item.description && (
                           <p className="text-[10px] text-muted-foreground line-clamp-1">{item.description}</p>
                         )}
@@ -325,9 +339,16 @@ export function RemindersPage() {
                         </div>
                       </TableCell>
                       <TableCell className="py-3">
-                        <Badge variant="outline" className="text-[10px] font-mono capitalize px-2 py-0 h-5">
-                          {item.source_type || "manual"}
-                        </Badge>
+                        {item.source_type === "inventory" ? (
+                          <Badge variant="outline" className="text-[10px] font-mono px-2 py-0 h-5 bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 gap-1 inline-flex items-center">
+                            <Wrench className="h-3 w-3" />
+                            <span>Perbaikan Aset</span>
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[10px] font-mono capitalize px-2 py-0 h-5">
+                            {item.source_type || "manual"}
+                          </Badge>
+                        )}
                       </TableCell>
                       <TableCell className="py-3 text-right">
                         <div className="flex items-center justify-end gap-1">

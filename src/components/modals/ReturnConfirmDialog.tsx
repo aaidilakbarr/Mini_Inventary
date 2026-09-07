@@ -237,9 +237,17 @@ export function ReturnConfirmDialog({
             <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-start gap-2.5 text-xs text-amber-800 dark:text-amber-300">
               <Wrench className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
               <div>
-                <p className="font-semibold text-xs">Proteksi Stok: Masuk Masa Perawatan</p>
+                <p className="font-semibold text-xs">Tiket Perbaikan & Proteksi Sisa Stok</p>
                 <p className="text-[11px] text-amber-700/90 dark:text-amber-400 mt-0.5 leading-relaxed">
-                  Status aset otomatis diubah menjadi <strong>Maintenance (Perawatan)</strong> dan <strong>TIDAK</strong> masuk ke stok Tersedia agar terlindungi dari peminjaman baru sampai selesai diservis.
+                  {(item?.inventory?.quantity ?? 0) > 0 ? (
+                    <>
+                      1 unit yang rusak otomatis didaftarkan ke tiket <strong>Pengingat Perbaikan (Reminders)</strong>. Sisa stok di gudang (<strong>{item?.inventory?.quantity} unit</strong>) tetap berstatus <strong>Tersedia (Bagus)</strong> dan dapat terus dipinjam.
+                    </>
+                  ) : (
+                    <>
+                      Status aset diubah menjadi <strong>Maintenance (Perawatan)</strong> dan otomatis dibuatkan tiket di <strong>Pengingat Perbaikan (Reminders)</strong> sampai perbaikan selesai.
+                    </>
+                  )}
                 </p>
               </div>
             </div>
@@ -249,9 +257,17 @@ export function ReturnConfirmDialog({
             <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 flex items-start gap-2.5 text-xs text-rose-800 dark:text-rose-300">
               <ShieldAlert className="h-4 w-4 shrink-0 text-rose-600 mt-0.5" />
               <div>
-                <p className="font-semibold text-xs">Peringatan: Aset Rusak Parah</p>
+                <p className="font-semibold text-xs">Peringatan: Tiket Servis Prioritas Tinggi</p>
                 <p className="text-[11px] text-rose-700/90 dark:text-rose-400 mt-0.5 leading-relaxed">
-                  Status aset diset ke <strong>Maintenance</strong> dan dinonaktifkan dari daftar peminjaman. Wajib dicatat kendala spesifik untuk proses penanganan lebih lanjut.
+                  {(item?.inventory?.quantity ?? 0) > 0 ? (
+                    <>
+                      1 unit rusak parah didaftarkan ke tiket <strong>Pengingat Perbaikan</strong> berprioritas <strong>Tinggi</strong>. Sisa stok di gudang (<strong>{item?.inventory?.quantity} unit</strong>) tetap berstatus <strong>Tersedia</strong>.
+                    </>
+                  ) : (
+                    <>
+                      Status aset diset ke <strong>Maintenance</strong> dan dinonaktifkan dari peminjaman. Otomatis dibuatkan tiket perbaikan prioritas <strong>Tinggi</strong>.
+                    </>
+                  )}
                 </p>
               </div>
             </div>

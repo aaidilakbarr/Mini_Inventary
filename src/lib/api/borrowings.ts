@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import { recordAuditLog } from '@/lib/api/auditLogs'
+import { createReminder } from '@/lib/api/reminders'
 import type { BorrowingItem, CreateBorrowingPayload, InventoryStatus } from '@/types/database'
 
 export interface ReturnBorrowingOptions {
@@ -66,34 +67,77 @@ async function increaseInventoryStock(inventoryId: string) {
 async function handleReturnInventory(
   inventoryId: string,
   condition: string = 'Bagus',
-  returnNotes?: string
+  returnNotes?: string,
+  borrowerName?: string
 ) {
   try {
     const { data: inv, error: fetchErr } = await supabase
       .from('inventories')
-      .select('quantity, status, condition, notes')
+      .select('id, code, name, quantity, status, condition, notes')
       .eq('id', inventoryId)
       .single()
 
     if (!fetchErr && inv) {
       const currentQty = typeof inv.quantity === 'number' ? inv.quantity : 0
-      const newQty = currentQty + 1
-
-      // CRITICAL FIX: If damaged, do NOT mark as Available!
-      // Set status to Maintenance so it cannot be borrowed by others
       const isDamaged =
         condition === 'Rusak Ringan' ||
         condition === 'Rusak Berat' ||
         condition === 'Perlu Perbaikan' ||
         condition === 'Rusak'
 
-      const newStatus: InventoryStatus = isDamaged ? 'Maintenance' : 'Available'
-
-      // Append return notes to inventory record if provided
+      let newQty = currentQty
+      let newStatus: InventoryStatus = 'Available'
+      let newCondition = inv.condition || 'Bagus'
       let updatedInvNotes = inv.notes || ''
-      if (returnNotes && returnNotes.trim()) {
-        const noteEntry = `[Pengembalian ${new Date().toLocaleDateString('id-ID')}]: Kondisi ${condition} - ${returnNotes.trim()}`
-        updatedInvNotes = updatedInvNotes ? `${updatedInvNotes}\n${noteEntry}` : noteEntry
+
+      if (isDamaged) {
+        // Skenario 1: Masih ada sisa stok bagus di gudang (misal kuantitas sisa 4 dari 5)
+        if (currentQty > 0) {
+          // JANGAN ubah status sisa barang bagus menjadi Maintenance!
+          // Kuantitas tetap sama (1 unit rusak tidak digabung ke stok bagus sebelum diperbaiki)
+          newQty = currentQty
+          newStatus = 'Available'
+          newCondition = inv.condition || 'Bagus'
+
+          const noteEntry = `[Pengembalian ${new Date().toLocaleDateString('id-ID')}]: 1 unit dikembalikan ${condition}${returnNotes?.trim() ? ` (${returnNotes.trim()})` : ''} - dialihkan ke tiket Pengingat Perbaikan.`
+          updatedInvNotes = updatedInvNotes ? `${updatedInvNotes}\n${noteEntry}` : noteEntry
+        } else {
+          // Skenario 2: Tidak ada sisa stok bagus (seluruh unit dipinjam / barang tunggal)
+          newQty = 1
+          newStatus = 'Maintenance'
+          newCondition = condition
+
+          const noteEntry = `[Pengembalian ${new Date().toLocaleDateString('id-ID')}]: Dikembalikan ${condition}${returnNotes?.trim() ? ` (${returnNotes.trim()})` : ''} - dialihkan ke tiket Pengingat Perbaikan (status Maintenance).`
+          updatedInvNotes = updatedInvNotes ? `${updatedInvNotes}\n${noteEntry}` : noteEntry
+        }
+
+        // Buat tiket pengingat perbaikan otomatis di modul Reminders
+        try {
+          const repairDueDate = new Date()
+          repairDueDate.setDate(repairDueDate.getDate() + 3)
+
+          await createReminder({
+            title: `Perbaikan: ${inv.name} (1 unit ${condition})`,
+            description: `Aset ${inv.name} (${inv.code || '-'}) dikembalikan dalam kondisi ${condition}.${returnNotes?.trim() ? ` Catatan: ${returnNotes.trim()}` : ''}${borrowerName ? ` | Peminjam: ${borrowerName}` : ''}. Setelah unit selesai diperbaiki, tandai pengingat ini sebagai 'Selesai' untuk mengembalikan 1 unit ke stok inventaris aktif.`,
+            source_type: 'inventory',
+            source_id: inventoryId,
+            due_date: repairDueDate.toISOString(),
+            priority: condition === 'Rusak Berat' ? 'Tinggi' : 'Sedang',
+            status: 'Upcoming'
+          })
+        } catch (reminderErr) {
+          console.error('Error creating repair reminder:', reminderErr)
+        }
+      } else {
+        // Kondisi Bagus: Tambahkan 1 unit kembali ke stok tersedia
+        newQty = currentQty + 1
+        newStatus = 'Available'
+        newCondition = 'Bagus'
+
+        if (returnNotes && returnNotes.trim()) {
+          const noteEntry = `[Pengembalian ${new Date().toLocaleDateString('id-ID')}]: Kondisi Bagus - ${returnNotes.trim()}`
+          updatedInvNotes = updatedInvNotes ? `${updatedInvNotes}\n${noteEntry}` : noteEntry
+        }
       }
 
       await supabase
@@ -101,7 +145,7 @@ async function handleReturnInventory(
         .update({
           quantity: newQty,
           status: newStatus,
-          condition: condition,
+          condition: newCondition,
           notes: updatedInvNotes,
           updated_at: new Date().toISOString(),
         })
@@ -279,7 +323,8 @@ export async function returnBorrowing(
 
   // 5. Update inventory stock and status based on physical condition
   if (borrowing.inventory_id) {
-    await handleReturnInventory(borrowing.inventory_id, condition, returnNotes)
+    const borrowerName = (borrowing.borrower as any)?.full_name || undefined
+    await handleReturnInventory(borrowing.inventory_id, condition, returnNotes, borrowerName)
   }
 
   // 6. Record Audit Log for traceability
