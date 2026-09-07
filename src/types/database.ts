@@ -48,6 +48,7 @@ export interface CreateInventoryPayload {
   photo_url?: string | null
   status: InventoryStatus
   notes?: string | null
+  purchase_info?: Record<string, any> | null
 }
 
 export type UpdateInventoryPayload = Partial<CreateInventoryPayload>

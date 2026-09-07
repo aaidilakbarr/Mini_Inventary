@@ -7,7 +7,8 @@ import {
   Trash2,
   Loader2,
   PackageOpen,
-  RefreshCw
+  RefreshCw,
+  Eye
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -22,6 +23,7 @@ import {
   TableRow 
 } from "@/components/ui/table"
 import { InventoryModal } from "@/components/modals/InventoryModal"
+import { InventoryDetailModal } from "@/components/modals/InventoryDetailModal"
 import { DeleteConfirmDialog } from "@/components/modals/DeleteConfirmDialog"
 import { fetchInventories, createInventory, updateInventory, deleteInventory } from "@/lib/api/inventories"
 import { fetchCategories } from "@/lib/api/categories"
@@ -39,6 +41,10 @@ export function InventoryPage() {
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null)
+
+  // Detail modal state
+  const [detailItem, setDetailItem] = useState<InventoryItem | null>(null)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
 
   // Delete dialog state
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
@@ -68,6 +74,11 @@ export function InventoryPage() {
   const handleOpenAdd = () => {
     setEditingItem(null)
     setIsModalOpen(true)
+  }
+
+  const handleOpenDetail = (item: InventoryItem) => {
+    setDetailItem(item)
+    setIsDetailModalOpen(true)
   }
 
   const handleOpenEdit = (item: InventoryItem) => {
@@ -227,13 +238,13 @@ export function InventoryPage() {
                 <TableHead className="text-[11px] font-mono uppercase font-semibold h-9 text-center">Jumlah</TableHead>
                 <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Garansi</TableHead>
                 <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Status</TableHead>
-                {isAdmin && <TableHead className="text-[11px] font-mono uppercase font-semibold h-9 text-right">Aksi</TableHead>}
+                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9 text-right">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={isAdmin ? 8 : 7} className="h-36 text-center">
+                  <TableCell colSpan={8} className="h-36 text-center">
                     <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
                       <Loader2 className="h-6 w-6 animate-spin text-primary" />
                       <p className="text-xs">Memuat data inventaris...</p>
@@ -242,7 +253,7 @@ export function InventoryPage() {
                 </TableRow>
               ) : filteredItems.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={isAdmin ? 8 : 7} className="h-36 text-center">
+                  <TableCell colSpan={8} className="h-36 text-center">
                     <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
                       <PackageOpen className="h-8 w-8 text-muted-foreground/60" />
                       <p className="text-xs font-medium text-foreground">Tidak ada aset ditemukan</p>
@@ -294,30 +305,41 @@ export function InventoryPage() {
                          item.status === "Lost" ? "Hilang" : item.status}
                       </Badge>
                     </TableCell>
-                    {isAdmin && (
-                      <TableCell className="py-3 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => handleOpenEdit(item)}
-                            className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted"
-                            title="Edit Aset"
-                          >
-                            <Edit2 className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => handleOpenDelete(item)}
-                            className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                            title="Hapus Aset"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    )}
+                    <TableCell className="py-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleOpenDetail(item)}
+                          className="h-7 w-7 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                          title="Lihat Detail Aset"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                        </Button>
+                        {isAdmin && (
+                          <>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleOpenEdit(item)}
+                              className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted"
+                              title="Edit Aset"
+                            >
+                              <Edit2 className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => handleOpenDelete(item)}
+                              className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                              title="Hapus Aset"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -325,6 +347,21 @@ export function InventoryPage() {
           </Table>
         </div>
       </Card>
+
+      {/* View Detail Inventory Modal */}
+      <InventoryDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => {
+          setIsDetailModalOpen(false)
+          setDetailItem(null)
+        }}
+        item={detailItem}
+        isAdmin={isAdmin}
+        onEdit={(item) => {
+          setIsDetailModalOpen(false)
+          handleOpenEdit(item)
+        }}
+      />
 
       {/* Add / Edit Inventory Modal */}
       <InventoryModal
