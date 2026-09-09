@@ -14,6 +14,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AuditLogsPage } from '@/pages/AuditLogs'
 import { SettingsPage } from '@/pages/Settings'
+import { ProfilePage } from '@/pages/Profile'
 
 const queryClient = new QueryClient()
 
@@ -44,6 +45,7 @@ function App() {
                 <Route path="inventory" element={<InventoryPage />} />
                 <Route path="borrowing" element={<BorrowingPage />} />
                 <Route path="subscriptions" element={<SubscriptionsPage />} />
+                <Route path="profile" element={<ProfilePage />} />
 
                 {/* Admin Only Protected Routes */}
                 <Route

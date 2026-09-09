@@ -19,8 +19,7 @@ import {
   Layers,
   Package,
   ArrowLeftRight,
-  Plus,
-  Check
+  Plus
 } from "lucide-react"
 import type { InventoryItem, CreateBorrowingPayload, BorrowingStatus } from "@/types/database"
 import type { UserProfile } from "@/types/auth"

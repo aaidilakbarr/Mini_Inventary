@@ -14,7 +14,6 @@ import {
   FileText
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { 
@@ -143,22 +142,41 @@ export function BorrowingPage() {
     setIsReturnDialogOpen(true)
   }
 
-  const getReturnInfo = (item: BorrowingItem) => {
-    if (item.status !== "Returned") return null
-    let condition = item.return_condition || null
-    let note = item.return_notes || null
-
-    if (!condition && item.notes) {
-      const match = item.notes.match(/\[Pengembalian - Kondisi:\s*([^\]|]+)\](?:\s*Catatan:\s*([^\n]+))?/)
-      if (match) {
-        condition = match[1]?.trim() || null
-        if (!note && match[2]) note = match[2]?.trim() || null
+  const getStatusBadge = (item: BorrowingItem) => {
+    const overdue = isOverdue(item)
+    if (overdue) {
+      return {
+        label: "Terlambat",
+        className: "bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300",
       }
     }
 
-    return {
-      condition: condition || "Bagus",
-      note,
+    switch (item.status) {
+      case "Borrowed":
+        return {
+          label: "Dipinjam",
+          className: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300",
+        }
+      case "Pending Approval":
+        return {
+          label: "Menunggu Persetujuan",
+          className: "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300",
+        }
+      case "Returned":
+        return {
+          label: "Dikembalikan",
+          className: "bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300",
+        }
+      case "Rejected":
+        return {
+          label: "Ditolak",
+          className: "bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-400",
+        }
+      default:
+        return {
+          label: item.status,
+          className: "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+        }
     }
   }
 
@@ -386,51 +404,14 @@ export function BorrowingPage() {
                         </span>
                       </TableCell>
                       <TableCell className="py-3">
-                        <div className="space-y-1">
-                          <Badge 
-                            variant={
-                              overdue ? "destructive" :
-                              item.status === "Borrowed" ? "default" :
-                              item.status === "Pending Approval" ? "secondary" :
-                              item.status === "Returned" ? "outline" : "destructive"
-                            }
-                            className="text-[10px] font-mono px-2.5 py-0.5 rounded-full"
-                          >
-                            {overdue ? "Terlambat" :
-                             item.status === "Pending Approval" ? "Menunggu Persetujuan" :
-                             item.status === "Borrowed" ? "Dipinjam" :
-                             item.status === "Returned" ? "Dikembalikan" :
-                             item.status === "Rejected" ? "Ditolak" : item.status}
-                          </Badge>
-
-                          {item.status === "Returned" && (() => {
-                            const retInfo = getReturnInfo(item)
-                            if (!retInfo) return null
-                            return (
-                              <div className="flex flex-col gap-0.5">
-                                <span 
-                                  className={`inline-flex items-center gap-1 text-[9px] font-medium px-1.5 py-0.5 rounded border w-fit ${
-                                    retInfo.condition === "Bagus"
-                                      ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
-                                      : retInfo.condition === "Rusak Ringan"
-                                      ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30"
-                                      : "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/30"
-                                  }`}
-                                >
-                                  {retInfo.condition === "Bagus" ? "✓ Fisik: Bagus" : `⚠ ${retInfo.condition}`}
-                                </span>
-                                {retInfo.note && (
-                                  <span 
-                                    className="text-[10px] text-muted-foreground italic truncate max-w-[150px]" 
-                                    title={retInfo.note}
-                                  >
-                                    "{retInfo.note}"
-                                  </span>
-                                )}
-                              </div>
-                            )
-                          })()}
-                        </div>
+                        {(() => {
+                          const badge = getStatusBadge(item)
+                          return (
+                            <span className={`inline-flex items-center justify-center rounded-full px-3.5 py-1 text-xs font-semibold select-none ${badge.className}`}>
+                              {badge.label}
+                            </span>
+                          )
+                        })()}
                       </TableCell>
                       <TableCell className="py-3 text-right">
                         <div className="flex items-center justify-end gap-1.5">

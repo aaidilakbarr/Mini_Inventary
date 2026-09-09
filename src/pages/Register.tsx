@@ -2,18 +2,18 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import type { UserRole } from '@/types/auth'
-import { 
-  Package, 
-  Lock, 
-  Mail, 
-  User, 
-  Eye, 
-  EyeOff, 
-  ArrowRight, 
-  Shield, 
-  UserCheck, 
-  AlertCircle, 
-  CheckCircle2 
+import {
+  Package,
+  Lock,
+  Mail,
+  User,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  Shield,
+  UserCheck,
+  AlertCircle,
+  CheckCircle2
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -141,7 +141,7 @@ export function RegisterPage() {
                   type="text"
                   required
                   autoComplete="name"
-                  placeholder="Aidil Pratama"
+                  placeholder="Masukkan Username"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   className="pl-9 h-10 text-xs bg-muted/30 border-border/80 focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-primary/30"
@@ -160,7 +160,7 @@ export function RegisterPage() {
                   type="email"
                   required
                   autoComplete="email"
-                  placeholder="nama@perusahaan.com"
+                  placeholder="Masukkan Email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-9 h-10 text-xs bg-muted/30 border-border/80 focus-visible:bg-background focus-visible:ring-2 focus-visible:ring-primary/30"

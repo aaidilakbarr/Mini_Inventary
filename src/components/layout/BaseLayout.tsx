@@ -190,6 +190,7 @@ export function BaseLayout() {
     if (location.pathname.startsWith("/reminders")) return "Pengingat"
     if (location.pathname.startsWith("/audit-logs")) return "Log Audit"
     if (location.pathname.startsWith("/settings")) return "Pengaturan"
+    if (location.pathname.startsWith("/profile")) return "Profil Pengguna"
     return "Halaman"
   }
 
@@ -375,20 +376,30 @@ export function BaseLayout() {
 
       {/* Floating User Profile Card at Sidebar Bottom */}
       <div className="p-3 border-t border-border/50 bg-slate-50/50 dark:bg-card">
-        <div className="p-2.5 rounded-2xl border border-border/80 bg-card shadow-xs flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-xs">
+        <div className={cn(
+          "p-2.5 rounded-2xl border bg-card shadow-xs flex items-center justify-between gap-2 transition-all",
+          location.pathname === "/profile"
+            ? "border-primary/50 ring-2 ring-primary/10 bg-primary/5"
+            : "border-border/80 hover:border-border hover:bg-slate-50 dark:hover:bg-muted/40"
+        )}>
+          <Link 
+            to="/profile"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="flex items-center gap-2.5 min-w-0 flex-1 group"
+            title="Buka Profil Pengguna"
+          >
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-xs group-hover:scale-105 transition-transform">
               {displayName.charAt(0).toUpperCase()}
             </div>
             <div className="truncate min-w-0">
-              <p className="text-xs font-bold text-foreground truncate leading-tight">
+              <p className="text-xs font-bold text-foreground truncate leading-tight group-hover:text-primary transition-colors">
                 {displayName}
               </p>
               <p className="text-[10px] text-muted-foreground truncate">
                 {displayEmail}
               </p>
             </div>
-          </div>
+          </Link>
 
           {/* Quick Sign Out Action */}
           <button
@@ -481,6 +492,26 @@ export function BaseLayout() {
             >
               <Mail className="h-4 w-4" />
             </button>
+
+            {/* Profile Avatar Pill */}
+            <Link to="/profile" title="Profil Pengguna">
+              <button
+                className={cn(
+                  "h-9 px-2.5 rounded-xl border bg-white dark:bg-card flex items-center gap-2 transition-all shadow-2xs group",
+                  location.pathname === "/profile"
+                    ? "border-primary/50 ring-2 ring-primary/10 bg-primary/5 text-primary"
+                    : "border-slate-200/80 dark:border-border/80 text-muted-foreground hover:text-foreground hover:bg-slate-50 dark:hover:bg-muted/60"
+                )}
+                aria-label="Buka Profil Pengguna"
+              >
+                <div className="h-6 w-6 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-[10px] group-hover:scale-105 transition-transform">
+                  {displayName.charAt(0).toUpperCase()}
+                </div>
+                <span className="hidden sm:inline-block text-xs font-semibold max-w-[110px] truncate">
+                  {displayName.split(' ')[0]}
+                </span>
+              </button>
+            </Link>
           </div>
         </header>
 

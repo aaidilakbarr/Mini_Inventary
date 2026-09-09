@@ -91,27 +91,44 @@ export function UserLayout() {
 
         {/* Right Section: User Info & Actions */}
         <div className="flex items-center gap-2 sm:gap-4 z-10">
-          {/* User Profile Card */}
-          <div className="hidden sm:flex items-center gap-2.5 px-3 py-1.5 rounded-lg border border-border/60 bg-muted/40">
-            <div className="h-7 w-7 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-xs">
-              {displayName.charAt(0).toUpperCase()}
-            </div>
-            <div className="text-left">
-              <span className="text-xs font-semibold text-foreground leading-tight block">{displayName}</span>
-              <span className="text-[10px] text-muted-foreground font-mono leading-none block">{displayEmail}</span>
-            </div>
-          </div>
+          {/* User Profile Card with Integrated Logout Action (Matching Admin Layout) */}
+          <div className={cn(
+            "hidden sm:flex items-center justify-between gap-2.5 px-2.5 py-1.5 rounded-xl border transition-all",
+            location.pathname === "/profile"
+              ? "border-primary/50 ring-2 ring-primary/10 bg-primary/5"
+              : "border-border/70 bg-muted/40 hover:bg-muted/60 hover:border-border"
+          )}>
+            <Link
+              to="/profile"
+              className="flex items-center gap-2.5 min-w-0 group"
+              title="Buka Profil Pengguna"
+            >
+              <div className="h-7 w-7 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shrink-0 group-hover:scale-105 transition-transform shadow-2xs">
+                {displayName.charAt(0).toUpperCase()}
+              </div>
+              <div className="text-left truncate max-w-[140px]">
+                <span className="text-xs font-semibold text-foreground leading-tight block truncate group-hover:text-primary transition-colors">
+                  {displayName}
+                </span>
+                <span className="text-[10px] text-muted-foreground font-mono leading-none block truncate">
+                  {displayEmail}
+                </span>
+              </div>
+            </Link>
 
-          {/* Logout Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => signOut()}
-            className="hidden sm:inline-flex h-8 text-xs font-medium gap-1.5 border-border/80 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-colors"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-            <span>Keluar</span>
-          </Button>
+            <div className="h-4 w-px bg-border/80 mx-0.5" />
+
+            {/* Integrated Quick Sign Out Button */}
+            <button
+              type="button"
+              onClick={() => signOut()}
+              className="p-1 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
+              title="Keluar Akun"
+              aria-label="Keluar"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </button>
+          </div>
 
           {/* Mobile Menu Toggle Button */}
           <Button
@@ -153,27 +170,43 @@ export function UserLayout() {
             })}
           </nav>
 
-          {/* Mobile Profile & Logout */}
-          <div className="pt-3 border-t border-border/60 flex items-center justify-between">
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="h-8 w-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-xs shrink-0">
-                {displayName.charAt(0).toUpperCase()}
-              </div>
-              <div className="truncate">
-                <span className="text-xs font-semibold text-foreground truncate block">{displayName}</span>
-                <p className="text-[10px] text-muted-foreground font-mono truncate">{displayEmail}</p>
-              </div>
-            </div>
+          {/* Mobile Profile Card with Integrated Logout Action (Matching Admin Layout) */}
+          <div className="pt-3 border-t border-border/60">
+            <div className={cn(
+              "p-2.5 rounded-xl border flex items-center justify-between gap-2 transition-all",
+              location.pathname === "/profile"
+                ? "border-primary/50 ring-2 ring-primary/10 bg-primary/5"
+                : "border-border/70 bg-muted/30"
+            )}>
+              <Link
+                to="/profile"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center gap-2.5 min-w-0 flex-1 group"
+                title="Buka Profil Pengguna"
+              >
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shrink-0 shadow-2xs">
+                  {displayName.charAt(0).toUpperCase()}
+                </div>
+                <div className="truncate min-w-0">
+                  <span className="text-xs font-semibold text-foreground truncate block group-hover:text-primary transition-colors">
+                    {displayName}
+                  </span>
+                  <p className="text-[10px] text-muted-foreground font-mono truncate">
+                    {displayEmail}
+                  </p>
+                </div>
+              </Link>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => signOut()}
-              className="h-7 text-[11px] text-destructive hover:bg-destructive/10 border-border/80 gap-1 shrink-0 ml-2"
-            >
-              <LogOut className="h-3 w-3" />
-              <span>Keluar</span>
-            </Button>
+              <button
+                type="button"
+                onClick={() => signOut()}
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
+                title="Keluar Akun"
+                aria-label="Keluar"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
       )}

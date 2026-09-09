@@ -118,7 +118,7 @@ export function ReminderModal({
             <Label htmlFor="title" className="text-xs font-semibold">Judul Pengingat *</Label>
             <Input
               id="title"
-              placeholder="misal: Perawatan Rutin UPS Server"
+              placeholder="Masukkan Judul Pengingat"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               className="h-8 text-xs"
@@ -131,7 +131,7 @@ export function ReminderModal({
             <textarea
               id="description"
               rows={2}
-              placeholder="Detail instruksi atau rincian aset/layanan yang perlu ditindaklanjuti"
+              placeholder="Tambahkan Detail Instruksi / Layanan yang perlu ditindaklanjuti"
               value={formData.description || ""}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               className="w-full text-xs rounded-lg border border-input bg-background p-2 text-foreground outline-none focus:border-ring"
@@ -142,12 +142,13 @@ export function ReminderModal({
             <div className="space-y-1.5">
               <Label htmlFor="source_type" className="text-xs font-semibold">Kategori Sumber</Label>
               <Select
-                value={formData.source_type || "manual"}
+                value={formData.source_type || ""}
                 onValueChange={(val) => setFormData({ ...formData, source_type: val as string })}
               >
                 <SelectTrigger className="h-8 text-xs">
-                  <SelectValue />
+                  <SelectValue placeholder="Pilih kategori Sumber" />
                 </SelectTrigger>
+
                 <SelectContent>
                   <SelectItem value="manual">Manual</SelectItem>
                   <SelectItem value="Inventaris">Inventaris</SelectItem>
