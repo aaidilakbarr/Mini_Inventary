@@ -246,20 +246,20 @@ export function BorrowingPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">Peminjaman Aset</h1>
-          <p className="text-xs text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">Peminjaman Aset</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Kelola permintaan peminjaman, persetujuan, dan pelacakan pengembalian inventaris.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           <Button 
             variant="outline" 
             size="sm" 
             onClick={loadData}
             disabled={isLoading}
-            className="h-8 text-xs font-medium gap-1.5 border-border/80"
+            className="h-9 px-3.5 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
             <span>Segarkan</span>
@@ -267,9 +267,9 @@ export function BorrowingPage() {
           <Button 
             size="sm" 
             onClick={() => setIsModalOpen(true)}
-            className="h-8 text-xs font-medium gap-1.5 bg-primary text-primary-foreground shadow-xs"
+            className="h-9 px-4 text-xs font-bold rounded-xl gap-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-primary dark:hover:bg-primary/90 text-white shadow-sm"
           >
-            <Plus className="h-3.5 w-3.5" />
+            <Plus className="h-4 w-4 stroke-[2.5]" />
             <span>Pinjam Aset</span>
           </Button>
         </div>
@@ -311,7 +311,7 @@ export function BorrowingPage() {
                 variant={statusFilter === status ? "default" : "outline"}
                 size="sm"
                 onClick={() => setStatusFilter(status)}
-                className="h-7 text-xs px-2.5 rounded-md shrink-0 whitespace-nowrap"
+                className="h-7 text-xs px-3 rounded-full shrink-0 whitespace-nowrap"
               >
                 {status}
               </Button>
@@ -394,7 +394,7 @@ export function BorrowingPage() {
                               item.status === "Pending Approval" ? "secondary" :
                               item.status === "Returned" ? "outline" : "destructive"
                             }
-                            className="text-[10px] font-mono px-2 py-0 h-5"
+                            className="text-[10px] font-mono px-2.5 py-0.5 rounded-full"
                           >
                             {overdue ? "Terlambat" :
                              item.status === "Pending Approval" ? "Menunggu Persetujuan" :

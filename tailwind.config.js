@@ -19,7 +19,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["'Fira Sans'", "sans-serif"],
+        sans: ["'Plus Jakarta Sans'", "'Fira Sans'", "sans-serif"],
         mono: ["'Fira Code'", "monospace"],
       },
       colors: {

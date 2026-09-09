@@ -18,9 +18,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Loader2 } from "lucide-react"
+import { 
+  CreditCard, 
+  Loader2, 
+  Plus
+} from "lucide-react"
 import { formatNumberID } from "@/lib/formatters"
-import type { SubscriptionItem, CreateSubscriptionPayload, Category, BillingCycle, SubscriptionStatus } from "@/types/database"
+import type { 
+  SubscriptionItem, 
+  CreateSubscriptionPayload, 
+  Category, 
+  BillingCycle 
+} from "@/types/database"
 
 interface SubscriptionModalProps {
   open: boolean
@@ -91,22 +100,56 @@ export function SubscriptionModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.service_name.trim()) {
-      setErrorMsg("Nama layanan harus diisi.")
+      setErrorMsg("Nama Layanan / Software wajib diisi.")
       return
     }
     if (!formData.next_billing_date) {
-      setErrorMsg("Tanggal jatuh tempo tagihan berikutnya harus diisi.")
+      setErrorMsg("Tanggal jatuh tempo tagihan berikutnya wajib diisi.")
       return
     }
 
     try {
       setIsSubmitting(true)
       setErrorMsg("")
-      await onSubmit(formData)
+      await onSubmit({
+        ...formData,
+        service_name: formData.service_name.trim(),
+        provider: formData.provider?.trim() || null,
+        category_id: formData.category_id && formData.category_id !== "none" ? formData.category_id : null,
+        cost: Number(formData.cost) || 0,
+      })
       onOpenChange(false)
     } catch (err: any) {
       console.error("Gagal menyimpan langganan:", err)
-      setErrorMsg(err.message || "Terjadi kesalahan saat menyimpan data.")
+      setErrorMsg(err.message || "Terjadi kesalahan saat menyimpan data langganan.")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleSaveDraft = async () => {
+    if (!formData.service_name.trim()) {
+      setErrorMsg("Harap isi setidaknya Nama Layanan untuk menyimpan draf langganan.")
+      return
+    }
+
+    try {
+      setIsSubmitting(true)
+      setErrorMsg("")
+      const today = new Date().toISOString().split("T")[0]
+      await onSubmit({
+        ...formData,
+        service_name: formData.service_name.trim(),
+        provider: formData.provider?.trim() || null,
+        category_id: formData.category_id && formData.category_id !== "none" ? formData.category_id : null,
+        cost: Number(formData.cost) || 0,
+        next_billing_date: formData.next_billing_date || today,
+        status: "Active",
+      })
+      onOpenChange(false)
+    } catch (err: any) {
+      console.error("Gagal menyimpan draf:", err)
+      setErrorMsg(err.message || "Gagal menyimpan draf langganan.")
     } finally {
       setIsSubmitting(false)
     }
@@ -114,60 +157,85 @@ export function SubscriptionModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[540px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-base font-bold">
-            {initialData ? "Ubah Informasi Langganan" : "Tambah Langganan Baru"}
-          </DialogTitle>
-          <DialogDescription className="text-xs">
-            {initialData
-              ? "Perbarui detail paket langganan, biaya berulang, atau tanggal penagihan."
-              : "Masukkan rincian layanan langganan atau lisensi software perusahaan."}
-          </DialogDescription>
+      <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto p-5 sm:p-7 rounded-2xl">
+        {/* Header - Layout persis modal tambah aset di inventaris */}
+        <DialogHeader className="pb-3 border-b border-border/50">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="h-11 w-11 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+                <CreditCard className="h-6 w-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <DialogTitle className="text-base sm:text-lg font-bold text-foreground">
+                    {initialData ? "Ubah Data Langganan" : "Tambah Langganan Baru"}
+                  </DialogTitle>
+                  <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-mono">
+                    {initialData ? "Edit Langganan" : "Langganan Baru"}
+                  </span>
+                </div>
+                <DialogDescription className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                  Daftarkan layanan langganan atau lisensi software, kelola jadwal tagihan, dan pantau pengeluaran operasional.
+                </DialogDescription>
+              </div>
+            </div>
+          </div>
         </DialogHeader>
 
-        {errorMsg && (
-          <div className="p-2.5 text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
-            {errorMsg}
-          </div>
-        )}
+        <form onSubmit={handleSubmit} className="space-y-4 py-2 text-xs">
+          {errorMsg && (
+            <div className="p-3 text-xs rounded-xl bg-destructive/10 text-destructive border border-destructive/20 font-medium">
+              {errorMsg}
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit} className="space-y-4 pt-1">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1 sm:col-span-2">
-              <Label className="text-xs font-semibold">Nama Layanan / Software *</Label>
+          {/* Baris 1: Nama Layanan & Penyedia / Vendor */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="service_name" className="text-xs font-semibold text-foreground flex items-center gap-1">
+                Nama Layanan / Software <span className="text-rose-500">*</span>
+              </Label>
               <Input
-                placeholder="cth: Figma Professional, AWS Cloud, Zoom Enterprise"
+                id="service_name"
+                placeholder="misal: Figma Professional, AWS, Zoom Enterprise"
                 value={formData.service_name}
                 onChange={(e) => setFormData({ ...formData, service_name: e.target.value })}
-                className="h-8 text-xs"
+                className="h-10 text-xs rounded-xl bg-muted/20 border-border/80 focus-visible:ring-blue-500/30"
                 required
               />
             </div>
 
-            <div className="space-y-1">
-              <Label className="text-xs font-semibold">Penyedia / Vendor</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="provider" className="text-xs font-semibold text-foreground">
+                Penyedia / Vendor
+              </Label>
               <Input
-                placeholder="cth: Figma Inc., Amazon Web Services"
+                id="provider"
+                placeholder="misal: Figma Inc., Amazon Web Services"
                 value={formData.provider || ""}
                 onChange={(e) => setFormData({ ...formData, provider: e.target.value })}
-                className="h-8 text-xs"
+                className="h-10 text-xs rounded-xl bg-muted/20 border-border/80 focus-visible:ring-blue-500/30"
               />
             </div>
+          </div>
 
-            <div className="space-y-1">
-              <Label className="text-xs font-semibold">Kategori</Label>
+          {/* Baris 2: Kategori & Metode Pembayaran */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="category" className="text-xs font-semibold text-foreground flex items-center gap-1">
+                Kategori Layanan
+              </Label>
               <Select
                 value={formData.category_id || "none"}
                 onValueChange={(val) =>
-                  setFormData({ ...formData, category_id: val === "none" ? null : (val as string) })
+                  setFormData({ ...formData, category_id: val === "none" ? null : val })
                 }
               >
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue placeholder="-- Pilih Kategori --">
+                <SelectTrigger className="h-10 text-xs rounded-xl bg-muted/20 border-border/80 focus:ring-blue-500/30">
+                  <SelectValue placeholder="Pilih Kategori">
                     {formData.category_id && formData.category_id !== "none"
-                      ? categories.find((c) => c.id === formData.category_id)?.name || "-- Pilih Kategori --"
-                      : "-- Pilih Kategori --"}
+                      ? categories.find((c) => c.id === formData.category_id)?.name || "Pilih Kategori"
+                      : "Pilih Kategori"}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -179,13 +247,29 @@ export function SubscriptionModal({
                   ))}
                 </SelectContent>
               </Select>
-
             </div>
 
-            <div className="space-y-1">
-              <Label className="text-xs font-semibold">Biaya (IDR)</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="payment_method" className="text-xs font-semibold text-foreground">
+                Metode Pembayaran
+              </Label>
+              <Input
+                id="payment_method"
+                placeholder="misal: Kartu Kredit Corp, BCA Virtual Account"
+                value={formData.payment_method || ""}
+                onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
+                className="h-10 text-xs rounded-xl bg-muted/20 border-border/80 focus-visible:ring-blue-500/30"
+              />
+            </div>
+          </div>
+
+          {/* Baris 3: Container Metrik Finansial & Tagihan (Card Rounded Abu-Abu persis InventoryModal) */}
+          <div className="p-3.5 sm:p-4 rounded-xl bg-muted/25 dark:bg-muted/10 border border-border/70 grid grid-cols-1 sm:grid-cols-3 gap-3.5 items-end">
+            {/* Biaya Tagihan */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-foreground">Biaya (IDR)</Label>
               <div className="relative">
-                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-mono select-none pointer-events-none">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-mono font-bold select-none pointer-events-none">
                   Rp
                 </span>
                 <Input
@@ -197,18 +281,19 @@ export function SubscriptionModal({
                     const rawVal = e.target.value.replace(/\D/g, "")
                     setFormData({ ...formData, cost: rawVal ? Number(rawVal) : 0 })
                   }}
-                  className="h-8 text-xs pl-8 font-mono"
+                  className="h-10 text-xs pl-9 font-mono font-bold rounded-xl bg-background border-border/80 shadow-xs"
                 />
               </div>
             </div>
 
-            <div className="space-y-1">
-              <Label className="text-xs font-semibold">Siklus Penagihan</Label>
+            {/* Siklus Penagihan */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-foreground">Siklus Penagihan</Label>
               <Select
                 value={formData.billing_cycle}
                 onValueChange={(val) => setFormData({ ...formData, billing_cycle: val as BillingCycle })}
               >
-                <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger className="h-10 text-xs rounded-xl bg-background border-border/80 shadow-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -221,84 +306,172 @@ export function SubscriptionModal({
               </Select>
             </div>
 
-            <div className="space-y-1">
-              <Label className="text-xs font-semibold">Tgl Mulai Langganan</Label>
-              <DatePicker
-                value={formData.start_date || ""}
-                onChange={(date) => setFormData({ ...formData, start_date: date })}
-                placeholder="Pilih tgl mulai..."
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label className="text-xs font-semibold">Tagihan Berikutnya *</Label>
+            {/* Tagihan Berikutnya */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-foreground flex items-center gap-1">
+                Jatuh Tempo Berikutnya <span className="text-rose-500">*</span>
+              </Label>
               <DatePicker
                 value={formData.next_billing_date}
                 onChange={(date) => setFormData({ ...formData, next_billing_date: date })}
                 placeholder="Pilih tgl tagihan..."
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label className="text-xs font-semibold">Metode Pembayaran</Label>
-              <Input
-                placeholder="cth: Kartu Kredit Corp, BCA Virtual Account"
-                value={formData.payment_method || ""}
-                onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
-                className="h-8 text-xs"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label className="text-xs font-semibold">Status Langganan</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(val) => setFormData({ ...formData, status: val as SubscriptionStatus })}
-              >
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Active">Aktif (Active)</SelectItem>
-                  <SelectItem value="Past Due">Jatuh Tempo (Past Due)</SelectItem>
-                  <SelectItem value="Cancelled">Dibatalkan (Cancelled)</SelectItem>
-                  <SelectItem value="Expired">Kedaluwarsa (Expired)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-1 sm:col-span-2">
-              <Label className="text-xs font-semibold">Catatan Tambahan</Label>
-              <textarea
-                rows={2}
-                placeholder="Keterangan jumlah lisensi, akun PIC, login credential manager..."
-                value={formData.notes || ""}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                className="w-full p-2 text-xs rounded-md border border-input bg-background font-sans focus:outline-none focus:ring-1 focus:ring-ring resize-none"
+                className="h-10 text-xs rounded-xl bg-background border-border/80 shadow-xs"
               />
             </div>
           </div>
 
-          <DialogFooter className="pt-2">
+          {/* Baris 4: Tgl Mulai & Catatan Tambahan */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold text-foreground">
+                Tgl Mulai Berlangganan
+              </Label>
+              <DatePicker
+                value={formData.start_date || ""}
+                onChange={(date) => setFormData({ ...formData, start_date: date })}
+                placeholder="Pilih tgl mulai..."
+                className="h-10 text-xs rounded-xl bg-muted/20 border-border/80"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="notes" className="text-xs font-semibold text-foreground">
+                Catatan / Keterangan Lisensi
+              </Label>
+              <Input
+                id="notes"
+                placeholder="Nomor lisensi, akun PIC, info perpanjangan..."
+                value={formData.notes || ""}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                className="h-10 text-xs rounded-xl bg-muted/20 border-border/80 focus-visible:ring-blue-500/30"
+              />
+            </div>
+          </div>
+
+          {/* Baris 5: Status Langganan - Radio Pills persis InventoryModal */}
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold text-foreground">Status Langganan</Label>
+            <div className="flex items-center gap-2.5 flex-wrap">
+              {/* Aktif (Active) */}
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, status: "Active" })}
+                className={`px-3.5 py-1.5 rounded-full border text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${
+                  formData.status === "Active"
+                    ? "bg-emerald-500/10 border-emerald-500/60 text-emerald-700 dark:text-emerald-300 ring-2 ring-emerald-500/20 font-semibold"
+                    : "bg-muted/20 border-border/80 text-muted-foreground hover:border-border hover:text-foreground"
+                }`}
+              >
+                <span
+                  className={`h-2.5 w-2.5 rounded-full transition-all ${
+                    formData.status === "Active"
+                      ? "bg-emerald-500 ring-2 ring-emerald-500/30"
+                      : "bg-emerald-500/40"
+                  }`}
+                />
+                <span>Aktif</span>
+              </button>
+
+              {/* Jatuh Tempo (Past Due) */}
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, status: "Past Due" })}
+                className={`px-3.5 py-1.5 rounded-full border text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${
+                  formData.status === "Past Due"
+                    ? "bg-rose-500/10 border-rose-500/60 text-rose-700 dark:text-rose-300 ring-2 ring-rose-500/20 font-semibold"
+                    : "bg-muted/20 border-border/80 text-muted-foreground hover:border-border hover:text-foreground"
+                }`}
+              >
+                <span
+                  className={`h-2.5 w-2.5 rounded-full transition-all ${
+                    formData.status === "Past Due"
+                      ? "bg-rose-500 ring-2 ring-rose-500/30"
+                      : "bg-rose-500/40"
+                  }`}
+                />
+                <span>Jatuh Tempo</span>
+              </button>
+
+              {/* Dibatalkan (Cancelled) */}
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, status: "Cancelled" })}
+                className={`px-3.5 py-1.5 rounded-full border text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${
+                  formData.status === "Cancelled"
+                    ? "bg-slate-500/10 border-slate-500/60 text-slate-700 dark:text-slate-300 ring-2 ring-slate-500/20 font-semibold"
+                    : "bg-muted/20 border-border/80 text-muted-foreground hover:border-border hover:text-foreground"
+                }`}
+              >
+                <span
+                  className={`h-2.5 w-2.5 rounded-full transition-all ${
+                    formData.status === "Cancelled"
+                      ? "bg-slate-500 ring-2 ring-slate-500/30"
+                      : "bg-slate-500/40"
+                  }`}
+                />
+                <span>Dibatalkan</span>
+              </button>
+
+              {/* Kedaluwarsa (Expired) */}
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, status: "Expired" })}
+                className={`px-3.5 py-1.5 rounded-full border text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${
+                  formData.status === "Expired"
+                    ? "bg-amber-500/10 border-amber-500/60 text-amber-700 dark:text-amber-300 ring-2 ring-amber-500/20 font-semibold"
+                    : "bg-muted/20 border-border/80 text-muted-foreground hover:border-border hover:text-foreground"
+                }`}
+              >
+                <span
+                  className={`h-2.5 w-2.5 rounded-full transition-all ${
+                    formData.status === "Expired"
+                      ? "bg-amber-500 ring-2 ring-amber-500/30"
+                      : "bg-amber-500/40"
+                  }`}
+                />
+                <span>Kedaluwarsa</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Footer - Persis InventoryModal */}
+          <DialogFooter className="pt-3 border-t border-border/50 flex flex-row items-center justify-between gap-2">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
-              className="h-8 text-xs"
+              className="h-9 px-4 rounded-xl text-xs font-medium border-border/80"
             >
               Batal
             </Button>
-            <Button
-              type="submit"
-              size="sm"
-              disabled={isSubmitting}
-              className="h-8 text-xs gap-1"
-            >
-              {isSubmitting && <Loader2 className="h-3 w-3 animate-spin" />}
-              <span>{initialData ? "Simpan Perubahan" : "Simpan Langganan"}</span>
-            </Button>
+
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleSaveDraft}
+                disabled={isSubmitting}
+                className="h-9 px-4 rounded-xl text-xs font-medium border-border/80"
+              >
+                Simpan Draf
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={isSubmitting}
+                className="h-9 px-5 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-xs gap-1.5"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Plus className="h-3.5 w-3.5" />
+                )}
+                <span>{initialData ? "Simpan Perubahan" : "+ Tambah Langganan"}</span>
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>

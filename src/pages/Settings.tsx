@@ -287,18 +287,18 @@ export function SettingsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
               Pengaturan Sistem
             </h1>
-            <Badge variant="outline" className="h-5 px-1.5 text-[10px] font-mono gap-1 text-primary border-primary/30 bg-primary/5">
+            <Badge variant="outline" className="h-5 px-2.5 text-[10px] font-mono gap-1 text-primary border-primary/30 bg-primary/5 rounded-full">
               <ShieldCheck className="h-3 w-3" />
               <span>Admin Mode</span>
             </Badge>
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Kelola preferensi instansi, parameter aturan peminjaman, ambang batas pengingat, dan delegasi peran pengguna.
           </p>
         </div>

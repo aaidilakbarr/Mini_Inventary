@@ -167,20 +167,20 @@ export function SubscriptionsPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">Langganan & Lisensi</h1>
-          <p className="text-xs text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">Langganan & Lisensi</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Lacak pengeluaran biaya berkala, lisensi software, dan siklus tagihan aktif.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           <Button
             variant="outline"
             size="sm"
             onClick={loadData}
             disabled={isLoading}
-            className="h-8 text-xs font-medium gap-1.5 border-border/80"
+            className="h-9 px-3.5 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
             <span>Segarkan</span>
@@ -190,18 +190,18 @@ export function SubscriptionsPage() {
             size="sm"
             onClick={exportCSV}
             disabled={subscriptions.length === 0}
-            className="h-8 text-xs font-medium gap-1.5 border-border/80"
+            className="h-9 px-3.5 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs"
           >
-            <Download className="h-3.5 w-3.5" />
+            <Download className="h-3.5 w-3.5 text-muted-foreground" />
             <span>Ekspor CSV</span>
           </Button>
           {isAdmin && (
             <Button
               size="sm"
               onClick={handleOpenAdd}
-              className="h-8 text-xs font-medium gap-1.5 bg-primary text-primary-foreground shadow-xs"
+              className="h-9 px-4 text-xs font-bold rounded-xl gap-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-primary dark:hover:bg-primary/90 text-white shadow-sm"
             >
-              <Plus className="h-3.5 w-3.5" />
+              <Plus className="h-4 w-4 stroke-[2.5]" />
               <span>Tambah Langganan</span>
             </Button>
           )}
@@ -272,7 +272,7 @@ export function SubscriptionsPage() {
                 variant={statusFilter === st ? "default" : "outline"}
                 size="sm"
                 onClick={() => setStatusFilter(st)}
-                className="h-7 text-xs px-2.5 rounded-md shrink-0 whitespace-nowrap"
+                className="h-7 text-xs px-3 rounded-full shrink-0 whitespace-nowrap"
               >
                 {st}
               </Button>
@@ -331,7 +331,7 @@ export function SubscriptionsPage() {
                         <p className="text-[10px] text-muted-foreground">{item.provider || "Penyedia Eksternal"}</p>
                       </TableCell>
                       <TableCell className="py-3">
-                        <Badge variant="outline" className="text-[10px] font-normal px-2 py-0 h-5">
+                        <Badge variant="outline" className="text-[10px] font-normal px-2.5 py-0.5 rounded-full border-border">
                           {item.category?.name || "Umum"}
                         </Badge>
                       </TableCell>
@@ -354,7 +354,7 @@ export function SubscriptionsPage() {
                             item.status === "Past Due" ? "destructive" :
                             item.status === "Cancelled" ? "secondary" : "outline"
                           }
-                          className="text-[10px] font-mono px-2 py-0 h-5"
+                          className="text-[10px] font-mono px-2.5 py-0.5 rounded-full"
                         >
                           {item.status === "Active" ? "Aktif" :
                            item.status === "Past Due" ? "Jatuh Tempo" :

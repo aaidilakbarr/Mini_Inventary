@@ -27,7 +27,7 @@ import {
   Loader2,
   Trash2,
 } from "lucide-react"
-import type { InventoryItem, CreateInventoryPayload, Category, InventoryStatus } from "@/types/database"
+import type { InventoryItem, CreateInventoryPayload, Category } from "@/types/database"
 
 interface InventoryModalProps {
   open: boolean

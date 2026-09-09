@@ -58,26 +58,26 @@ export function Dashboard() {
       {/* Welcome Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
             Selamat Datang, {profile?.full_name || "Pengguna"}!
           </h1>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Ringkasan pemantauan inventaris aset fisik, lisensi layanan, dan jadwal operasional perusahaan.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <Button
             variant="outline"
             size="sm"
             onClick={loadData}
             disabled={isLoading}
-            className="h-8 text-xs font-medium gap-1.5 border-border/80"
+            className="h-9 px-3.5 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
             <span>Segarkan</span>
           </Button>
           {isAdmin && (
-            <Badge variant="outline" className="h-8 px-2.5 text-xs font-mono gap-1 text-primary border-primary/30 bg-primary/5">
+            <Badge variant="outline" className="h-9 px-3 text-xs font-mono gap-1.5 text-primary border-primary/30 bg-primary/5 rounded-full inline-flex items-center">
               <ShieldCheck className="h-3.5 w-3.5" />
               <span>Admin Mode</span>
             </Badge>
@@ -230,7 +230,7 @@ export function Dashboard() {
                         b.status === "Pending Approval" ? "secondary" :
                         b.status === "Returned" ? "outline" : "destructive"
                       }
-                      className="text-[10px] font-mono px-2 shrink-0"
+                      className="text-[10px] font-mono px-2.5 py-0.5 rounded-full shrink-0"
                     >
                       {b.status === "Pending Approval" ? "Menunggu" :
                        b.status === "Borrowed" ? "Dipinjam" :
@@ -277,7 +277,7 @@ export function Dashboard() {
                         r.priority === "Tinggi" ? "destructive" :
                         r.priority === "Sedang" ? "secondary" : "outline"
                       }
-                      className="text-[10px] font-mono px-2 shrink-0"
+                      className="text-[10px] font-mono px-2.5 py-0.5 rounded-full shrink-0"
                     >
                       {r.priority}
                     </Badge>
@@ -314,7 +314,7 @@ export function Dashboard() {
                 <div key={sub.id} className="p-4 space-y-1.5 text-xs">
                   <div className="flex items-center justify-between">
                     <p className="font-semibold text-foreground truncate">{sub.service_name}</p>
-                    <Badge variant="outline" className="text-[10px] font-normal">
+                    <Badge variant="outline" className="text-[10px] font-normal px-2.5 py-0.5 rounded-full">
                       {sub.billing_cycle}
                     </Badge>
                   </div>

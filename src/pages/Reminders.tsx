@@ -142,20 +142,20 @@ export function RemindersPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">Pengingat & Agenda</h1>
-          <p className="text-xs text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">Pengingat & Agenda</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Pusat notifikasi jadwal pemeliharaan aset, tagihan lisensi, dan agenda penting internal.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           <Button
             variant="outline"
             size="sm"
             onClick={loadData}
             disabled={isLoading}
-            className="h-8 text-xs font-medium gap-1.5 border-border/80"
+            className="h-9 px-3.5 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
             <span>Segarkan</span>
@@ -163,9 +163,9 @@ export function RemindersPage() {
           <Button
             size="sm"
             onClick={handleOpenAdd}
-            className="h-8 text-xs font-medium gap-1.5 bg-primary text-primary-foreground shadow-xs"
+            className="h-9 px-4 text-xs font-bold rounded-xl gap-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-primary dark:hover:bg-primary/90 text-white shadow-sm"
           >
-            <Plus className="h-3.5 w-3.5" />
+            <Plus className="h-4 w-4 stroke-[2.5]" />
             <span>Tambah Pengingat</span>
           </Button>
         </div>
@@ -235,7 +235,7 @@ export function RemindersPage() {
                 variant={filterTab === tab ? "default" : "outline"}
                 size="sm"
                 onClick={() => setFilterTab(tab)}
-                className="h-7 text-xs px-2.5 rounded-md shrink-0 whitespace-nowrap"
+                className="h-7 text-xs px-3 rounded-full shrink-0 whitespace-nowrap"
               >
                 {tab}
               </Button>
@@ -327,7 +327,7 @@ export function RemindersPage() {
                             item.priority === "Tinggi" ? "destructive" :
                             item.priority === "Sedang" ? "secondary" : "outline"
                           }
-                          className="text-[10px] font-mono px-2 py-0 h-5"
+                          className="text-[10px] font-mono px-2.5 py-0.5 rounded-full"
                         >
                           {item.priority}
                         </Badge>
@@ -340,12 +340,12 @@ export function RemindersPage() {
                       </TableCell>
                       <TableCell className="py-3">
                         {item.source_type === "inventory" ? (
-                          <Badge variant="outline" className="text-[10px] font-mono px-2 py-0 h-5 bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 gap-1 inline-flex items-center">
+                          <Badge variant="outline" className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 gap-1 inline-flex items-center">
                             <Wrench className="h-3 w-3" />
                             <span>Perbaikan Aset</span>
                           </Badge>
                         ) : (
-                          <Badge variant="outline" className="text-[10px] font-mono capitalize px-2 py-0 h-5">
+                          <Badge variant="outline" className="text-[10px] font-mono capitalize px-2.5 py-0.5 rounded-full">
                             {item.source_type || "manual"}
                           </Badge>
                         )}

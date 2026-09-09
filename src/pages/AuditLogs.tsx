@@ -82,24 +82,24 @@ export function AuditLogsPage() {
   const getActionBadge = (action: string) => {
     const act = action.toUpperCase()
     if (act.includes('CREATE') || act.includes('ADD') || act.includes('INSERT')) {
-      return <Badge variant="outline" className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30 font-mono text-[10px] font-bold">{action}</Badge>
+      return <Badge variant="outline" className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30 font-mono text-[10px] font-bold rounded-full px-2.5 py-0.5">{action}</Badge>
     }
     if (act.includes('UPDATE') || act.includes('EDIT')) {
-      return <Badge variant="outline" className="bg-blue-500/15 text-blue-600 border-blue-500/30 font-mono text-[10px] font-bold">{action}</Badge>
+      return <Badge variant="outline" className="bg-blue-500/15 text-blue-600 border-blue-500/30 font-mono text-[10px] font-bold rounded-full px-2.5 py-0.5">{action}</Badge>
     }
     if (act.includes('DELETE') || act.includes('REMOVE')) {
-      return <Badge variant="outline" className="bg-rose-500/15 text-rose-600 border-rose-500/30 font-mono text-[10px] font-bold">{action}</Badge>
+      return <Badge variant="outline" className="bg-rose-500/15 text-rose-600 border-rose-500/30 font-mono text-[10px] font-bold rounded-full px-2.5 py-0.5">{action}</Badge>
     }
     if (act.includes('APPROVE')) {
-      return <Badge variant="outline" className="bg-teal-500/15 text-teal-600 border-teal-500/30 font-mono text-[10px] font-bold">{action}</Badge>
+      return <Badge variant="outline" className="bg-teal-500/15 text-teal-600 border-teal-500/30 font-mono text-[10px] font-bold rounded-full px-2.5 py-0.5">{action}</Badge>
     }
     if (act.includes('REJECT')) {
-      return <Badge variant="outline" className="bg-red-500/15 text-red-600 border-red-500/30 font-mono text-[10px] font-bold">{action}</Badge>
+      return <Badge variant="outline" className="bg-red-500/15 text-red-600 border-red-500/30 font-mono text-[10px] font-bold rounded-full px-2.5 py-0.5">{action}</Badge>
     }
     if (act.includes('RETURN')) {
-      return <Badge variant="outline" className="bg-purple-500/15 text-purple-600 border-purple-500/30 font-mono text-[10px] font-bold">{action}</Badge>
+      return <Badge variant="outline" className="bg-purple-500/15 text-purple-600 border-purple-500/30 font-mono text-[10px] font-bold rounded-full px-2.5 py-0.5">{action}</Badge>
     }
-    return <Badge variant="outline" className="bg-amber-500/15 text-amber-600 border-amber-500/30 font-mono text-[10px] font-bold">{action}</Badge>
+    return <Badge variant="outline" className="bg-amber-500/15 text-amber-600 border-amber-500/30 font-mono text-[10px] font-bold rounded-full px-2.5 py-0.5">{action}</Badge>
   }
 
   const exportCSV = () => {
@@ -129,29 +129,29 @@ export function AuditLogsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
               Log Audit Sistem
             </h1>
-            <Badge variant="outline" className="h-5 px-1.5 text-[10px] font-mono gap-1 text-primary border-primary/30 bg-primary/5">
+            <Badge variant="outline" className="h-5 px-2.5 text-[10px] font-mono gap-1 text-primary border-primary/30 bg-primary/5 rounded-full">
               <ShieldCheck className="h-3 w-3" />
               <span>Admin Only</span>
             </Badge>
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             Rekaman jejak aktivitas, mutasi data, dan persetujuan yang dilakukan oleh pengguna maupun sistem otomatis.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-2.5 flex-wrap">
           <Button
             variant="outline"
             size="sm"
             onClick={loadData}
             disabled={isLoading}
-            className="h-8 text-xs font-medium gap-1.5 border-border/80"
+            className="h-9 px-3.5 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
             <span>Segarkan</span>
@@ -161,7 +161,7 @@ export function AuditLogsPage() {
             size="sm"
             onClick={exportCSV}
             disabled={logs.length === 0}
-            className="h-8 text-xs font-medium gap-1.5 border-border/80"
+            className="h-9 px-3.5 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs"
           >
             <Download className="h-3.5 w-3.5 text-muted-foreground" />
             <span>Ekspor CSV</span>
@@ -351,7 +351,7 @@ export function AuditLogsPage() {
                               <span className="text-[10px] text-muted-foreground truncate">{log.user?.email || 'automated trigger'}</span>
                               <Badge 
                                 variant={log.user?.role === 'admin' ? 'default' : 'secondary'} 
-                                className="text-[8px] uppercase px-1 py-0 h-3.5 font-mono"
+                                className="text-[8px] uppercase px-1.5 py-0.5 rounded-full font-mono"
                               >
                                 {log.user?.role || 'SYS'}
                               </Badge>
@@ -368,7 +368,7 @@ export function AuditLogsPage() {
                       {/* Entitas */}
                       <TableCell className="text-xs py-3">
                         <div className="flex flex-col gap-0.5">
-                          <Badge variant="secondary" className="font-mono text-[10px] uppercase w-fit">
+                          <Badge variant="secondary" className="font-mono text-[10px] uppercase w-fit rounded-full px-2.5 py-0.5">
                             {log.entity_type}
                           </Badge>
                           {log.entity_id && (
