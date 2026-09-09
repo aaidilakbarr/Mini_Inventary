@@ -205,6 +205,29 @@ export async function createBorrowing(payload: CreateBorrowingPayload): Promise<
 }
 
 export async function approveBorrowing(borrowingId: string, inventoryId: string): Promise<void> {
+  // 1. Attempt Atomic RPC execution first (ensures race condition safety and stock lock)
+  try {
+    const { error: rpcError } = await supabase.rpc('rpc_approve_borrowing', {
+      target_borrowing_id: borrowingId,
+    })
+
+    if (!rpcError) {
+      return
+    }
+
+    // If RPC failed due to business validation (e.g. stock exhausted), throw error immediately
+    if (rpcError.message && !rpcError.message.includes('function') && !rpcError.message.includes('not found')) {
+      throw new Error(rpcError.message)
+    }
+
+    console.warn('RPC rpc_approve_borrowing not registered yet, using fallback:', rpcError.message)
+  } catch (err: any) {
+    if (err?.message && !err.message.includes('function') && !err.message.includes('not found') && !err.message.includes('schema')) {
+      throw err
+    }
+  }
+
+  // Fallback: 2-step manual client-side update
   const { error: borrowError } = await supabase
     .from('borrowings')
     .update({ 

@@ -27,6 +27,7 @@ import { CategoryModal } from "@/components/modals/CategoryModal"
 import { DeleteConfirmDialog } from "@/components/modals/DeleteConfirmDialog"
 import { fetchCategories, createCategory, updateCategory, deleteCategory } from "@/lib/api/categories"
 import { fetchProfiles, updateUserProfileRole } from "@/lib/api/profiles"
+import { fetchSystemSettings, saveSystemSetting } from "@/lib/api/settings"
 import { recordAuditLog } from "@/lib/api/auditLogs"
 import { formatDateID } from "@/lib/formatters"
 import { useAuth } from "@/hooks/useAuth"
@@ -104,6 +105,40 @@ export function SettingsPage() {
     }
   }, [])
 
+  // Load centralized settings from Supabase on mount
+  useEffect(() => {
+    let isMounted = true
+    fetchSystemSettings().then((s) => {
+      if (!isMounted) return
+      setOrgName(s.organization.name)
+      setOrgAddress(s.organization.address)
+      setOrgEmail(s.organization.email)
+      setOrgLogo(s.organization.logo)
+
+      setDefaultLoanDays(String(s.borrowing_rules.default_loan_days))
+      setMaxItemsPerUser(String(s.borrowing_rules.max_items_per_user))
+      setGracePeriodDays(String(s.borrowing_rules.grace_period_days))
+      setRequireApproval(s.borrowing_rules.require_approval)
+
+      setWarrantyLeadDays(String(s.reminder_thresholds.warranty_lead_days))
+      setBorrowingLeadDays(String(s.reminder_thresholds.borrowing_lead_days))
+      setSubscriptionLeadDays(String(s.reminder_thresholds.subscription_lead_days))
+
+      setInAppActive(s.notifications.in_app_active)
+      setSmtpHost(s.notifications.smtp_host)
+      setSmtpSender(s.notifications.smtp_sender)
+      setTelegramToken(s.notifications.telegram_token)
+      setTelegramChatId(s.notifications.telegram_chat_id)
+      setWhatsappEndpoint(s.notifications.whatsapp_endpoint)
+    }).catch((err) => {
+      console.warn("Gagal memuat pengaturan sistem dari Supabase, menggunakan cache lokal:", err)
+    })
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
   useEffect(() => {
     if (activeTab === "categories") {
       loadCategories()
@@ -112,84 +147,44 @@ export function SettingsPage() {
     }
   }, [activeTab, loadCategories, loadUsers])
 
-  const handleSaveOrganization = () => {
-    localStorage.setItem("setting_org_name", orgName)
-    localStorage.setItem("setting_org_address", orgAddress)
-    localStorage.setItem("setting_org_email", orgEmail)
-    localStorage.setItem("setting_org_logo", orgLogo)
-
-    recordAuditLog({
-      action: "UPDATE_SYSTEM_SETTINGS",
-      entity_type: "settings",
-      details: {
-        section: "organization",
-        org_name: orgName,
-        org_email: orgEmail,
-      }
+  const handleSaveOrganization = async () => {
+    await saveSystemSetting("organization", {
+      name: orgName,
+      address: orgAddress,
+      email: orgEmail,
+      logo: orgLogo,
     })
-
     triggerSaveToast()
   }
 
-  const handleSaveBorrowingRules = () => {
-    localStorage.setItem("setting_loan_days", defaultLoanDays)
-    localStorage.setItem("setting_max_items", maxItemsPerUser)
-    localStorage.setItem("setting_grace_period", gracePeriodDays)
-    localStorage.setItem("setting_require_approval", String(requireApproval))
-
-    recordAuditLog({
-      action: "UPDATE_SYSTEM_SETTINGS",
-      entity_type: "settings",
-      details: {
-        section: "borrowing_rules",
-        default_loan_days: defaultLoanDays,
-        max_items: maxItemsPerUser,
-        grace_period_days: gracePeriodDays,
-        require_approval: requireApproval
-      }
+  const handleSaveBorrowingRules = async () => {
+    await saveSystemSetting("borrowing_rules", {
+      default_loan_days: Number(defaultLoanDays) || 7,
+      max_items_per_user: Number(maxItemsPerUser) || 3,
+      grace_period_days: Number(gracePeriodDays) || 1,
+      require_approval: Boolean(requireApproval),
     })
-
     triggerSaveToast()
   }
 
-  const handleSaveReminderRules = () => {
-    localStorage.setItem("setting_warranty_lead", warrantyLeadDays)
-    localStorage.setItem("setting_borrowing_lead", borrowingLeadDays)
-    localStorage.setItem("setting_subscription_lead", subscriptionLeadDays)
-
-    recordAuditLog({
-      action: "UPDATE_SYSTEM_SETTINGS",
-      entity_type: "settings",
-      details: {
-        section: "reminder_thresholds",
-        warranty_lead_days: warrantyLeadDays,
-        borrowing_lead_days: borrowingLeadDays,
-        subscription_lead_days: subscriptionLeadDays
-      }
+  const handleSaveReminderRules = async () => {
+    await saveSystemSetting("reminder_thresholds", {
+      warranty_lead_days: Number(warrantyLeadDays) || 30,
+      borrowing_lead_days: Number(borrowingLeadDays) || 3,
+      subscription_lead_days: Number(subscriptionLeadDays) || 7,
     })
-
     triggerSaveToast()
   }
 
-  const handleSaveNotifications = () => {
-    localStorage.setItem("setting_inapp_active", String(inAppActive))
-    localStorage.setItem("setting_smtp_host", smtpHost)
-    localStorage.setItem("setting_smtp_sender", smtpSender)
-    localStorage.setItem("setting_tg_token", telegramToken)
-    localStorage.setItem("setting_tg_chat_id", telegramChatId)
-    localStorage.setItem("setting_wa_endpoint", whatsappEndpoint)
-
-    recordAuditLog({
-      action: "UPDATE_SYSTEM_SETTINGS",
-      entity_type: "settings",
-      details: {
-        section: "notifications",
-        in_app_active: inAppActive,
-        smtp_host: smtpHost,
-        telegram_configured: !!telegramToken,
-      }
+  const handleSaveNotifications = async () => {
+    await saveSystemSetting("notifications", {
+      in_app_active: Boolean(inAppActive),
+      smtp_host: smtpHost,
+      smtp_sender: smtpSender,
+      telegram_token: telegramToken,
+      telegram_chat_id: telegramChatId,
+      whatsapp_endpoint: whatsappEndpoint,
     })
-
     triggerSaveToast()
   }
 

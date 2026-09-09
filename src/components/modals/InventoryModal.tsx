@@ -26,8 +26,11 @@ import {
   Plus,
   Loader2,
   Trash2,
+  Link2,
+  Image as ImageIcon,
 } from "lucide-react"
 import type { InventoryItem, CreateInventoryPayload, Category } from "@/types/database"
+import { uploadInventoryPhoto, MAX_PHOTO_SIZE_BYTES } from "@/lib/api/storage"
 
 interface InventoryModalProps {
   open: boolean
@@ -58,8 +61,12 @@ export function InventoryModal({
     photo_url: null,
   })
 
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewImage, setPreviewImage] = useState<string | null>(null)
+  const [imageSourceMode, setImageSourceMode] = useState<"file" | "url">("file")
+  const [imageUrlInput, setImageUrlInput] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false)
   const [errorMsg, setErrorMsg] = useState("")
 
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -86,6 +93,13 @@ export function InventoryModal({
         photo_url: initialData.photo_url || null,
       })
       setPreviewImage(initialData.photo_url || null)
+      if (initialData.photo_url && !initialData.photo_url.includes("inventory-images")) {
+        setImageUrlInput(initialData.photo_url)
+        setImageSourceMode("url")
+      } else {
+        setImageUrlInput("")
+        setImageSourceMode("file")
+      }
     } else {
       setFormData({
         code: generateAssetCode(),
@@ -101,7 +115,11 @@ export function InventoryModal({
         photo_url: null,
       })
       setPreviewImage(null)
+      setImageUrlInput("")
+      setImageSourceMode("file")
     }
+    setSelectedFile(null)
+    setIsUploadingPhoto(false)
     setErrorMsg("")
   }, [initialData, open, categories])
 
@@ -113,26 +131,44 @@ export function InventoryModal({
     const file = e.target.files?.[0]
     if (!file) return
 
-    if (file.size > 5 * 1024 * 1024) {
+    if (file.size > MAX_PHOTO_SIZE_BYTES) {
       setErrorMsg("Ukuran file gambar maksimal 5MB")
       return
     }
 
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      const result = reader.result as string
-      setPreviewImage(result)
-      setFormData((prev) => ({ ...prev, photo_url: result }))
+    const allowedMime = ["image/jpeg", "image/png", "image/webp", "image/gif"]
+    if (!allowedMime.includes(file.type)) {
+      setErrorMsg("Format berkas tidak didukung. Harap gunakan format JPG, PNG, atau WEBP.")
+      return
     }
-    reader.readAsDataURL(file)
+
+    setErrorMsg("")
+    setSelectedFile(file)
+    const localUrl = URL.createObjectURL(file)
+    setPreviewImage(localUrl)
+    setFormData((prev) => ({ ...prev, photo_url: localUrl }))
   }
 
   const handleRemoveImage = (e: React.MouseEvent) => {
     e.stopPropagation()
+    setSelectedFile(null)
     setPreviewImage(null)
+    setImageUrlInput("")
     setFormData((prev) => ({ ...prev, photo_url: null }))
     if (fileInputRef.current) {
       fileInputRef.current.value = ""
+    }
+  }
+
+  const handleUrlInputChange = (url: string) => {
+    setImageUrlInput(url)
+    setSelectedFile(null)
+    if (url.trim()) {
+      setPreviewImage(url.trim())
+      setFormData((prev) => ({ ...prev, photo_url: url.trim() }))
+    } else {
+      setPreviewImage(null)
+      setFormData((prev) => ({ ...prev, photo_url: null }))
     }
   }
 
@@ -150,12 +186,32 @@ export function InventoryModal({
     try {
       setIsSubmitting(true)
       setErrorMsg("")
+
+      let finalPhotoUrl = formData.photo_url
+
+      // If a local file was selected, upload it directly to Supabase Storage
+      if (selectedFile) {
+        setIsUploadingPhoto(true)
+        try {
+          finalPhotoUrl = await uploadInventoryPhoto(selectedFile, formData.code)
+        } catch (uploadErr: any) {
+          console.error("Gagal mengunggah foto ke storage:", uploadErr)
+          setErrorMsg(uploadErr.message || "Gagal mengunggah foto ke penyimpanan.")
+          setIsSubmitting(false)
+          setIsUploadingPhoto(false)
+          return
+        }
+      } else if (imageSourceMode === "url") {
+        finalPhotoUrl = imageUrlInput.trim() || null
+      }
+
       await onSubmit({
         ...formData,
         code: formData.code.trim(),
         name: formData.name.trim(),
         category_id: formData.category_id && formData.category_id !== "none" ? formData.category_id : null,
         quantity: Math.max(1, Number(formData.quantity) || 1),
+        photo_url: finalPhotoUrl,
       })
       onOpenChange(false)
     } catch (err: any) {
@@ -163,6 +219,7 @@ export function InventoryModal({
       setErrorMsg(err.message || "Gagal menyimpan data aset")
     } finally {
       setIsSubmitting(false)
+      setIsUploadingPhoto(false)
     }
   }
 
@@ -175,6 +232,19 @@ export function InventoryModal({
     try {
       setIsSubmitting(true)
       setErrorMsg("")
+
+      let finalPhotoUrl = formData.photo_url
+      if (selectedFile) {
+        setIsUploadingPhoto(true)
+        try {
+          finalPhotoUrl = await uploadInventoryPhoto(selectedFile, formData.code)
+        } catch (uploadErr: any) {
+          console.error("Gagal mengunggah foto draf:", uploadErr)
+        }
+      } else if (imageSourceMode === "url") {
+        finalPhotoUrl = imageUrlInput.trim() || null
+      }
+
       await onSubmit({
         ...formData,
         code: formData.code.trim() || generateAssetCode(),
@@ -182,6 +252,7 @@ export function InventoryModal({
         category_id: formData.category_id && formData.category_id !== "none" ? formData.category_id : null,
         quantity: Math.max(1, Number(formData.quantity) || 1),
         status: "Available",
+        photo_url: finalPhotoUrl,
       })
       onOpenChange(false)
     } catch (err: any) {
@@ -189,6 +260,7 @@ export function InventoryModal({
       setErrorMsg(err.message || "Gagal menyimpan draf aset")
     } finally {
       setIsSubmitting(false)
+      setIsUploadingPhoto(false)
     }
   }
 
@@ -496,53 +568,134 @@ export function InventoryModal({
             </div>
           </div>
 
-          {/* Baris 6: Visual / Foto Aset - Dropzone persis gambar referensi */}
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold text-foreground">Visual / Foto Aset</Label>
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-border/80 hover:border-blue-500/50 dark:hover:border-blue-400/50 rounded-2xl p-6 text-center transition-all cursor-pointer bg-muted/10 hover:bg-muted/20 group relative overflow-hidden"
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/png, image/jpeg, image/webp"
-                onChange={handleImageFileChange}
-                className="hidden"
-              />
-              {previewImage ? (
-                <div className="flex flex-col items-center gap-2">
-                  <div className="relative group/preview">
-                    <img
-                      src={previewImage}
-                      alt="Preview Aset"
-                      className="h-24 w-24 object-cover rounded-xl border border-border/60 shadow-sm"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleRemoveImage}
-                      className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-xs hover:scale-110 transition-transform"
-                      title="Hapus gambar"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground">Klik untuk memilih gambar lain</p>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center gap-2">
-                  <div className="h-10 w-10 rounded-full bg-muted/80 flex items-center justify-center text-muted-foreground group-hover:text-blue-600 transition-colors shadow-2xs">
-                    <UploadCloud className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-foreground">Klik atau seret file gambar ke sini</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Mendukung format PNG, JPG, atau WEBP hingga 5MB
+          {/* Baris 6: Visual / Foto Aset */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-semibold text-foreground">Visual / Foto Aset</Label>
+              
+              {/* Mode Switch: Upload File vs Tautan URL */}
+              <div className="flex items-center p-0.5 rounded-lg bg-muted/60 border border-border/70 text-[10px]">
+                <button
+                  type="button"
+                  onClick={() => setImageSourceMode("file")}
+                  className={`px-2.5 py-1 rounded-md transition-all font-medium flex items-center gap-1 cursor-pointer ${
+                    imageSourceMode === "file"
+                      ? "bg-card text-foreground shadow-2xs font-semibold"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <ImageIcon className="h-3 w-3" />
+                  <span>Unggah Berkas</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setImageSourceMode("url")}
+                  className={`px-2.5 py-1 rounded-md transition-all font-medium flex items-center gap-1 cursor-pointer ${
+                    imageSourceMode === "url"
+                      ? "bg-card text-foreground shadow-2xs font-semibold"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Link2 className="h-3 w-3" />
+                  <span>Tautan URL</span>
+                </button>
+              </div>
+            </div>
+
+            {imageSourceMode === "file" ? (
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed border-border/80 hover:border-blue-500/50 dark:hover:border-blue-400/50 rounded-2xl p-5 text-center transition-all cursor-pointer bg-muted/10 hover:bg-muted/20 group relative overflow-hidden"
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png, image/jpeg, image/webp"
+                  onChange={handleImageFileChange}
+                  className="hidden"
+                />
+                {previewImage ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="relative group/preview">
+                      <img
+                        src={previewImage}
+                        alt="Preview Aset"
+                        className="h-24 w-24 object-cover rounded-xl border border-border/60 shadow-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-xs hover:scale-110 transition-transform"
+                        title="Hapus gambar"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      {selectedFile ? `Berkas terpilih: ${selectedFile.name}` : "Klik untuk memilih gambar lain"}
                     </p>
                   </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <div className="h-10 w-10 rounded-full bg-muted/80 flex items-center justify-center text-muted-foreground group-hover:text-blue-600 transition-colors shadow-2xs">
+                      <UploadCloud className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-foreground">Klik atau seret file gambar ke sini</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Mendukung format PNG, JPG, atau WEBP hingga 5MB (disimpan ke Supabase Storage)
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3 p-4 rounded-2xl border border-border/80 bg-muted/10">
+                <div className="space-y-1.5">
+                  <Label htmlFor="image-url" className="text-[11px] text-muted-foreground">
+                    URL Gambar Eksternal / CDN Produk
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                      <Input
+                        id="image-url"
+                        placeholder="https://images.unsplash.com/... atau URL produk vendor"
+                        value={imageUrlInput}
+                        onChange={(e) => handleUrlInputChange(e.target.value)}
+                        className="h-9 pl-9 text-xs rounded-xl bg-background"
+                      />
+                    </div>
+                    {imageUrlInput && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleRemoveImage}
+                        className="h-9 px-3 text-xs text-destructive border-border/80"
+                      >
+                        Hapus
+                      </Button>
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
+
+                {previewImage && (
+                  <div className="flex items-center gap-3 pt-2 border-t border-border/50">
+                    <img
+                      src={previewImage}
+                      alt="Preview Aset URL"
+                      onError={() => setErrorMsg("Gagal memuat pratinjau gambar dari URL tersebut.")}
+                      className="h-16 w-16 object-cover rounded-xl border border-border/60 shadow-2xs"
+                    />
+                    <div className="text-[11px] text-muted-foreground truncate">
+                      <p className="font-semibold text-foreground">Pratinjau Gambar URL</p>
+                      <p className="truncate max-w-xs">{imageUrlInput}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Footer - Persis gambar referensi */}
@@ -552,7 +705,7 @@ export function InventoryModal({
               variant="outline"
               size="sm"
               onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
+              disabled={isSubmitting || isUploadingPhoto}
               className="h-9 px-4 rounded-xl text-xs font-medium border-border/80"
             >
               Batal
@@ -564,7 +717,7 @@ export function InventoryModal({
                 variant="outline"
                 size="sm"
                 onClick={handleSaveDraft}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isUploadingPhoto}
                 className="h-9 px-4 rounded-xl text-xs font-medium border-border/80"
               >
                 Simpan Draf
@@ -572,15 +725,20 @@ export function InventoryModal({
               <Button
                 type="submit"
                 size="sm"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isUploadingPhoto}
                 className="h-9 px-5 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-xs gap-1.5"
               >
-                {isSubmitting ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                {isSubmitting || isUploadingPhoto ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span>{isUploadingPhoto ? "Mengunggah Foto..." : "Menyimpan..."}</span>
+                  </>
                 ) : (
-                  <Plus className="h-3.5 w-3.5" />
+                  <>
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>{initialData ? "Simpan Perubahan" : "+ Tambah Aset"}</span>
+                  </>
                 )}
-                <span>{initialData ? "Simpan Perubahan" : "+ Tambah Aset"}</span>
               </Button>
             </div>
           </DialogFooter>

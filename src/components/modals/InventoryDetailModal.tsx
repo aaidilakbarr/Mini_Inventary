@@ -25,7 +25,8 @@ import {
   Check,
   Edit2,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  ExternalLink
 } from "lucide-react"
 import type { InventoryItem } from "@/types/database"
 
@@ -158,6 +159,39 @@ export function InventoryDetailModal({
         </DialogHeader>
 
         <div className="space-y-4 py-2 text-xs">
+          {/* Visual Showcase (if asset has a photo) */}
+          {item.photo_url && (
+            <div className="rounded-2xl border border-border/80 bg-slate-50/70 dark:bg-slate-900/40 p-3.5 flex flex-col sm:flex-row items-center gap-4 overflow-hidden shadow-2xs group">
+              <div className="relative h-28 w-28 shrink-0 rounded-xl overflow-hidden bg-background border border-border/60 flex items-center justify-center shadow-xs">
+                <img
+                  src={item.photo_url}
+                  alt={item.name}
+                  className="h-full w-full object-contain p-1 group-hover:scale-105 transition-transform duration-200"
+                />
+              </div>
+              <div className="space-y-1 text-center sm:text-left flex-1 min-w-0">
+                <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-muted-foreground">
+                  Foto Resmi Unit Aset
+                </span>
+                <p className="text-sm font-bold text-foreground truncate">{item.name}</p>
+                <p className="text-[11px] text-muted-foreground line-clamp-2">
+                  Tersimpan pada penyimpanan cloud inventaris. Gunakan tautan di bawah untuk melihat foto resolusi penuh.
+                </p>
+                <div className="pt-1">
+                  <a
+                    href={item.photo_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs text-primary font-medium hover:underline"
+                  >
+                    <span>Buka Foto Resolusi Penuh</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Quick Metrics Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
             <div className="p-3 rounded-lg bg-muted/40 border border-border/70 space-y-1">
