@@ -33,6 +33,7 @@ interface BorrowingModalProps {
   profiles: UserProfile[]
   currentUserId: string
   isAdmin: boolean
+  initialInventoryId?: string
   onSubmit: (payload: CreateBorrowingPayload | CreateBorrowingPayload[]) => Promise<void>
 }
 
@@ -43,6 +44,7 @@ export function BorrowingModal({
   profiles,
   currentUserId,
   isAdmin,
+  initialInventoryId,
   onSubmit,
 }: BorrowingModalProps) {
   const [borrowType, setBorrowType] = useState<BorrowType>("single")
@@ -58,16 +60,22 @@ export function BorrowingModal({
   const [errorMsg, setErrorMsg] = useState("")
 
   useEffect(() => {
+    if (!open) return
+
     // Default due date: 7 days from today
     const d = new Date()
     d.setDate(d.getDate() + 7)
     const formattedDate = d.toISOString().split("T")[0]
 
     setBorrowType("single")
-    setSingleInventoryId(availableInventories.length > 0 ? availableInventories[0].id : "")
+    const targetId = (initialInventoryId && availableInventories.some(inv => inv.id === initialInventoryId))
+      ? initialInventoryId
+      : (availableInventories.length > 0 ? availableInventories[0].id : "")
+
+    setSingleInventoryId(targetId)
     setMultipleInventoryIds([
-      availableInventories.length > 0 ? availableInventories[0].id : "",
-      availableInventories.length > 1 ? availableInventories[1].id : "",
+      targetId,
+      availableInventories.length > 1 ? (availableInventories.find(inv => inv.id !== targetId)?.id || "") : "",
       "",
     ])
     setBorrowerId(currentUserId || (profiles.length > 0 ? profiles[0].id : ""))
@@ -75,7 +83,7 @@ export function BorrowingModal({
     setNotes("")
     setStatus(isAdmin ? "Borrowed" : "Pending Approval")
     setErrorMsg("")
-  }, [open, availableInventories, profiles, currentUserId, isAdmin])
+  }, [open, availableInventories, profiles, currentUserId, isAdmin, initialInventoryId])
 
   // Options for single mode
   const singleInventoryOptions: ComboboxOption[] = availableInventories.map((inv) => ({

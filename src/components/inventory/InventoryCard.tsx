@@ -5,7 +5,8 @@ import {
   Trash2, 
   Laptop, 
   Armchair, 
-  Truck
+  Truck,
+  ArrowLeftRight
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { InventoryItem } from "@/types/database"
@@ -14,6 +15,7 @@ interface InventoryCardProps {
   item: InventoryItem
   isAdmin: boolean
   onViewDetail: (item: InventoryItem) => void
+  onBorrow?: (item: InventoryItem) => void
   onEdit: (item: InventoryItem) => void
   onDelete: (item: InventoryItem) => void
 }
@@ -22,6 +24,7 @@ export function InventoryCard({
   item,
   isAdmin,
   onViewDetail,
+  onBorrow,
   onEdit,
   onDelete,
 }: InventoryCardProps) {
@@ -191,16 +194,42 @@ export function InventoryCard({
         </div>
       </div>
 
-      {/* Action CTA: Lihat Detail */}
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => onViewDetail(item)}
-        className="w-full h-8 text-xs font-semibold text-primary hover:text-primary-foreground hover:bg-primary border-primary/20 hover:border-primary transition-all duration-150 rounded-xl"
-      >
-        <Eye className="h-3.5 w-3.5 mr-1.5" />
-        Lihat Detail
-      </Button>
+      {/* Action CTAs: Lihat Detail & Pinjam Barang */}
+      <div className="grid grid-cols-2 gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onViewDetail(item)}
+          className="h-8 text-xs font-semibold text-foreground hover:text-primary hover:bg-primary/10 border-border/80 hover:border-primary/40 transition-all duration-150 rounded-xl px-2"
+          title="Lihat Detail Aset"
+        >
+          <Eye className="h-3.5 w-3.5 mr-1 shrink-0" />
+          <span className="truncate">Lihat Detail</span>
+        </Button>
+        <Button
+          size="sm"
+          disabled={item.status !== "Available" || (item.quantity ?? 0) <= 0}
+          onClick={(e) => {
+            e.stopPropagation()
+            onBorrow?.(item)
+          }}
+          className={`h-8 text-xs font-semibold rounded-xl transition-all duration-150 px-2 ${
+            item.status === "Available" && (item.quantity ?? 0) > 0
+              ? "bg-blue-600 hover:bg-blue-700 text-white shadow-xs"
+              : "bg-muted text-muted-foreground cursor-not-allowed opacity-60 hover:bg-muted"
+          }`}
+          title={
+            item.status !== "Available"
+              ? `Status: ${item.status}`
+              : (item.quantity ?? 0) <= 0
+              ? "Stok Habis"
+              : "Pinjam Barang"
+          }
+        >
+          <ArrowLeftRight className="h-3.5 w-3.5 mr-1 shrink-0" />
+          <span className="truncate">Pinjam Barang</span>
+        </Button>
+      </div>
     </div>
   )
 }

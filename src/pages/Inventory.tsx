@@ -11,7 +11,9 @@ import {
   LayoutGrid, 
   List, 
   Tag, 
-  Scan
+  Scan,
+  ArrowLeftRight,
+  CheckCircle2
 } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -36,13 +38,17 @@ import { InventoryModal } from "@/components/modals/InventoryModal"
 import { InventoryDetailModal } from "@/components/modals/InventoryDetailModal"
 import { DeleteConfirmDialog } from "@/components/modals/DeleteConfirmDialog"
 import { CategoryModal } from "@/components/modals/CategoryModal"
+import { BorrowingModal } from "@/components/modals/BorrowingModal"
 import { fetchInventories, createInventory, updateInventory, deleteInventory } from "@/lib/api/inventories"
 import { fetchCategories, createCategory } from "@/lib/api/categories"
+import { fetchProfiles } from "@/lib/api/profiles"
+import { createBorrowing } from "@/lib/api/borrowings"
 import { useAuth } from "@/hooks/useAuth"
-import type { InventoryItem, CreateInventoryPayload, Category } from "@/types/database"
+import type { InventoryItem, CreateInventoryPayload, Category, CreateBorrowingPayload } from "@/types/database"
+import type { UserProfile } from "@/types/auth"
 
 export function InventoryPage() {
-  const { isAdmin } = useAuth()
+  const { user, isAdmin } = useAuth()
   const [inventories, setInventories] = useState<InventoryItem[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -67,15 +73,23 @@ export function InventoryPage() {
   // Category modal state
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
 
+  // Borrowing modal state
+  const [profiles, setProfiles] = useState<UserProfile[]>([])
+  const [isBorrowModalOpen, setIsBorrowModalOpen] = useState(false)
+  const [borrowTargetItem, setBorrowTargetItem] = useState<InventoryItem | null>(null)
+  const [borrowSuccessMessage, setBorrowSuccessMessage] = useState<string | null>(null)
+
   const loadData = useCallback(async () => {
     try {
       setIsLoading(true)
-      const [invData, catData] = await Promise.all([
+      const [invData, catData, profData] = await Promise.all([
         fetchInventories(),
         fetchCategories('inventory'),
+        fetchProfiles(),
       ])
       setInventories(invData)
       setCategories(catData)
+      setProfiles(profData)
     } catch (err) {
       console.error("Gagal memuat data inventaris:", err)
     } finally {
@@ -95,6 +109,28 @@ export function InventoryPage() {
   const handleOpenDetail = (item: InventoryItem) => {
     setDetailItem(item)
     setIsDetailModalOpen(true)
+  }
+
+  const handleOpenBorrow = (item: InventoryItem) => {
+    setBorrowTargetItem(item)
+    setIsBorrowModalOpen(true)
+  }
+
+  const handleCreateBorrowing = async (payload: CreateBorrowingPayload | CreateBorrowingPayload[]) => {
+    if (Array.isArray(payload)) {
+      for (const item of payload) {
+        await createBorrowing(item)
+      }
+    } else {
+      await createBorrowing(payload)
+    }
+    setBorrowSuccessMessage(
+      isAdmin 
+        ? "Catatan peminjaman aset berhasil disimpan!" 
+        : "Permohonan peminjaman aset berhasil diajukan dan sedang menunggu persetujuan Admin."
+    )
+    setTimeout(() => setBorrowSuccessMessage(null), 5000)
+    await loadData()
   }
 
   const handleOpenEdit = (item: InventoryItem) => {
@@ -200,6 +236,10 @@ export function InventoryPage() {
     return inventories.filter(item => item.status === "Available").length
   }, [inventories])
 
+  const availableInventories = useMemo(() => {
+    return inventories.filter(item => item.status === "Available" && (Number(item.quantity) || 0) > 0)
+  }, [inventories])
+
   const categoryNames = ["Semua", ...Array.from(new Set(categories.map(c => c.name)))]
 
   return (
@@ -255,6 +295,24 @@ export function InventoryPage() {
           )}
         </div>
       </div>
+
+      {/* Borrowing Success Feedback Alert */}
+      {borrowSuccessMessage && (
+        <div className="p-3.5 text-xs rounded-xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 flex items-center justify-between shadow-2xs animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span className="font-semibold">{borrowSuccessMessage}</span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setBorrowSuccessMessage(null)}
+            className="h-6 px-2 text-xs text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 rounded-lg"
+          >
+            Tutup
+          </Button>
+        </div>
+      )}
 
       {/* Filter, Search & View Mode Switcher Bar */}
       <div className="bg-card border border-border/80 rounded-2xl p-4 space-y-3.5 shadow-xs">
@@ -396,6 +454,7 @@ export function InventoryPage() {
               item={item}
               isAdmin={isAdmin}
               onViewDetail={handleOpenDetail}
+              onBorrow={handleOpenBorrow}
               onEdit={handleOpenEdit}
               onDelete={handleOpenDelete}
             />
@@ -468,6 +527,20 @@ export function InventoryPage() {
                         >
                           <Eye className="h-3.5 w-3.5" />
                         </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          disabled={item.status !== "Available" || (item.quantity ?? 0) <= 0}
+                          onClick={() => handleOpenBorrow(item)}
+                          className="h-8 w-8 rounded-lg text-muted-foreground hover:text-blue-600 hover:bg-blue-500/10 disabled:opacity-35"
+                          title={
+                            item.status !== "Available" || (item.quantity ?? 0) <= 0
+                              ? "Aset tidak tersedia untuk dipinjam"
+                              : "Pinjam Barang"
+                          }
+                        >
+                          <ArrowLeftRight className="h-3.5 w-3.5" />
+                        </Button>
                         {isAdmin && (
                           <>
                             <Button 
@@ -515,6 +588,7 @@ export function InventoryPage() {
         onClose={() => setIsDetailModalOpen(false)}
         item={detailItem}
         isAdmin={isAdmin}
+        onBorrow={handleOpenBorrow}
         onEdit={handleOpenEdit}
       />
 
@@ -533,6 +607,18 @@ export function InventoryPage() {
         isOpen={isCategoryModalOpen}
         onClose={() => setIsCategoryModalOpen(false)}
         onSubmit={handleAddCategory}
+      />
+
+      {/* Borrowing Request Modal */}
+      <BorrowingModal
+        open={isBorrowModalOpen}
+        onOpenChange={setIsBorrowModalOpen}
+        availableInventories={availableInventories}
+        profiles={profiles}
+        currentUserId={user?.id || ""}
+        isAdmin={isAdmin}
+        initialInventoryId={borrowTargetItem?.id}
+        onSubmit={handleCreateBorrowing}
       />
     </div>
   )

@@ -26,7 +26,8 @@ import {
   Edit2,
   CheckCircle2,
   AlertCircle,
-  ExternalLink
+  ExternalLink,
+  ArrowLeftRight
 } from "lucide-react"
 import type { InventoryItem } from "@/types/database"
 
@@ -35,6 +36,7 @@ interface InventoryDetailModalProps {
   onClose: () => void
   item: InventoryItem | null
   isAdmin?: boolean
+  onBorrow?: (item: InventoryItem) => void
   onEdit?: (item: InventoryItem) => void
 }
 
@@ -43,6 +45,7 @@ export function InventoryDetailModal({
   onClose,
   item,
   isAdmin = false,
+  onBorrow,
   onEdit,
 }: InventoryDetailModalProps) {
   const [isCopied, setIsCopied] = useState(false)
@@ -332,15 +335,36 @@ export function InventoryDetailModal({
 
         {/* Footer Actions */}
         <DialogFooter className="border-t border-border/60 pt-3 flex flex-row items-center justify-between gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={onClose}
-            className="h-8 text-xs"
-          >
-            Tutup
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onClose}
+              className="h-8 text-xs rounded-xl"
+            >
+              Tutup
+            </Button>
+
+            <Button
+              type="button"
+              size="sm"
+              disabled={item.status !== "Available" || (item.quantity ?? 0) <= 0}
+              onClick={() => {
+                onClose()
+                onBorrow?.(item)
+              }}
+              className="h-8 text-xs gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-xs disabled:opacity-50"
+              title={
+                item.status !== "Available" || (item.quantity ?? 0) <= 0
+                  ? "Aset tidak tersedia untuk dipinjam saat ini"
+                  : "Ajukan Permohonan Peminjaman Aset"
+              }
+            >
+              <ArrowLeftRight className="h-3.5 w-3.5" />
+              <span>Pinjam Barang</span>
+            </Button>
+          </div>
 
           {isAdmin && onEdit && (
             <Button
@@ -350,7 +374,7 @@ export function InventoryDetailModal({
                 onClose()
                 onEdit(item)
               }}
-              className="h-8 text-xs gap-1.5 bg-primary text-primary-foreground"
+              className="h-8 text-xs gap-1.5 rounded-xl bg-primary text-primary-foreground"
             >
               <Edit2 className="h-3.5 w-3.5" />
               <span>Edit Aset Ini</span>
