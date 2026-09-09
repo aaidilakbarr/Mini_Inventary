@@ -516,7 +516,7 @@ export function BaseLayout() {
         </header>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-[#F4F7FB] dark:bg-background">
+        <main className="flex-1 overflow-y-auto p-3 sm:p-5 lg:p-8 bg-[#F4F7FB] dark:bg-background">
           <div className="max-w-7xl mx-auto w-full">
             <Outlet />
           </div>

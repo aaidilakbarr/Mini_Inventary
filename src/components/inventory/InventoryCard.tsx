@@ -195,12 +195,12 @@ export function InventoryCard({
       </div>
 
       {/* Action CTAs: Lihat Detail & Pinjam Barang */}
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-2 pt-0.5">
         <Button
           variant="outline"
           size="sm"
           onClick={() => onViewDetail(item)}
-          className="h-8 text-xs font-semibold text-foreground hover:text-primary hover:bg-primary/10 border-border/80 hover:border-primary/40 transition-all duration-150 rounded-xl px-2"
+          className="h-9 text-[11px] sm:text-xs font-semibold text-foreground hover:text-primary hover:bg-primary/10 border-border/80 hover:border-primary/40 transition-all duration-150 rounded-xl px-1.5 sm:px-2 flex items-center justify-center min-w-0"
           title="Lihat Detail Aset"
         >
           <Eye className="h-3.5 w-3.5 mr-1 shrink-0" />
@@ -213,7 +213,7 @@ export function InventoryCard({
             e.stopPropagation()
             onBorrow?.(item)
           }}
-          className={`h-8 text-xs font-semibold rounded-xl transition-all duration-150 px-2 ${
+          className={`h-9 text-[11px] sm:text-xs font-semibold rounded-xl transition-all duration-150 px-1.5 sm:px-2 flex items-center justify-center min-w-0 ${
             item.status === "Available" && (item.quantity ?? 0) > 0
               ? "bg-blue-600 hover:bg-blue-700 text-white shadow-xs"
               : "bg-muted text-muted-foreground cursor-not-allowed opacity-60 hover:bg-muted"

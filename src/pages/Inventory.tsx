@@ -256,17 +256,17 @@ export function InventoryPage() {
         </div>
 
         {/* Right Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-2.5 w-full md:w-auto">
           {/* Button 1: Kelola Kategori */}
           {isAdmin && (
             <Button 
               variant="outline" 
               size="sm" 
               onClick={() => setIsCategoryModalOpen(true)}
-              className="h-9 px-3.5 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs"
+              className="h-9 px-3 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs justify-center"
             >
-              <Tag className="h-3.5 w-3.5 text-primary" />
-              <span>Kelola Kategori</span>
+              <Tag className="h-3.5 w-3.5 text-primary shrink-0" />
+              <span className="truncate">Kelola Kategori</span>
             </Button>
           )}
 
@@ -276,10 +276,10 @@ export function InventoryPage() {
             size="sm" 
             onClick={exportCSV}
             disabled={inventories.length === 0}
-            className="h-9 px-3.5 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs"
+            className={`h-9 px-3 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs justify-center ${!isAdmin ? 'w-full sm:w-auto col-span-2 sm:col-span-1' : ''}`}
           >
-            <Download className="h-3.5 w-3.5 text-muted-foreground" />
-            <span>Ekspor CSV</span>
+            <Download className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+            <span className="truncate">Ekspor CSV</span>
           </Button>
 
           {/* Button 3: Tambah Aset (Primary dark/navy button) */}
@@ -287,9 +287,9 @@ export function InventoryPage() {
             <Button 
               size="sm" 
               onClick={handleOpenAdd}
-              className="h-9 px-4 text-xs font-bold rounded-xl gap-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-primary dark:hover:bg-primary/90 text-white shadow-sm"
+              className="col-span-2 sm:col-span-1 h-9 px-4 text-xs font-bold rounded-xl gap-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-primary dark:hover:bg-primary/90 text-white shadow-sm justify-center"
             >
-              <Plus className="h-4 w-4 stroke-[2.5]" />
+              <Plus className="h-4 w-4 stroke-[2.5] shrink-0" />
               <span>Tambah Aset</span>
             </Button>
           )}
@@ -315,10 +315,10 @@ export function InventoryPage() {
       )}
 
       {/* Filter, Search & View Mode Switcher Bar */}
-      <div className="bg-card border border-border/80 rounded-2xl p-4 space-y-3.5 shadow-xs">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+      <div className="bg-card border border-border/80 rounded-2xl p-3.5 sm:p-4 space-y-3 sm:space-y-3.5 shadow-xs">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5 sm:gap-3">
           {/* Pill Search Input with Scan Icon */}
-          <div className="relative flex-1 max-w-md">
+          <div className="relative w-full lg:max-w-md">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/80" />
             <input
               type="text"
@@ -333,12 +333,12 @@ export function InventoryPage() {
           </div>
 
           {/* Right Controls: Sort Dropdown & Grid/Table Switcher */}
-          <div className="flex items-center gap-2.5 self-end lg:self-auto">
+          <div className="flex items-center justify-between lg:justify-end gap-2.5 w-full lg:w-auto">
             {/* Sort Selector */}
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 flex-1 sm:flex-none">
               <span className="text-xs text-muted-foreground hidden sm:inline">Urutkan:</span>
               <Select value={sortBy} onValueChange={(val: any) => setSortBy(val)}>
-                <SelectTrigger className="h-8 text-xs w-[130px] rounded-xl border-border/80 bg-background">
+                <SelectTrigger className="h-8.5 sm:h-8 text-xs w-full sm:w-[130px] rounded-xl border-border/80 bg-background">
                   <SelectValue placeholder="Urutkan" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">
@@ -351,7 +351,7 @@ export function InventoryPage() {
             </div>
 
             {/* View Mode Switcher: Grid vs Table */}
-            <div className="flex items-center p-0.5 rounded-xl border border-slate-200/80 dark:border-border bg-slate-100/80 dark:bg-muted/50">
+            <div className="flex items-center p-0.5 rounded-xl border border-slate-200/80 dark:border-border bg-slate-100/80 dark:bg-muted/50 shrink-0">
               <button
                 type="button"
                 onClick={() => setViewMode("grid")}
@@ -385,14 +385,14 @@ export function InventoryPage() {
         </div>
 
         {/* Category Filter Chips & Live Counters Row */}
-        <div className="pt-2 border-t border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        <div className="pt-2.5 border-t border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           {/* Category Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none w-full sm:w-auto">
             {categoryNames.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setCategoryFilter(cat)}
-                className={`px-3.5 py-1 rounded-full text-xs whitespace-nowrap transition-all ${
+                className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-all shrink-0 ${
                   categoryFilter === cat
                     ? "bg-primary text-primary-foreground font-semibold shadow-2xs"
                     : "bg-slate-100 dark:bg-muted text-muted-foreground hover:text-foreground hover:bg-slate-200/70"
@@ -403,22 +403,19 @@ export function InventoryPage() {
             ))}
           </div>
 
-          {/* Inline Summary Metrics */}
-          <div className="flex items-center gap-3 text-xs text-muted-foreground font-mono shrink-0">
-            <span>
+          {/* Responsive Summary Metrics Micro-Badges */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none text-[11px] font-mono text-muted-foreground shrink-0 border-t sm:border-t-0 pt-2 sm:pt-0 border-border/40">
+            <span className="px-2 py-0.5 rounded-lg bg-muted/60 border border-border/40 whitespace-nowrap">
               Kategori: <strong className="text-foreground">{categories.length}</strong>
             </span>
-            <span>•</span>
-            <span>
-              Total Aset: <strong className="text-foreground">{inventories.length}</strong>
+            <span className="px-2 py-0.5 rounded-lg bg-muted/60 border border-border/40 whitespace-nowrap">
+              Aset: <strong className="text-foreground">{inventories.length}</strong>
             </span>
-            <span>•</span>
-            <span>
-              Kuantitas: <strong className="text-primary">{totalQuantity} Unit</strong>
+            <span className="px-2 py-0.5 rounded-lg bg-muted/60 border border-border/40 whitespace-nowrap">
+              Kuantitas: <strong className="text-primary">{totalQuantity}</strong>
             </span>
-            <span>•</span>
-            <span>
-              Tersedia: <strong className="text-emerald-600">{totalAvailable}</strong>
+            <span className="px-2 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
+              Tersedia: <strong>{totalAvailable}</strong>
             </span>
           </div>
         </div>

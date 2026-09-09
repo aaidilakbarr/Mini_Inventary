@@ -271,13 +271,13 @@ export function BorrowingPage() {
             Kelola permintaan peminjaman, persetujuan, dan pelacakan pengembalian inventaris.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-2.5 w-full md:w-auto">
           <Button 
             variant="outline" 
             size="sm" 
             onClick={loadData}
             disabled={isLoading}
-            className="h-9 px-3.5 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs"
+            className="h-9 px-3.5 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs justify-center"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
             <span>Segarkan</span>
@@ -285,7 +285,7 @@ export function BorrowingPage() {
           <Button 
             size="sm" 
             onClick={() => setIsModalOpen(true)}
-            className="h-9 px-4 text-xs font-bold rounded-xl gap-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-primary dark:hover:bg-primary/90 text-white shadow-sm"
+            className="h-9 px-4 text-xs font-bold rounded-xl gap-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-primary dark:hover:bg-primary/90 text-white shadow-sm justify-center"
           >
             <Plus className="h-4 w-4 stroke-[2.5]" />
             <span>Pinjam Aset</span>

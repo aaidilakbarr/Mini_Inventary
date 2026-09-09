@@ -97,7 +97,7 @@ export function ReminderModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] sm:max-w-md max-h-[92vh] overflow-y-auto p-4 sm:p-6 rounded-2xl">
         <DialogHeader>
           <DialogTitle>{initialData ? "Edit Pengingat" : "Tambah Pengingat Baru"}</DialogTitle>
           <DialogDescription>
@@ -207,13 +207,14 @@ export function ReminderModal({
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="pt-3 border-t border-border/50 flex flex-row items-center justify-between gap-2.5">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
+              className="h-9 rounded-xl text-xs flex-1 sm:flex-none justify-center"
             >
               Batal
             </Button>
@@ -221,7 +222,7 @@ export function ReminderModal({
               type="submit"
               size="sm"
               disabled={isSubmitting}
-              className="bg-primary text-primary-foreground gap-1.5"
+              className="h-9 rounded-xl text-xs bg-primary text-primary-foreground gap-1.5 flex-1 sm:flex-none justify-center"
             >
               {isSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               <span>{initialData ? "Simpan Perubahan" : "Buat Pengingat"}</span>

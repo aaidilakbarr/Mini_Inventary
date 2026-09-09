@@ -149,13 +149,13 @@ export function RemindersPage() {
             Pusat notifikasi jadwal pemeliharaan aset, tagihan lisensi, dan agenda penting internal.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-2.5 w-full md:w-auto">
           <Button
             variant="outline"
             size="sm"
             onClick={loadData}
             disabled={isLoading}
-            className="h-9 px-3.5 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs"
+            className="h-9 px-3.5 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs justify-center"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
             <span>Segarkan</span>
@@ -163,7 +163,7 @@ export function RemindersPage() {
           <Button
             size="sm"
             onClick={handleOpenAdd}
-            className="h-9 px-4 text-xs font-bold rounded-xl gap-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-primary dark:hover:bg-primary/90 text-white shadow-sm"
+            className="h-9 px-4 text-xs font-bold rounded-xl gap-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-primary dark:hover:bg-primary/90 text-white shadow-sm justify-center"
           >
             <Plus className="h-4 w-4 stroke-[2.5]" />
             <span>Tambah Pengingat</span>
@@ -172,45 +172,45 @@ export function RemindersPage() {
       </div>
 
       {/* Summary KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         <Card className="border-border/80 shadow-xs">
-          <CardContent className="p-4 flex items-center justify-between">
+          <CardContent className="p-2.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground">Agenda Aktif / Menunggu</p>
-              <p className="text-lg font-bold font-mono text-foreground mt-0.5">
-                {activeCount} <span className="text-xs font-normal text-muted-foreground">Item</span>
+              <p className="text-[10px] sm:text-[11px] font-medium text-muted-foreground truncate">Aktif / Menunggu</p>
+              <p className="text-sm sm:text-lg font-bold font-mono text-foreground mt-0.5">
+                {activeCount} <span className="text-[10px] sm:text-xs font-normal text-muted-foreground hidden xs:inline">Item</span>
               </p>
             </div>
-            <div className="h-9 w-9 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600">
-              <Clock className="h-4 w-4" />
+            <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600 shrink-0 self-end sm:self-auto">
+              <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-border/80 shadow-xs">
-          <CardContent className="p-4 flex items-center justify-between">
+          <CardContent className="p-2.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground">Prioritas Tinggi</p>
-              <p className="text-lg font-bold font-mono text-destructive mt-0.5">
-                {highPriorityCount} <span className="text-xs font-normal text-muted-foreground">Penting</span>
+              <p className="text-[10px] sm:text-[11px] font-medium text-muted-foreground truncate">Prioritas Tinggi</p>
+              <p className="text-sm sm:text-lg font-bold font-mono text-destructive mt-0.5">
+                {highPriorityCount} <span className="text-[10px] sm:text-xs font-normal text-muted-foreground hidden xs:inline">Penting</span>
               </p>
             </div>
-            <div className="h-9 w-9 rounded-lg bg-destructive/10 flex items-center justify-center text-destructive">
-              <AlertTriangle className="h-4 w-4" />
+            <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-lg bg-destructive/10 flex items-center justify-center text-destructive shrink-0 self-end sm:self-auto">
+              <AlertTriangle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-border/80 shadow-xs">
-          <CardContent className="p-4 flex items-center justify-between">
+          <CardContent className="p-2.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground">Telah Selesai</p>
-              <p className="text-lg font-bold font-mono text-emerald-600 mt-0.5">
-                {completedCount} <span className="text-xs font-normal text-muted-foreground">Tuntas</span>
+              <p className="text-[10px] sm:text-[11px] font-medium text-muted-foreground truncate">Telah Selesai</p>
+              <p className="text-sm sm:text-lg font-bold font-mono text-emerald-600 mt-0.5">
+                {completedCount} <span className="text-[10px] sm:text-xs font-normal text-muted-foreground hidden xs:inline">Tuntas</span>
               </p>
             </div>
-            <div className="h-9 w-9 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600">
-              <CheckCircle2 className="h-4 w-4" />
+            <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0 self-end sm:self-auto">
+              <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </div>
           </CardContent>
         </Card>
@@ -225,17 +225,17 @@ export function RemindersPage() {
               placeholder="Cari judul pengingat atau keterangan..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8 h-8 text-xs bg-muted/30 border-border/80 w-full"
+              className="pl-8 h-8.5 sm:h-8 text-xs bg-muted/30 border-border/80 w-full rounded-xl"
             />
           </div>
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 w-full md:w-auto">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 w-full md:w-auto scrollbar-none">
             {filterTabs.map((tab) => (
               <Button
                 key={tab}
                 variant={filterTab === tab ? "default" : "outline"}
                 size="sm"
                 onClick={() => setFilterTab(tab)}
-                className="h-7 text-xs px-3 rounded-full shrink-0 whitespace-nowrap"
+                className="h-7.5 sm:h-7 text-xs px-3 rounded-full shrink-0 whitespace-nowrap"
               >
                 {tab}
               </Button>

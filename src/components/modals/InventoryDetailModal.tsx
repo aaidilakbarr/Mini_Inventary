@@ -120,7 +120,7 @@ export function InventoryDetailModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[92vh] overflow-y-auto p-4 sm:p-6 rounded-2xl">
         {/* Header */}
         <DialogHeader className="border-b border-border/60 pb-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
@@ -334,14 +334,14 @@ export function InventoryDetailModal({
         </div>
 
         {/* Footer Actions */}
-        <DialogFooter className="border-t border-border/60 pt-3 flex flex-row items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
+        <DialogFooter className="border-t border-border/60 pt-3 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2.5 w-full">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={onClose}
-              className="h-8 text-xs rounded-xl"
+              className="h-9 sm:h-8 text-xs rounded-xl flex-1 sm:flex-none justify-center"
             >
               Tutup
             </Button>
@@ -354,14 +354,14 @@ export function InventoryDetailModal({
                 onClose()
                 onBorrow?.(item)
               }}
-              className="h-8 text-xs gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-xs disabled:opacity-50"
+              className="h-9 sm:h-8 text-xs gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-xs disabled:opacity-50 flex-1 sm:flex-none justify-center"
               title={
                 item.status !== "Available" || (item.quantity ?? 0) <= 0
                   ? "Aset tidak tersedia untuk dipinjam saat ini"
                   : "Ajukan Permohonan Peminjaman Aset"
               }
             >
-              <ArrowLeftRight className="h-3.5 w-3.5" />
+              <ArrowLeftRight className="h-3.5 w-3.5 shrink-0" />
               <span>Pinjam Barang</span>
             </Button>
           </div>
@@ -374,9 +374,9 @@ export function InventoryDetailModal({
                 onClose()
                 onEdit(item)
               }}
-              className="h-8 text-xs gap-1.5 rounded-xl bg-primary text-primary-foreground"
+              className="h-9 sm:h-8 text-xs gap-1.5 rounded-xl bg-primary text-primary-foreground w-full sm:w-auto justify-center"
             >
-              <Edit2 className="h-3.5 w-3.5" />
+              <Edit2 className="h-3.5 w-3.5 shrink-0" />
               <span>Edit Aset Ini</span>
             </Button>
           )}

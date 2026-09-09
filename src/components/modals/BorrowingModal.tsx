@@ -207,7 +207,7 @@ export function BorrowingModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto p-5 sm:p-7 rounded-2xl">
+      <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[92vh] overflow-y-auto p-4 sm:p-7 rounded-2xl">
         {/* Header - Layout persis modal form Tambah Aset */}
         <DialogHeader className="pb-3 border-b border-border/50">
           <div className="flex items-start justify-between gap-3">
@@ -510,33 +510,31 @@ export function BorrowingModal({
           </div>
 
           {/* Footer - Persis modal form Tambah Aset */}
-          <DialogFooter className="pt-3 border-t border-border/50 flex flex-row items-center justify-between gap-2">
+          <DialogFooter className="pt-3 border-t border-border/50 flex flex-row items-center justify-between gap-2.5">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
-              className="h-9 px-4 rounded-xl text-xs font-medium border-border/80"
+              className="h-9 px-4 rounded-xl text-xs font-medium border-border/80 flex-1 sm:flex-none justify-center"
             >
               Batal
             </Button>
 
-            <div className="flex items-center gap-2">
-              <Button
-                type="submit"
-                size="sm"
-                disabled={isSubmitting || availableInventories.length === 0}
-                className="h-9 px-5 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-xs gap-1.5"
-              >
-                {isSubmitting ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Plus className="h-3.5 w-3.5" />
-                )}
-                <span>{isAdmin ? "Catat Peminjaman" : "Kirim Permohonan"}</span>
-              </Button>
-            </div>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={isSubmitting || availableInventories.length === 0}
+              className="h-9 px-5 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-xs gap-1.5 flex-1 sm:flex-none justify-center"
+            >
+              {isSubmitting ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Plus className="h-3.5 w-3.5" />
+              )}
+              <span>{isAdmin ? "Catat Peminjaman" : "Kirim Permohonan"}</span>
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

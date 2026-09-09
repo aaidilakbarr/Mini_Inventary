@@ -174,13 +174,13 @@ export function SubscriptionsPage() {
             Lacak pengeluaran biaya berkala, lisensi software, dan siklus tagihan aktif.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-2.5 w-full md:w-auto">
           <Button
             variant="outline"
             size="sm"
             onClick={loadData}
             disabled={isLoading}
-            className="h-9 px-3.5 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs"
+            className="h-9 px-3 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs justify-center"
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
             <span>Segarkan</span>
@@ -190,18 +190,18 @@ export function SubscriptionsPage() {
             size="sm"
             onClick={exportCSV}
             disabled={subscriptions.length === 0}
-            className="h-9 px-3.5 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs"
+            className={`h-9 px-3 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs justify-center ${!isAdmin ? 'w-full sm:w-auto col-span-1' : ''}`}
           >
-            <Download className="h-3.5 w-3.5 text-muted-foreground" />
-            <span>Ekspor CSV</span>
+            <Download className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+            <span className="truncate">Ekspor CSV</span>
           </Button>
           {isAdmin && (
             <Button
               size="sm"
               onClick={handleOpenAdd}
-              className="h-9 px-4 text-xs font-bold rounded-xl gap-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-primary dark:hover:bg-primary/90 text-white shadow-sm"
+              className="col-span-2 sm:col-span-1 h-9 px-4 text-xs font-bold rounded-xl gap-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-primary dark:hover:bg-primary/90 text-white shadow-sm justify-center"
             >
-              <Plus className="h-4 w-4 stroke-[2.5]" />
+              <Plus className="h-4 w-4 stroke-[2.5] shrink-0" />
               <span>Tambah Langganan</span>
             </Button>
           )}
@@ -209,45 +209,45 @@ export function SubscriptionsPage() {
       </div>
 
       {/* Summary KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         <Card className="border-border/80 shadow-xs">
-          <CardContent className="p-4 flex items-center justify-between">
+          <CardContent className="p-2.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground">Estimasi Beban Bulanan</p>
-              <p className="text-lg font-bold font-mono text-foreground mt-0.5">
+              <p className="text-[10px] sm:text-[11px] font-medium text-muted-foreground truncate">Beban Bulanan</p>
+              <p className="text-xs sm:text-lg font-bold font-mono text-foreground mt-0.5 truncate" title={formatCurrencyID(totalMonthlyCost)}>
                 {formatCurrencyID(totalMonthlyCost)}
               </p>
             </div>
-            <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-              <CreditCard className="h-4 w-4" />
+            <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0 self-end sm:self-auto">
+              <CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-border/80 shadow-xs">
-          <CardContent className="p-4 flex items-center justify-between">
+          <CardContent className="p-2.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground">Langganan Aktif</p>
-              <p className="text-lg font-bold font-mono text-foreground mt-0.5">
-                {activeSubs.length} <span className="text-xs font-normal text-muted-foreground">Layanan</span>
+              <p className="text-[10px] sm:text-[11px] font-medium text-muted-foreground truncate">Aktif</p>
+              <p className="text-sm sm:text-lg font-bold font-mono text-foreground mt-0.5">
+                {activeSubs.length} <span className="text-[10px] sm:text-xs font-normal text-muted-foreground hidden xs:inline">Layanan</span>
               </p>
             </div>
-            <div className="h-9 w-9 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600">
-              <Layers className="h-4 w-4" />
+            <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0 self-end sm:self-auto">
+              <Layers className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-border/80 shadow-xs">
-          <CardContent className="p-4 flex items-center justify-between">
+          <CardContent className="p-2.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground">Total Keseluruhan</p>
-              <p className="text-lg font-bold font-mono text-foreground mt-0.5">
-                {subscriptions.length} <span className="text-xs font-normal text-muted-foreground">Akun Terdata</span>
+              <p className="text-[10px] sm:text-[11px] font-medium text-muted-foreground truncate">Total Akun</p>
+              <p className="text-sm sm:text-lg font-bold font-mono text-foreground mt-0.5">
+                {subscriptions.length} <span className="text-[10px] sm:text-xs font-normal text-muted-foreground hidden xs:inline">Akun</span>
               </p>
             </div>
-            <div className="h-9 w-9 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600">
-              <Calendar className="h-4 w-4" />
+            <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600 shrink-0 self-end sm:self-auto">
+              <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             </div>
           </CardContent>
         </Card>
@@ -262,17 +262,17 @@ export function SubscriptionsPage() {
               placeholder="Cari langganan atau provider..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8 h-8 text-xs bg-muted/30 border-border/80 w-full"
+              className="pl-8 h-8.5 sm:h-8 text-xs bg-muted/30 border-border/80 w-full rounded-xl"
             />
           </div>
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 w-full md:w-auto">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 w-full md:w-auto scrollbar-none">
             {statusOptions.map((st) => (
               <Button
                 key={st}
                 variant={statusFilter === st ? "default" : "outline"}
                 size="sm"
                 onClick={() => setStatusFilter(st)}
-                className="h-7 text-xs px-3 rounded-full shrink-0 whitespace-nowrap"
+                className="h-7.5 sm:h-7 text-xs px-3 rounded-full shrink-0 whitespace-nowrap"
               >
                 {st}
               </Button>
