@@ -18,17 +18,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { 
-  CreditCard, 
-  Loader2, 
+import {
+  CreditCard,
+  Loader2,
   Plus
 } from "lucide-react"
 import { formatNumberID } from "@/lib/formatters"
-import type { 
-  SubscriptionItem, 
-  CreateSubscriptionPayload, 
-  Category, 
-  BillingCycle 
+import type {
+  SubscriptionItem,
+  CreateSubscriptionPayload,
+  Category,
+  BillingCycle
 } from "@/types/database"
 
 interface SubscriptionModalProps {
@@ -197,7 +197,7 @@ export function SubscriptionModal({
               </Label>
               <Input
                 id="service_name"
-                placeholder="misal: Figma Professional, AWS, Zoom Enterprise"
+                placeholder="Masukkan Layanan"
                 value={formData.service_name}
                 onChange={(e) => setFormData({ ...formData, service_name: e.target.value })}
                 className="h-10 text-xs rounded-xl bg-muted/20 border-border/80 focus-visible:ring-blue-500/30"
@@ -207,11 +207,11 @@ export function SubscriptionModal({
 
             <div className="space-y-1.5">
               <Label htmlFor="provider" className="text-xs font-semibold text-foreground">
-                Penyedia / Vendor
+                Penyedia
               </Label>
               <Input
                 id="provider"
-                placeholder="misal: Figma Inc., Amazon Web Services"
+                placeholder="Masukkan Penyedia (Opsional)"
                 value={formData.provider || ""}
                 onChange={(e) => setFormData({ ...formData, provider: e.target.value })}
                 className="h-10 text-xs rounded-xl bg-muted/20 border-border/80 focus-visible:ring-blue-500/30"
@@ -340,7 +340,7 @@ export function SubscriptionModal({
               </Label>
               <Input
                 id="notes"
-                placeholder="Nomor lisensi, akun PIC, info perpanjangan..."
+                placeholder="Masukkan Catatan"
                 value={formData.notes || ""}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 className="h-10 text-xs rounded-xl bg-muted/20 border-border/80 focus-visible:ring-blue-500/30"
@@ -356,18 +356,16 @@ export function SubscriptionModal({
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, status: "Active" })}
-                className={`px-3.5 py-1.5 rounded-full border text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${
-                  formData.status === "Active"
-                    ? "bg-emerald-500/10 border-emerald-500/60 text-emerald-700 dark:text-emerald-300 ring-2 ring-emerald-500/20 font-semibold"
-                    : "bg-muted/20 border-border/80 text-muted-foreground hover:border-border hover:text-foreground"
-                }`}
+                className={`px-3.5 py-1.5 rounded-full border text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${formData.status === "Active"
+                  ? "bg-emerald-500/10 border-emerald-500/60 text-emerald-700 dark:text-emerald-300 ring-2 ring-emerald-500/20 font-semibold"
+                  : "bg-muted/20 border-border/80 text-muted-foreground hover:border-border hover:text-foreground"
+                  }`}
               >
                 <span
-                  className={`h-2.5 w-2.5 rounded-full transition-all ${
-                    formData.status === "Active"
-                      ? "bg-emerald-500 ring-2 ring-emerald-500/30"
-                      : "bg-emerald-500/40"
-                  }`}
+                  className={`h-2.5 w-2.5 rounded-full transition-all ${formData.status === "Active"
+                    ? "bg-emerald-500 ring-2 ring-emerald-500/30"
+                    : "bg-emerald-500/40"
+                    }`}
                 />
                 <span>Aktif</span>
               </button>
@@ -376,18 +374,16 @@ export function SubscriptionModal({
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, status: "Past Due" })}
-                className={`px-3.5 py-1.5 rounded-full border text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${
-                  formData.status === "Past Due"
-                    ? "bg-rose-500/10 border-rose-500/60 text-rose-700 dark:text-rose-300 ring-2 ring-rose-500/20 font-semibold"
-                    : "bg-muted/20 border-border/80 text-muted-foreground hover:border-border hover:text-foreground"
-                }`}
+                className={`px-3.5 py-1.5 rounded-full border text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${formData.status === "Past Due"
+                  ? "bg-rose-500/10 border-rose-500/60 text-rose-700 dark:text-rose-300 ring-2 ring-rose-500/20 font-semibold"
+                  : "bg-muted/20 border-border/80 text-muted-foreground hover:border-border hover:text-foreground"
+                  }`}
               >
                 <span
-                  className={`h-2.5 w-2.5 rounded-full transition-all ${
-                    formData.status === "Past Due"
-                      ? "bg-rose-500 ring-2 ring-rose-500/30"
-                      : "bg-rose-500/40"
-                  }`}
+                  className={`h-2.5 w-2.5 rounded-full transition-all ${formData.status === "Past Due"
+                    ? "bg-rose-500 ring-2 ring-rose-500/30"
+                    : "bg-rose-500/40"
+                    }`}
                 />
                 <span>Jatuh Tempo</span>
               </button>
@@ -396,18 +392,16 @@ export function SubscriptionModal({
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, status: "Cancelled" })}
-                className={`px-3.5 py-1.5 rounded-full border text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${
-                  formData.status === "Cancelled"
-                    ? "bg-slate-500/10 border-slate-500/60 text-slate-700 dark:text-slate-300 ring-2 ring-slate-500/20 font-semibold"
-                    : "bg-muted/20 border-border/80 text-muted-foreground hover:border-border hover:text-foreground"
-                }`}
+                className={`px-3.5 py-1.5 rounded-full border text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${formData.status === "Cancelled"
+                  ? "bg-slate-500/10 border-slate-500/60 text-slate-700 dark:text-slate-300 ring-2 ring-slate-500/20 font-semibold"
+                  : "bg-muted/20 border-border/80 text-muted-foreground hover:border-border hover:text-foreground"
+                  }`}
               >
                 <span
-                  className={`h-2.5 w-2.5 rounded-full transition-all ${
-                    formData.status === "Cancelled"
-                      ? "bg-slate-500 ring-2 ring-slate-500/30"
-                      : "bg-slate-500/40"
-                  }`}
+                  className={`h-2.5 w-2.5 rounded-full transition-all ${formData.status === "Cancelled"
+                    ? "bg-slate-500 ring-2 ring-slate-500/30"
+                    : "bg-slate-500/40"
+                    }`}
                 />
                 <span>Dibatalkan</span>
               </button>
@@ -416,18 +410,16 @@ export function SubscriptionModal({
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, status: "Expired" })}
-                className={`px-3.5 py-1.5 rounded-full border text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${
-                  formData.status === "Expired"
-                    ? "bg-amber-500/10 border-amber-500/60 text-amber-700 dark:text-amber-300 ring-2 ring-amber-500/20 font-semibold"
-                    : "bg-muted/20 border-border/80 text-muted-foreground hover:border-border hover:text-foreground"
-                }`}
+                className={`px-3.5 py-1.5 rounded-full border text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${formData.status === "Expired"
+                  ? "bg-amber-500/10 border-amber-500/60 text-amber-700 dark:text-amber-300 ring-2 ring-amber-500/20 font-semibold"
+                  : "bg-muted/20 border-border/80 text-muted-foreground hover:border-border hover:text-foreground"
+                  }`}
               >
                 <span
-                  className={`h-2.5 w-2.5 rounded-full transition-all ${
-                    formData.status === "Expired"
-                      ? "bg-amber-500 ring-2 ring-amber-500/30"
-                      : "bg-amber-500/40"
-                  }`}
+                  className={`h-2.5 w-2.5 rounded-full transition-all ${formData.status === "Expired"
+                    ? "bg-amber-500 ring-2 ring-amber-500/30"
+                    : "bg-amber-500/40"
+                    }`}
                 />
                 <span>Kedaluwarsa</span>
               </button>
@@ -469,7 +461,7 @@ export function SubscriptionModal({
                 ) : (
                   <Plus className="h-3.5 w-3.5" />
                 )}
-                <span>{initialData ? "Simpan Perubahan" : "+ Tambah Langganan"}</span>
+                <span>{initialData ? "Simpan Perubahan" : "Tambah Langganan"}</span>
               </Button>
             </div>
           </DialogFooter>

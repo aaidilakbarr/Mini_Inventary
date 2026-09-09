@@ -234,7 +234,7 @@ export function InventoryModal({
               </Label>
               <Input
                 id="name"
-                placeholder="misal : Kursi Ergonomis"
+                placeholder="Masukkan Nama Barang"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="h-10 text-xs rounded-xl bg-muted/20 border-border/80 focus-visible:ring-blue-500/30"
@@ -308,7 +308,7 @@ export function InventoryModal({
               </Label>
               <Input
                 id="location"
-                placeholder="misal: Gudang IT"
+                placeholder="Masukkan Lokasi Penyimpanan"
                 value={formData.location || ""}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                 className="h-10 text-xs rounded-xl bg-muted/20 border-border/80 focus-visible:ring-blue-500/30"
@@ -381,7 +381,7 @@ export function InventoryModal({
               <Label className="text-xs font-semibold text-foreground">Masa Garansi</Label>
               <Input
                 id="warranty"
-                placeholder="misal: 2 Tahun / 15 Feb 2027"
+                placeholder="Masukkan Garansi"
                 value={formData.warranty_info || ""}
                 onChange={(e) => setFormData({ ...formData, warranty_info: e.target.value })}
                 className="h-10 text-xs rounded-xl bg-background border-border/80 shadow-xs"
@@ -397,7 +397,7 @@ export function InventoryModal({
               </Label>
               <Input
                 id="supplier"
-                placeholder="misal: Apple Store ID / PT Vendor Utama"
+                placeholder="Masukkan Vendor (Opsional)"
                 value={formData.supplier || ""}
                 onChange={(e) => setFormData({ ...formData, supplier: e.target.value })}
                 className="h-10 text-xs rounded-xl bg-muted/20 border-border/80 focus-visible:ring-blue-500/30"
@@ -410,7 +410,7 @@ export function InventoryModal({
               </Label>
               <Input
                 id="notes"
-                placeholder="Spesifikasi tambahan, nomor seri, kelengkapan aksesoris..."
+                placeholder="Masukkan Catatan"
                 value={formData.notes || ""}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 className="h-10 text-xs rounded-xl bg-muted/20 border-border/80 focus-visible:ring-blue-500/30"
