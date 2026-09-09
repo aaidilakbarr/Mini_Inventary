@@ -9,16 +9,19 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox"
 import { DatePicker } from "@/components/ui/date-picker"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Loader2, Info, Layers } from "lucide-react"
+  Loader2,
+  Info,
+  Layers,
+  Package,
+  ArrowLeftRight,
+  Plus,
+  Check
+} from "lucide-react"
 import type { InventoryItem, CreateBorrowingPayload, BorrowingStatus } from "@/types/database"
 import type { UserProfile } from "@/types/auth"
 
@@ -46,7 +49,7 @@ export function BorrowingModal({
   const [borrowType, setBorrowType] = useState<BorrowType>("single")
   const [singleInventoryId, setSingleInventoryId] = useState<string>("")
   const [multipleInventoryIds, setMultipleInventoryIds] = useState<[string, string, string]>(["", "", ""])
-  
+
   const [borrowerId, setBorrowerId] = useState<string>("")
   const [dueDate, setDueDate] = useState<string>("")
   const [notes, setNotes] = useState<string>("")
@@ -74,19 +77,6 @@ export function BorrowingModal({
     setStatus(isAdmin ? "Borrowed" : "Pending Approval")
     setErrorMsg("")
   }, [open, availableInventories, profiles, currentUserId, isAdmin])
-
-  const borrowTypeOptions: ComboboxOption[] = [
-    { 
-      value: "single", 
-      label: "1 Barang", 
-      sublabel: "Peminjaman 1 aset inventaris" 
-    },
-    { 
-      value: "multiple", 
-      label: "Lebih dari 1", 
-      sublabel: "Peminjaman multi-aset (hingga 3 barang)" 
-    },
-  ]
 
   // Options for single mode
   const singleInventoryOptions: ComboboxOption[] = availableInventories.map((inv) => ({
@@ -210,55 +200,94 @@ export function BorrowingModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Permohonan Peminjaman Aset</DialogTitle>
-          <DialogDescription>
-            Ajukan peminjaman aset inventaris kantor dengan menentukan aset dan tenggat waktu.
-          </DialogDescription>
+      <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto p-5 sm:p-7 rounded-2xl">
+        {/* Header - Layout persis modal form Tambah Aset */}
+        <DialogHeader className="pb-3 border-b border-border/50">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="h-11 w-11 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+                <ArrowLeftRight className="h-6 w-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <DialogTitle className="text-base sm:text-lg font-bold text-foreground">
+                    Permohonan Peminjaman Aset
+                  </DialogTitle>
+                  <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 font-mono">
+                    Peminjaman Baru
+                  </span>
+                </div>
+                <DialogDescription className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                  Ajukan peminjaman aset inventaris kantor dengan menentukan kuantitas barang dan tenggat pengembalian.
+                </DialogDescription>
+              </div>
+            </div>
+          </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 py-2">
+        <form onSubmit={handleSubmit} className="space-y-4 py-2 text-xs">
           {errorMsg && (
-            <div className="p-2.5 text-xs rounded-lg bg-destructive/10 text-destructive border border-destructive/20 font-medium">
+            <div className="p-3 text-xs rounded-xl bg-destructive/10 text-destructive border border-destructive/20 font-medium">
               {errorMsg}
             </div>
           )}
 
-          {/* Combobox Pilihan Peminjaman */}
-          <div className="space-y-1.5">
+          {/* Baris 1: Komponen Tabs Slider untuk Pemilihan Pinjaman */}
+          <div className="space-y-2.5">
             <div className="flex items-center justify-between">
-              <Label className="text-xs font-semibold flex items-center gap-1.5">
-                <Layers className="size-3.5 text-primary" />
-                <span>Pilihan Peminjaman *</span>
+              <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                <Layers className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                <span>Pilihan Peminjaman <span className="text-rose-500">*</span></span>
               </Label>
-              <span className="text-[11px] text-muted-foreground">
-                {borrowType === "single" ? "1 Barang" : "Hingga 3 Barang"}
-              </span>
             </div>
-            <Combobox
-              options={borrowTypeOptions}
+
+            {/* Shadcn Tabs Slider */}
+            <Tabs
               value={borrowType}
-              onChange={(val) => {
+              onValueChange={(val: any) => {
                 if (val === "single" || val === "multiple") {
                   setBorrowType(val)
                   setErrorMsg("")
                 }
               }}
-              placeholder="Pilih tipe peminjaman..."
-              searchPlaceholder="Cari tipe peminjaman..."
-            />
+              className="w-full"
+            >
+              <TabsList className="grid grid-cols-2 h-11 p-1 bg-slate-100 dark:bg-muted/60 rounded-xl border border-slate-200 dark:border-border/70 items-center">
+                <TabsTrigger
+                  value="single"
+                  className={`h-9 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer select-none ${borrowType === "single"
+                    ? "bg-white dark:bg-card text-blue-700 dark:text-blue-300 shadow-xs font-bold border border-slate-200/90 dark:border-border"
+                    : "text-muted-foreground hover:text-foreground"
+                    }`}
+                >
+                  <Package className={`h-3.5 w-3.5 shrink-0 transition-colors ${borrowType === "single" ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground"}`} />
+                  <span>1 Barang</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="multiple"
+                  className={`h-9 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer select-none ${borrowType === "multiple"
+                    ? "bg-white dark:bg-card text-blue-700 dark:text-blue-300 shadow-xs font-bold border border-slate-200/90 dark:border-border"
+                    : "text-muted-foreground hover:text-foreground"
+                    }`}
+                >
+                  <Layers className={`h-3.5 w-3.5 shrink-0 transition-colors ${borrowType === "multiple" ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground"}`} />
+                  <span>Multi Aset</span>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
 
-          {/* Asset Selection Section */}
+          {/* Baris 2: Pemilihan Aset (Single vs Multi-Aset Card Container) */}
           {availableInventories.length === 0 ? (
-            <div className="p-3 text-xs rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300">
+            <div className="p-3.5 text-xs rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300">
               Tidak ada aset dengan status Tersedia saat ini. Tambah aset baru di menu Inventaris terlebih dahulu.
             </div>
           ) : borrowType === "single" ? (
-            /* Single Asset Dropdown */
+            /* Single Asset Selection */
             <div className="space-y-1.5">
-              <Label htmlFor="inventory" className="text-xs font-semibold">Pilih Aset Tersedia *</Label>
+              <Label htmlFor="inventory" className="text-xs font-semibold text-foreground flex items-center gap-1">
+                Pilih Aset Tersedia <span className="text-rose-500">*</span>
+              </Label>
               <Combobox
                 options={singleInventoryOptions}
                 value={singleInventoryId}
@@ -269,147 +298,238 @@ export function BorrowingModal({
               />
             </div>
           ) : (
-            /* Multiple Assets Dropdowns (3 dropdowns) */
-            <div className="space-y-3 p-3 rounded-xl border border-border/80 bg-muted/20">
+            /* Multi-Aset Container Card - Stacked Atas ke Bawah */
+            <div className="p-3.5 sm:p-4 rounded-xl bg-muted/25 dark:bg-muted/10 border border-border/70 space-y-3">
               <div className="flex items-center justify-between">
-                <Label className="text-xs font-semibold text-foreground">
-                  Pilih Aset Tersedia (Multi-Barang)
-                </Label>
-                <span className="text-[10px] font-mono text-muted-foreground">Minimal 2 Aset</span>
+                <div>
+                  <Label className="text-xs font-semibold text-foreground">
+                    Daftar Aset Yang Dipinjam (Multi-Barang)
+                  </Label>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Pilih minimal 2 aset yang ingin dipinjam sekaligus dalam satu permohonan.
+                  </p>
+                </div>
               </div>
 
               {availableInventories.length < 3 && (
-                <div className="p-2.5 text-[11px] leading-relaxed rounded-lg border border-blue-200 bg-blue-50/70 dark:bg-blue-950/30 text-blue-800 dark:text-blue-300 flex items-start gap-2">
-                  <Info className="size-3.5 shrink-0 mt-0.5 text-blue-600 dark:text-blue-400" />
+                <div className="p-2.5 text-[11px] leading-relaxed rounded-xl border border-blue-200 bg-blue-50/70 dark:bg-blue-950/30 text-blue-800 dark:text-blue-300 flex items-start gap-2">
+                  <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-blue-600 dark:text-blue-400" />
                   <div>
                     <span className="font-semibold">Keterangan:</span> Tersedia {availableInventories.length} jenis aset di inventaris. Anda dapat memilih jenis aset yang sama jika stok unitnya mencukupi, atau mengosongkan aset ke-3.
                   </div>
                 </div>
               )}
 
-              {/* Slot 1 (Required) */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-medium text-foreground">Aset 1 *</span>
-                  <span className="text-[10px] text-muted-foreground">Wajib</span>
+              {/* Stacked Vertical Slots (Atas ke Bawah) */}
+              <div className="space-y-2.5">
+                {/* Slot 1 (Required) */}
+                <div className="p-3 rounded-xl bg-card/90 dark:bg-card border border-border/70 space-y-1.5 shadow-2xs">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="flex items-center justify-center h-5 w-5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 text-[10px] font-bold">
+                        1
+                      </span>
+                      <span className="text-xs font-semibold text-foreground">Aset Pertama</span>
+                    </div>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                      Wajib Dipilih
+                    </span>
+                  </div>
+                  <Combobox
+                    options={getMultipleOptionsForSlot(0)}
+                    value={multipleInventoryIds[0]}
+                    onChange={(val) => handleMultipleSlotChange(0, val)}
+                    placeholder="Pilih atau cari aset pertama..."
+                    searchPlaceholder="Ketik nama atau kode aset..."
+                    emptyMessage="Aset tidak ditemukan."
+                  />
                 </div>
-                <Combobox
-                  options={getMultipleOptionsForSlot(0)}
-                  value={multipleInventoryIds[0]}
-                  onChange={(val) => handleMultipleSlotChange(0, val)}
-                  placeholder="Pilih aset pertama..."
-                  searchPlaceholder="Ketik nama atau kode aset..."
-                  emptyMessage="Aset tidak ditemukan."
-                />
-              </div>
 
-              {/* Slot 2 (Required) */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-medium text-foreground">Aset 2 *</span>
-                  <span className="text-[10px] text-muted-foreground">Wajib</span>
+                {/* Slot 2 (Required) */}
+                <div className="p-3 rounded-xl bg-card/90 dark:bg-card border border-border/70 space-y-1.5 shadow-2xs">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="flex items-center justify-center h-5 w-5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 text-[10px] font-bold">
+                        2
+                      </span>
+                      <span className="text-xs font-semibold text-foreground">Aset Kedua</span>
+                    </div>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                      Wajib Dipilih
+                    </span>
+                  </div>
+                  <Combobox
+                    options={getMultipleOptionsForSlot(1)}
+                    value={multipleInventoryIds[1]}
+                    onChange={(val) => handleMultipleSlotChange(1, val)}
+                    placeholder="Pilih atau cari aset kedua..."
+                    searchPlaceholder="Ketik nama atau kode aset..."
+                    emptyMessage="Aset tidak ditemukan."
+                  />
                 </div>
-                <Combobox
-                  options={getMultipleOptionsForSlot(1)}
-                  value={multipleInventoryIds[1]}
-                  onChange={(val) => handleMultipleSlotChange(1, val)}
-                  placeholder="Pilih aset kedua..."
-                  searchPlaceholder="Ketik nama atau kode aset..."
-                  emptyMessage="Aset tidak ditemukan."
-                />
-              </div>
 
-              {/* Slot 3 (Optional) */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-medium text-foreground">Aset 3</span>
-                  <span className="text-[10px] text-muted-foreground font-sans">Opsional</span>
+                {/* Slot 3 (Optional) */}
+                <div className="p-3 rounded-xl bg-card/90 dark:bg-card border border-border/70 space-y-1.5 shadow-2xs">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="flex items-center justify-center h-5 w-5 rounded-full bg-slate-200 dark:bg-muted text-muted-foreground text-[10px] font-bold">
+                        3
+                      </span>
+                      <span className="text-xs font-semibold text-foreground">Aset Ketiga</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {multipleInventoryIds[2] && (
+                        <button
+                          type="button"
+                          onClick={() => handleMultipleSlotChange(2, "")}
+                          className="text-[10px] text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 font-medium hover:underline cursor-pointer"
+                        >
+                          Hapus Pilihan
+                        </button>
+                      )}
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground border border-border/70">
+                        Opsional
+                      </span>
+                    </div>
+                  </div>
+                  <Combobox
+                    options={getMultipleOptionsForSlot(2)}
+                    value={multipleInventoryIds[2]}
+                    onChange={(val) => handleMultipleSlotChange(2, val)}
+                    placeholder="Pilih atau cari aset ketiga (opsional)..."
+                    searchPlaceholder="Ketik nama atau kode aset..."
+                    emptyMessage="Aset tidak ditemukan."
+                    clearable={true}
+                  />
                 </div>
-                <Combobox
-                  options={getMultipleOptionsForSlot(2)}
-                  value={multipleInventoryIds[2]}
-                  onChange={(val) => handleMultipleSlotChange(2, val)}
-                  placeholder="Pilih aset ketiga (opsional)..."
-                  searchPlaceholder="Ketik nama atau kode aset..."
-                  emptyMessage="Aset tidak ditemukan."
-                  clearable={true}
-                />
               </div>
             </div>
           )}
 
-          {isAdmin ? (
+          {/* Baris 3: Peminjam & Tenggat Waktu Pengembalian */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {isAdmin ? (
+              <div className="space-y-1.5">
+                <Label htmlFor="borrower" className="text-xs font-semibold text-foreground flex items-center gap-1">
+                  Peminjam (Staff / Akun) <span className="text-rose-500">*</span>
+                </Label>
+                <Combobox
+                  options={profileOptions}
+                  value={borrowerId}
+                  onChange={(val) => setBorrowerId(val)}
+                  placeholder="Pilih peminjam..."
+                  searchPlaceholder="Cari nama atau email staff..."
+                  emptyMessage="Staff tidak ditemukan."
+                />
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-foreground">Peminjam Terdaftar</Label>
+                <div className="h-10 px-3 rounded-xl bg-muted/30 border border-border/80 flex items-center text-xs font-medium text-foreground">
+                  {profiles.find(p => p.id === borrowerId)?.full_name || "Akun Saya"}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-1.5">
-              <Label htmlFor="borrower" className="text-xs font-semibold">Peminjam (Staff / Akun) *</Label>
-              <Combobox
-                options={profileOptions}
-                value={borrowerId}
-                onChange={(val) => setBorrowerId(val)}
-                placeholder="Pilih peminjam..."
-                searchPlaceholder="Cari nama atau email staff..."
-                emptyMessage="Staff tidak ditemukan."
+              <Label htmlFor="due_date" className="text-xs font-semibold text-foreground flex items-center gap-1">
+                Tenggat Waktu Pengembalian <span className="text-rose-500">*</span>
+              </Label>
+              <DatePicker
+                value={dueDate}
+                onChange={(date) => setDueDate(date)}
+                placeholder="Pilih tenggat pengembalian..."
+                className="h-10 text-xs rounded-xl bg-muted/20 border-border/80"
               />
             </div>
-          ) : null}
-
-          <div className="space-y-1.5">
-            <Label htmlFor="due_date" className="text-xs font-semibold">Tenggat Waktu Pengembalian *</Label>
-            <DatePicker
-              value={dueDate}
-              onChange={(date) => setDueDate(date)}
-              placeholder="Pilih tenggat pengembalian..."
-            />
           </div>
 
+          {/* Baris 4: Status Awal Peminjaman (Radio Pills persis InventoryModal) */}
           {isAdmin && (
-            <div className="space-y-1.5">
-              <Label htmlFor="status" className="text-xs font-semibold">Status Awal Peminjaman</Label>
-              <Select
-                value={status}
-                onValueChange={(val) => setStatus(val as BorrowingStatus)}
-              >
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Borrowed">Langsung Dipinjam (Disetujui)</SelectItem>
-                  <SelectItem value="Pending Approval">Menunggu Persetujuan</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold text-foreground">Status Awal Peminjaman</Label>
+              <div className="flex items-center gap-2.5 flex-wrap">
+                {/* Langsung Dipinjam (Borrowed) */}
+                <button
+                  type="button"
+                  onClick={() => setStatus("Borrowed")}
+                  className={`px-3.5 py-1.5 rounded-full border text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${status === "Borrowed"
+                    ? "bg-blue-500/10 border-blue-500/60 text-blue-700 dark:text-blue-300 ring-2 ring-blue-500/20 font-semibold"
+                    : "bg-muted/20 border-border/80 text-muted-foreground hover:border-border hover:text-foreground"
+                    }`}
+                >
+                  <span
+                    className={`h-2.5 w-2.5 rounded-full transition-all ${status === "Borrowed"
+                      ? "bg-blue-500 ring-2 ring-blue-500/30"
+                      : "bg-blue-500/40"
+                      }`}
+                  />
+                  <span>Langsung Dipinjam (Disetujui)</span>
+                </button>
+
+                {/* Menunggu Persetujuan (Pending Approval) */}
+                <button
+                  type="button"
+                  onClick={() => setStatus("Pending Approval")}
+                  className={`px-3.5 py-1.5 rounded-full border text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${status === "Pending Approval"
+                    ? "bg-amber-500/10 border-amber-500/60 text-amber-700 dark:text-amber-300 ring-2 ring-amber-500/20 font-semibold"
+                    : "bg-muted/20 border-border/80 text-muted-foreground hover:border-border hover:text-foreground"
+                    }`}
+                >
+                  <span
+                    className={`h-2.5 w-2.5 rounded-full transition-all ${status === "Pending Approval"
+                      ? "bg-amber-500 ring-2 ring-amber-500/30"
+                      : "bg-amber-500/40"
+                      }`}
+                  />
+                  <span>Menunggu Persetujuan</span>
+                </button>
+              </div>
             </div>
           )}
 
+          {/* Baris 5: Keperluan / Catatan */}
           <div className="space-y-1.5">
-            <Label htmlFor="notes" className="text-xs font-semibold">Keperluan / Catatan</Label>
-            <textarea
+            <Label htmlFor="notes" className="text-xs font-semibold text-foreground">
+              Keperluan / Catatan
+            </Label>
+            <Input
               id="notes"
-              rows={2}
-              placeholder="misal: Presentasi sprint desain ke klien atau remote workstation"
+              placeholder="Masukkan keperluan / catatan"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full text-xs rounded-lg border border-input bg-background p-2 text-foreground outline-none focus:border-ring"
+              className="h-10 text-xs rounded-xl bg-muted/20 border-border/80 focus-visible:ring-blue-500/30"
             />
           </div>
 
-          <DialogFooter>
+          {/* Footer - Persis modal form Tambah Aset */}
+          <DialogFooter className="pt-3 border-t border-border/50 flex flex-row items-center justify-between gap-2">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
+              className="h-9 px-4 rounded-xl text-xs font-medium border-border/80"
             >
               Batal
             </Button>
-            <Button
-              type="submit"
-              size="sm"
-              disabled={isSubmitting || availableInventories.length === 0}
-              className="bg-primary text-primary-foreground gap-1.5"
-            >
-              {isSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-              <span>{isAdmin ? "Catat Peminjaman" : "Kirim Permohonan"}</span>
-            </Button>
+
+            <div className="flex items-center gap-2">
+              <Button
+                type="submit"
+                size="sm"
+                disabled={isSubmitting || availableInventories.length === 0}
+                className="h-9 px-5 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-xs gap-1.5"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Plus className="h-3.5 w-3.5" />
+                )}
+                <span>{isAdmin ? "Catat Peminjaman" : "Kirim Permohonan"}</span>
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>
