@@ -234,7 +234,7 @@ export function InventoryModal({
               </Label>
               <Input
                 id="name"
-                placeholder="misal: MacBook Pro 14 M3 Pro / Kursi Ergonomis"
+                placeholder="misal : Kursi Ergonomis"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 className="h-10 text-xs rounded-xl bg-muted/20 border-border/80 focus-visible:ring-blue-500/30"
@@ -308,7 +308,7 @@ export function InventoryModal({
               </Label>
               <Input
                 id="location"
-                placeholder="misal: Gudang IT - Rak A1 / Ruang Server"
+                placeholder="misal: Gudang IT"
                 value={formData.location || ""}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                 className="h-10 text-xs rounded-xl bg-muted/20 border-border/80 focus-visible:ring-blue-500/30"
@@ -426,80 +426,72 @@ export function InventoryModal({
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, status: "Available" })}
-                className={`px-3.5 py-1.5 rounded-full border text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${
-                  formData.status === "Available"
-                    ? "bg-emerald-500/10 border-emerald-500/60 text-emerald-700 dark:text-emerald-300 ring-2 ring-emerald-500/20 font-semibold"
-                    : "bg-muted/20 border-border/80 text-muted-foreground hover:border-border hover:text-foreground"
-                }`}
+                className={`px-3.5 py-1.5 rounded-full border text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${formData.status === "Available"
+                  ? "bg-emerald-500/10 border-emerald-500/60 text-emerald-700 dark:text-emerald-300 ring-2 ring-emerald-500/20 font-semibold"
+                  : "bg-muted/20 border-border/80 text-muted-foreground hover:border-border hover:text-foreground"
+                  }`}
               >
                 <span
-                  className={`h-2.5 w-2.5 rounded-full transition-all ${
-                    formData.status === "Available"
-                      ? "bg-emerald-500 ring-2 ring-emerald-500/30"
-                      : "bg-emerald-500/40"
-                  }`}
+                  className={`h-2.5 w-2.5 rounded-full transition-all ${formData.status === "Available"
+                    ? "bg-emerald-500 ring-2 ring-emerald-500/30"
+                    : "bg-emerald-500/40"
+                    }`}
                 />
-                <span>Tersedia (In Stock)</span>
+                <span>Tersedia</span>
               </button>
 
               {/* Perawatan (Maintenance) */}
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, status: "Maintenance" })}
-                className={`px-3.5 py-1.5 rounded-full border text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${
-                  formData.status === "Maintenance"
-                    ? "bg-amber-500/10 border-amber-500/60 text-amber-700 dark:text-amber-300 ring-2 ring-amber-500/20 font-semibold"
-                    : "bg-muted/20 border-border/80 text-muted-foreground hover:border-border hover:text-foreground"
-                }`}
+                className={`px-3.5 py-1.5 rounded-full border text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${formData.status === "Maintenance"
+                  ? "bg-amber-500/10 border-amber-500/60 text-amber-700 dark:text-amber-300 ring-2 ring-amber-500/20 font-semibold"
+                  : "bg-muted/20 border-border/80 text-muted-foreground hover:border-border hover:text-foreground"
+                  }`}
               >
                 <span
-                  className={`h-2.5 w-2.5 rounded-full transition-all ${
-                    formData.status === "Maintenance"
-                      ? "bg-amber-500 ring-2 ring-amber-500/30"
-                      : "bg-amber-500/40"
-                  }`}
+                  className={`h-2.5 w-2.5 rounded-full transition-all ${formData.status === "Maintenance"
+                    ? "bg-amber-500 ring-2 ring-amber-500/30"
+                    : "bg-amber-500/40"
+                    }`}
                 />
-                <span>Perawatan (Maintenance)</span>
+                <span>Perawatan</span>
               </button>
 
               {/* Dipinjam (Borrowed) */}
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, status: "Borrowed" })}
-                className={`px-3.5 py-1.5 rounded-full border text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${
-                  formData.status === "Borrowed"
-                    ? "bg-blue-500/10 border-blue-500/60 text-blue-700 dark:text-blue-300 ring-2 ring-blue-500/20 font-semibold"
-                    : "bg-muted/20 border-border/80 text-muted-foreground hover:border-border hover:text-foreground"
-                }`}
+                className={`px-3.5 py-1.5 rounded-full border text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${formData.status === "Borrowed"
+                  ? "bg-blue-500/10 border-blue-500/60 text-blue-700 dark:text-blue-300 ring-2 ring-blue-500/20 font-semibold"
+                  : "bg-muted/20 border-border/80 text-muted-foreground hover:border-border hover:text-foreground"
+                  }`}
               >
                 <span
-                  className={`h-2.5 w-2.5 rounded-full transition-all ${
-                    formData.status === "Borrowed"
-                      ? "bg-blue-500 ring-2 ring-blue-500/30"
-                      : "bg-blue-500/40"
-                  }`}
+                  className={`h-2.5 w-2.5 rounded-full transition-all ${formData.status === "Borrowed"
+                    ? "bg-blue-500 ring-2 ring-blue-500/30"
+                    : "bg-blue-500/40"
+                    }`}
                 />
-                <span>Dipinjam (In Transit)</span>
+                <span>Dipinjam</span>
               </button>
 
               {/* Hilang (Lost) */}
               <button
                 type="button"
                 onClick={() => setFormData({ ...formData, status: "Lost" })}
-                className={`px-3.5 py-1.5 rounded-full border text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${
-                  formData.status === "Lost"
-                    ? "bg-rose-500/10 border-rose-500/60 text-rose-700 dark:text-rose-300 ring-2 ring-rose-500/20 font-semibold"
-                    : "bg-muted/20 border-border/80 text-muted-foreground hover:border-border hover:text-foreground"
-                }`}
+                className={`px-3.5 py-1.5 rounded-full border text-xs font-medium flex items-center gap-2 transition-all cursor-pointer ${formData.status === "Lost"
+                  ? "bg-rose-500/10 border-rose-500/60 text-rose-700 dark:text-rose-300 ring-2 ring-rose-500/20 font-semibold"
+                  : "bg-muted/20 border-border/80 text-muted-foreground hover:border-border hover:text-foreground"
+                  }`}
               >
                 <span
-                  className={`h-2.5 w-2.5 rounded-full transition-all ${
-                    formData.status === "Lost"
-                      ? "bg-rose-500 ring-2 ring-rose-500/30"
-                      : "bg-rose-500/40"
-                  }`}
+                  className={`h-2.5 w-2.5 rounded-full transition-all ${formData.status === "Lost"
+                    ? "bg-rose-500 ring-2 ring-rose-500/30"
+                    : "bg-rose-500/40"
+                    }`}
                 />
-                <span>Hilang (Lost)</span>
+                <span>Hilang</span>
               </button>
             </div>
           </div>
