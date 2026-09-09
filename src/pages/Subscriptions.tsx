@@ -174,36 +174,38 @@ export function SubscriptionsPage() {
             Lacak pengeluaran biaya berkala, lisensi software, dan siklus tagihan aktif.
           </p>
         </div>
-        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-2.5 w-full md:w-auto">
+        <div className={`${isAdmin ? 'grid grid-cols-2 sm:flex' : 'flex'} items-center gap-2 sm:gap-2.5 w-full md:w-auto`}>
           <Button
             variant="outline"
             size="sm"
             onClick={loadData}
             disabled={isLoading}
-            className="h-9 px-3 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs justify-center"
+            className={`h-9 px-3 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs justify-center ${!isAdmin ? 'w-full sm:w-auto' : ''}`}
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
             <span>Segarkan</span>
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={exportCSV}
-            disabled={subscriptions.length === 0}
-            className={`h-9 px-3 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs justify-center ${!isAdmin ? 'w-full sm:w-auto col-span-1' : ''}`}
-          >
-            <Download className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-            <span className="truncate">Ekspor CSV</span>
-          </Button>
           {isAdmin && (
-            <Button
-              size="sm"
-              onClick={handleOpenAdd}
-              className="col-span-2 sm:col-span-1 h-9 px-4 text-xs font-bold rounded-xl gap-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-primary dark:hover:bg-primary/90 text-white shadow-sm justify-center"
-            >
-              <Plus className="h-4 w-4 stroke-[2.5] shrink-0" />
-              <span>Tambah Langganan</span>
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={exportCSV}
+                disabled={subscriptions.length === 0}
+                className="h-9 px-3 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs justify-center"
+              >
+                <Download className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                <span className="truncate">Ekspor CSV</span>
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleOpenAdd}
+                className="col-span-2 sm:col-span-1 h-9 px-4 text-xs font-bold rounded-xl gap-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-primary dark:hover:bg-primary/90 text-white shadow-sm justify-center"
+              >
+                <Plus className="h-4 w-4 stroke-[2.5] shrink-0" />
+                <span>Tambah Langganan</span>
+              </Button>
+            </>
           )}
         </div>
       </div>

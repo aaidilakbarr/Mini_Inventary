@@ -255,10 +255,10 @@ export function InventoryPage() {
           </p>
         </div>
 
-        {/* Right Action Buttons */}
-        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-2.5 w-full md:w-auto">
-          {/* Button 1: Kelola Kategori */}
-          {isAdmin && (
+        {/* Right Action Buttons - Admin Only */}
+        {isAdmin && (
+          <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-2.5 w-full md:w-auto">
+            {/* Button 1: Kelola Kategori */}
             <Button 
               variant="outline" 
               size="sm" 
@@ -268,22 +268,20 @@ export function InventoryPage() {
               <Tag className="h-3.5 w-3.5 text-primary shrink-0" />
               <span className="truncate">Kelola Kategori</span>
             </Button>
-          )}
 
-          {/* Button 2: Ekspor CSV */}
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={exportCSV}
-            disabled={inventories.length === 0}
-            className={`h-9 px-3 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs justify-center ${!isAdmin ? 'w-full sm:w-auto col-span-2 sm:col-span-1' : ''}`}
-          >
-            <Download className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-            <span className="truncate">Ekspor CSV</span>
-          </Button>
+            {/* Button 2: Ekspor CSV */}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={exportCSV}
+              disabled={inventories.length === 0}
+              className="h-9 px-3 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs justify-center"
+            >
+              <Download className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              <span className="truncate">Ekspor CSV</span>
+            </Button>
 
-          {/* Button 3: Tambah Aset (Primary dark/navy button) */}
-          {isAdmin && (
+            {/* Button 3: Tambah Aset (Primary dark/navy button) */}
             <Button 
               size="sm" 
               onClick={handleOpenAdd}
@@ -292,8 +290,8 @@ export function InventoryPage() {
               <Plus className="h-4 w-4 stroke-[2.5] shrink-0" />
               <span>Tambah Aset</span>
             </Button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Borrowing Success Feedback Alert */}
