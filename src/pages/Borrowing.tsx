@@ -547,6 +547,11 @@ export function BorrowingPage() {
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
         item={detailItem}
+        onReturnClick={(item) => {
+          setIsDetailModalOpen(false)
+          handleOpenReturnModal(item)
+        }}
+        canReturn={Boolean(isAdmin || (user && detailItem?.borrower_id === user.id))}
       />
     </div>
   )

@@ -9,18 +9,19 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
 import { 
   RotateCcw, 
   Loader2, 
   PackageCheck, 
   UserCheck, 
   Calendar,
-  CheckCircle2,
-  AlertTriangle,
-  AlertOctagon,
+  CheckCircle2, 
+  AlertTriangle, 
+  AlertOctagon, 
   Wrench,
-  ShieldAlert,
-  Info
+  Camera,
+  ShieldCheck
 } from "lucide-react"
 import { formatDateID } from "@/lib/formatters"
 import type { BorrowingItem } from "@/types/database"
@@ -65,9 +66,8 @@ export function ReturnConfirmDialog({
   const isDamaged = condition === "Rusak Ringan" || condition === "Rusak Berat"
 
   const handleConfirmSubmit = () => {
-    // If damaged, require return notes so technician / admin has context
     if (isDamaged && !notes.trim()) {
-      setValidationError("Wajib mengisi catatan detail kerusakan agar teknisi mengetahui kendala aset.")
+      setValidationError("Wajib mengisi rincian kendala/kerusakan pada catatan.")
       return
     }
 
@@ -80,69 +80,70 @@ export function ReturnConfirmDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
-              <RotateCcw className="h-5 w-5" />
+      <DialogContent className="w-[95vw] sm:w-full max-w-lg max-h-[90dvh] overflow-y-auto p-4 sm:p-6 rounded-2xl">
+        {/* Header */}
+        <DialogHeader className="border-b border-border/60 pb-3">
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
+              <RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
             <div>
-              <DialogTitle className="text-base sm:text-lg font-bold text-foreground">
-                Verifikasi & Konfirmasi Pengembalian
+              <DialogTitle className="text-sm sm:text-lg font-bold text-foreground">
+                Verifikasi & Pengembalian
               </DialogTitle>
-              <DialogDescription className="text-xs mt-0.5 text-muted-foreground">
-                Periksa kondisi fisik barang secara teliti sebelum mengonfirmasi pengembalian ke sistem.
+              <DialogDescription className="text-[11px] sm:text-xs mt-0.5 text-muted-foreground">
+                Periksa kondisi aktual aset sebelum menyelesaikan transaksi.
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <div className="space-y-4 py-1">
-          {/* Item Details Box */}
-          <div className="p-3 rounded-lg border border-border/80 bg-muted/30 space-y-2 text-xs">
+        <div className="space-y-3 sm:space-y-4 py-2 text-xs">
+          {/* Item & Borrower Summary Card */}
+          <div className="p-3 sm:p-3.5 rounded-xl border border-border/70 bg-muted/20 space-y-2">
             <div className="flex items-start justify-between gap-2">
-              <div className="flex items-start gap-2.5">
-                <PackageCheck className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-foreground text-xs">
-                    {item.inventory?.name || "Aset Inventaris"}
-                  </p>
-                  <p className="font-mono text-[11px] text-muted-foreground">
-                    Kode: {item.inventory?.code || "-"}
-                  </p>
-                </div>
+              <div className="min-w-0">
+                <span className="text-[9px] sm:text-[10px] uppercase font-semibold tracking-wider text-muted-foreground block">
+                  Aset Inventaris
+                </span>
+                <p className="font-bold text-foreground text-xs sm:text-sm leading-snug truncate">
+                  {item.inventory?.name || "Aset Inventaris"}
+                </p>
+                <p className="font-mono text-[10px] sm:text-[11px] text-muted-foreground mt-0.5">
+                  Kode: <strong className="text-foreground">{item.inventory?.code || "-"}</strong>
+                </p>
               </div>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-background border border-border/80 text-muted-foreground">
-                Kondisi Awal: <strong className="text-foreground">{item.inventory?.condition || "Bagus"}</strong>
-              </span>
+              <Badge variant="outline" className="bg-background text-[10px] font-mono shrink-0">
+                Kondisi: {item.inventory?.condition || "Baik"}
+              </Badge>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-border/40 text-[11px]">
-              <div className="flex items-center gap-2">
-                <UserCheck className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                <span className="text-muted-foreground">Peminjam:</span>
-                <span className="font-medium text-foreground truncate max-w-[140px]">
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/40 text-[11px]">
+              <div>
+                <span className="text-[9px] sm:text-[10px] text-muted-foreground block">Peminjam</span>
+                <span className="font-medium text-foreground truncate block">
                   {item.borrower?.full_name || "Tanpa Nama"}
                 </span>
               </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                <span className="text-muted-foreground">Batas Kembali:</span>
-                <span className="font-mono font-medium text-foreground">
+              <div>
+                <span className="text-[9px] sm:text-[10px] text-muted-foreground block">Batas Waktu</span>
+                <span className="font-mono font-medium text-foreground block">
                   {formatDateID(item.due_date)}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Condition Selection Cards */}
-          <div className="space-y-2">
-            <Label className="text-xs font-semibold text-foreground flex items-center justify-between">
-              <span>Kondisi Fisik Saat Pengembalian</span>
-              <span className="text-[10px] font-normal text-muted-foreground">Pilih kondisi aktual</span>
-            </Label>
+          {/* Condition Selector (Mobile: Thumb-Friendly List / Desktop: 3-Col Cards) */}
+          <div className="space-y-1.5 sm:space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-semibold text-foreground">
+                Kondisi Fisik Pengembalian <span className="text-destructive">*</span>
+              </Label>
+              <span className="text-[10px] text-muted-foreground">Pilih kondisi aktual</span>
+            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               {/* Option: Bagus */}
               <button
                 type="button"
@@ -150,22 +151,24 @@ export function ReturnConfirmDialog({
                   setCondition("Bagus")
                   setValidationError(null)
                 }}
-                className={`p-3 rounded-lg border text-left transition-all flex flex-col justify-between ${
+                className={`p-2.5 sm:p-3 rounded-xl border text-left transition-all cursor-pointer flex items-center sm:items-start justify-between sm:flex-col sm:justify-between min-h-[44px] ${
                   condition === "Bagus"
-                    ? "border-emerald-500 bg-emerald-500/10 shadow-xs ring-1 ring-emerald-500"
-                    : "border-border/80 bg-background hover:bg-muted/40"
+                    ? "border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500 shadow-xs"
+                    : "border-border/70 bg-background hover:bg-muted/40"
                 }`}
               >
-                <div className="flex items-center justify-between w-full mb-1.5">
-                  <span className="font-semibold text-xs text-foreground flex items-center gap-1.5">
-                    <CheckCircle2 className={`h-3.5 w-3.5 ${condition === "Bagus" ? "text-emerald-600" : "text-muted-foreground"}`} />
-                    Bagus
-                  </span>
-                  <span className={`h-2 w-2 rounded-full ${condition === "Bagus" ? "bg-emerald-500" : "bg-transparent"}`} />
+                <div className="flex items-center gap-2.5 sm:w-full sm:justify-between sm:mb-1">
+                  <CheckCircle2 className={`h-4 w-4 shrink-0 ${condition === "Bagus" ? "text-emerald-600" : "text-muted-foreground"}`} />
+                  <div className="sm:hidden">
+                    <span className="font-bold text-xs text-foreground block">Bagus</span>
+                    <span className="text-[10px] text-muted-foreground block">Normal & utuh</span>
+                  </div>
+                  <span className={`h-2 w-2 rounded-full shrink-0 ${condition === "Bagus" ? "bg-emerald-500" : "bg-transparent"}`} />
                 </div>
-                <p className="text-[10px] text-muted-foreground leading-snug">
-                  Normal & utuh, siap dipinjamkan kembali.
-                </p>
+                <div className="hidden sm:block">
+                  <span className="font-bold text-xs text-foreground block">Bagus</span>
+                  <span className="text-[10px] text-muted-foreground block leading-tight mt-0.5">Normal & utuh</span>
+                </div>
               </button>
 
               {/* Option: Rusak Ringan */}
@@ -175,22 +178,24 @@ export function ReturnConfirmDialog({
                   setCondition("Rusak Ringan")
                   setValidationError(null)
                 }}
-                className={`p-3 rounded-lg border text-left transition-all flex flex-col justify-between ${
+                className={`p-2.5 sm:p-3 rounded-xl border text-left transition-all cursor-pointer flex items-center sm:items-start justify-between sm:flex-col sm:justify-between min-h-[44px] ${
                   condition === "Rusak Ringan"
-                    ? "border-amber-500 bg-amber-500/10 shadow-xs ring-1 ring-amber-500"
-                    : "border-border/80 bg-background hover:bg-muted/40"
+                    ? "border-amber-500 bg-amber-500/10 ring-1 ring-amber-500 shadow-xs"
+                    : "border-border/70 bg-background hover:bg-muted/40"
                 }`}
               >
-                <div className="flex items-center justify-between w-full mb-1.5">
-                  <span className="font-semibold text-xs text-foreground flex items-center gap-1.5">
-                    <AlertTriangle className={`h-3.5 w-3.5 ${condition === "Rusak Ringan" ? "text-amber-600" : "text-muted-foreground"}`} />
-                    Rusak Ringan
-                  </span>
-                  <span className={`h-2 w-2 rounded-full ${condition === "Rusak Ringan" ? "bg-amber-500" : "bg-transparent"}`} />
+                <div className="flex items-center gap-2.5 sm:w-full sm:justify-between sm:mb-1">
+                  <AlertTriangle className={`h-4 w-4 shrink-0 ${condition === "Rusak Ringan" ? "text-amber-600" : "text-muted-foreground"}`} />
+                  <div className="sm:hidden">
+                    <span className="font-bold text-xs text-foreground block">Rusak Ringan</span>
+                    <span className="text-[10px] text-muted-foreground block">Cacat minor/servis</span>
+                  </div>
+                  <span className={`h-2 w-2 rounded-full shrink-0 ${condition === "Rusak Ringan" ? "bg-amber-500" : "bg-transparent"}`} />
                 </div>
-                <p className="text-[10px] text-muted-foreground leading-snug">
-                  Cacat fungsi minor/lecet, perlu perbaikan.
-                </p>
+                <div className="hidden sm:block">
+                  <span className="font-bold text-xs text-foreground block">Rusak Ringan</span>
+                  <span className="text-[10px] text-muted-foreground block leading-tight mt-0.5">Cacat minor/servis</span>
+                </div>
               </button>
 
               {/* Option: Rusak Berat */}
@@ -200,87 +205,62 @@ export function ReturnConfirmDialog({
                   setCondition("Rusak Berat")
                   setValidationError(null)
                 }}
-                className={`p-3 rounded-lg border text-left transition-all flex flex-col justify-between ${
+                className={`p-2.5 sm:p-3 rounded-xl border text-left transition-all cursor-pointer flex items-center sm:items-start justify-between sm:flex-col sm:justify-between min-h-[44px] ${
                   condition === "Rusak Berat"
-                    ? "border-rose-500 bg-rose-500/10 shadow-xs ring-1 ring-rose-500"
-                    : "border-border/80 bg-background hover:bg-muted/40"
+                    ? "border-rose-500 bg-rose-500/10 ring-1 ring-rose-500 shadow-xs"
+                    : "border-border/70 bg-background hover:bg-muted/40"
                 }`}
               >
-                <div className="flex items-center justify-between w-full mb-1.5">
-                  <span className="font-semibold text-xs text-foreground flex items-center gap-1.5">
-                    <AlertOctagon className={`h-3.5 w-3.5 ${condition === "Rusak Berat" ? "text-rose-600" : "text-muted-foreground"}`} />
-                    Rusak Berat
-                  </span>
-                  <span className={`h-2 w-2 rounded-full ${condition === "Rusak Berat" ? "bg-rose-500" : "bg-transparent"}`} />
+                <div className="flex items-center gap-2.5 sm:w-full sm:justify-between sm:mb-1">
+                  <AlertOctagon className={`h-4 w-4 shrink-0 ${condition === "Rusak Berat" ? "text-rose-600" : "text-muted-foreground"}`} />
+                  <div className="sm:hidden">
+                    <span className="font-bold text-xs text-foreground block">Rusak Berat</span>
+                    <span className="text-[10px] text-muted-foreground block">Mati total/parah</span>
+                  </div>
+                  <span className={`h-2 w-2 rounded-full shrink-0 ${condition === "Rusak Berat" ? "bg-rose-500" : "bg-transparent"}`} />
                 </div>
-                <p className="text-[10px] text-muted-foreground leading-snug">
-                  Mati total / parah, tidak dapat dipinjam.
-                </p>
+                <div className="hidden sm:block">
+                  <span className="font-bold text-xs text-foreground block">Rusak Berat</span>
+                  <span className="text-[10px] text-muted-foreground block leading-tight mt-0.5">Mati total / parah</span>
+                </div>
               </button>
             </div>
           </div>
 
-          {/* Dynamic Protection / Action Banner */}
-          {condition === "Bagus" && (
-            <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/25 flex items-start gap-2.5 text-xs text-emerald-800 dark:text-emerald-300">
-              <Info className="h-4 w-4 shrink-0 text-emerald-600 mt-0.5" />
-              <div>
-                <p className="font-semibold text-xs">Aset Tersedia untuk Dipinjam</p>
-                <p className="text-[11px] text-emerald-700/90 dark:text-emerald-400 mt-0.5 leading-relaxed">
-                  Stok inventaris bertambah 1 unit dan status aset diset ke <strong>Available (Tersedia)</strong> sehingga dapat segera dipinjam oleh staf lain.
-                </p>
-              </div>
-            </div>
-          )}
+          {/* Compact Impact Pill */}
+          <div className={`px-3 py-2 rounded-xl border flex items-center gap-2 text-[10px] sm:text-[11px] ${
+            condition === "Bagus"
+              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300"
+              : condition === "Rusak Ringan"
+              ? "border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-300"
+              : "border-rose-500/30 bg-rose-500/10 text-rose-800 dark:text-rose-300"
+          }`}>
+            {condition === "Bagus" ? (
+              <>
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                <span>Aset langsung dialihkan ke status <strong>Tersedia</strong> untuk dipinjam kembali.</span>
+              </>
+            ) : condition === "Rusak Ringan" ? (
+              <>
+                <Wrench className="h-3.5 w-3.5 text-amber-600 shrink-0" />
+                <span>Aset otomatis dibuatkan tiket <strong>Perawatan (Maintenance)</strong>.</span>
+              </>
+            ) : (
+              <>
+                <AlertOctagon className="h-3.5 w-3.5 text-rose-600 shrink-0" />
+                <span>Aset dinonaktifkan & dibuatkan tiket servis prioritas <strong>Tinggi</strong>.</span>
+              </>
+            )}
+          </div>
 
-          {condition === "Rusak Ringan" && (
-            <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-start gap-2.5 text-xs text-amber-800 dark:text-amber-300">
-              <Wrench className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" />
-              <div>
-                <p className="font-semibold text-xs">Tiket Perbaikan & Proteksi Sisa Stok</p>
-                <p className="text-[11px] text-amber-700/90 dark:text-amber-400 mt-0.5 leading-relaxed">
-                  {(item?.inventory?.quantity ?? 0) > 0 ? (
-                    <>
-                      1 unit yang rusak otomatis didaftarkan ke tiket <strong>Pengingat Perbaikan (Reminders)</strong>. Sisa stok di gudang (<strong>{item?.inventory?.quantity} unit</strong>) tetap berstatus <strong>Tersedia (Bagus)</strong> dan dapat terus dipinjam.
-                    </>
-                  ) : (
-                    <>
-                      Status aset diubah menjadi <strong>Maintenance (Perawatan)</strong> dan otomatis dibuatkan tiket di <strong>Pengingat Perbaikan (Reminders)</strong> sampai perbaikan selesai.
-                    </>
-                  )}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {condition === "Rusak Berat" && (
-            <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 flex items-start gap-2.5 text-xs text-rose-800 dark:text-rose-300">
-              <ShieldAlert className="h-4 w-4 shrink-0 text-rose-600 mt-0.5" />
-              <div>
-                <p className="font-semibold text-xs">Peringatan: Tiket Servis Prioritas Tinggi</p>
-                <p className="text-[11px] text-rose-700/90 dark:text-rose-400 mt-0.5 leading-relaxed">
-                  {(item?.inventory?.quantity ?? 0) > 0 ? (
-                    <>
-                      1 unit rusak parah didaftarkan ke tiket <strong>Pengingat Perbaikan</strong> berprioritas <strong>Tinggi</strong>. Sisa stok di gudang (<strong>{item?.inventory?.quantity} unit</strong>) tetap berstatus <strong>Tersedia</strong>.
-                    </>
-                  ) : (
-                    <>
-                      Status aset diset ke <strong>Maintenance</strong> dan dinonaktifkan dari peminjaman. Otomatis dibuatkan tiket perbaikan prioritas <strong>Tinggi</strong>.
-                    </>
-                  )}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Return Notes Input */}
+          {/* Return Notes Field */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Label htmlFor="return-notes" className="text-xs font-semibold text-foreground">
-                Catatan Pengembalian {isDamaged ? <span className="text-destructive">* (Wajib diisi)</span> : <span className="text-muted-foreground font-normal">(Opsional)</span>}
+                Catatan Verifikasi {isDamaged ? <span className="text-destructive">* (Wajib)</span> : <span className="text-muted-foreground font-normal">(Opsional)</span>}
               </Label>
               <span className="text-[10px] text-muted-foreground">
-                {isDamaged ? "Jelaskan kerusakan fisik aset" : "Aksesoris, kondisi, dll."}
+                {isDamaged ? "Rincian kerusakan" : "Kelengkapan, dll."}
               </span>
             </div>
             <textarea
@@ -288,35 +268,50 @@ export function ReturnConfirmDialog({
               rows={3}
               placeholder={
                 isDamaged
-                  ? "Tuliskan rincian kerusakan (misal: Layar retak di pojok kanan, tombol power macet, casing penyok, dsb.)..."
-                  : "Tambahkan catatan jika ada (misal: Aksesoris charger dan tas lengkap, baterai terisi penuh)..."
+                  ? "Tulis rincian kendala/kerusakan (misal: Layar retak, port charger longgar)..."
+                  : "Catatan kelengkapan aset (misal: Unit dan aksesoris kembali lengkap)..."
               }
               value={notes}
               onChange={(e) => {
                 setNotes(e.target.value)
                 if (validationError) setValidationError(null)
               }}
-              className={`w-full text-xs rounded-lg border bg-background p-2.5 text-foreground outline-none transition-colors focus:border-ring ${
+              className={`w-full text-xs rounded-xl border bg-background p-2.5 text-foreground outline-none transition-colors focus:border-ring ${
                 validationError ? "border-destructive focus:border-destructive" : "border-input"
               }`}
             />
             {validationError && (
-              <p className="text-[11px] text-destructive flex items-center gap-1 mt-1">
+              <p className="text-[11px] text-destructive flex items-center gap-1 mt-0.5">
                 <AlertTriangle className="h-3 w-3 inline" />
                 {validationError}
               </p>
             )}
           </div>
+
+          {/* Foto Pengembalian (Future-Ready Slot) */}
+          <div className="p-3 rounded-xl border border-dashed border-border/80 bg-muted/10 space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-foreground flex items-center gap-1.5">
+                <Camera className="h-3.5 w-3.5 text-muted-foreground" />
+                Dokumentasi Foto Pengembalian
+              </span>
+              <span className="text-[10px] text-muted-foreground font-mono">Segera Hadir</span>
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Slot foto kondisi fisik saat barang diterima kembali.
+            </p>
+          </div>
         </div>
 
-        <DialogFooter className="mt-3 gap-2 sm:gap-0">
+        {/* Footer (Responsive Mobile-First) */}
+        <DialogFooter className="mt-2 border-t border-border/60 pt-3 flex flex-col-reverse sm:flex-row gap-2 sm:gap-0 sm:justify-between w-full">
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
-            className="text-xs h-8"
+            className="text-xs h-9 sm:h-8 px-3.5 border-border/80 w-full sm:w-auto rounded-xl"
           >
             Batal
           </Button>
@@ -325,7 +320,7 @@ export function ReturnConfirmDialog({
             size="sm"
             onClick={handleConfirmSubmit}
             disabled={isLoading}
-            className={`gap-1.5 text-xs h-8 text-white ${
+            className={`gap-1.5 text-xs h-9 sm:h-8 px-4 text-white font-semibold transition-all w-full sm:w-auto rounded-xl ${
               isDamaged 
                 ? "bg-amber-600 hover:bg-amber-700" 
                 : "bg-primary hover:bg-primary/90 text-primary-foreground"
@@ -337,7 +332,7 @@ export function ReturnConfirmDialog({
               <RotateCcw className="h-3.5 w-3.5" />
             )}
             <span>
-              {condition === "Bagus" ? "Kembalikan (Tersedia)" : "Kembalikan (Perlu Servis)"}
+              {condition === "Bagus" ? "Selesaikan Pengembalian" : "Simpan & Jadwalkan Servis"}
             </span>
           </Button>
         </DialogFooter>
@@ -345,3 +340,4 @@ export function ReturnConfirmDialog({
     </Dialog>
   )
 }
+
