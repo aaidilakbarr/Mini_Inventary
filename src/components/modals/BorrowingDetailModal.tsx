@@ -19,17 +19,8 @@ import {
   CheckCircle2, 
   Printer, 
   Clock, 
-  Wrench,
-  ShieldCheck,
-  Building2,
-  AlertTriangle,
-  AlertOctagon,
-  Calendar,
-  Camera,
-  ArrowLeftRight,
-  MapPin,
-  Check,
-  Sparkles
+  Camera, 
+  MapPin
 } from "lucide-react"
 import type { BorrowingItem } from "@/types/database"
 
@@ -80,7 +71,6 @@ export function BorrowingDetailModal({
   const isReturned = item.status === "Returned"
   const isPending = item.status === "Pending Approval"
   const isBorrowed = item.status === "Borrowed"
-  const isRejected = item.status === "Rejected"
 
   // Check overdue
   const isOverdue = !isReturned && item.due_date && new Date(item.due_date) < new Date()

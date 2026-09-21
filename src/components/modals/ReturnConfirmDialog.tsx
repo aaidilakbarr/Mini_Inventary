@@ -13,15 +13,11 @@ import { Badge } from "@/components/ui/badge"
 import { 
   RotateCcw, 
   Loader2, 
-  PackageCheck, 
-  UserCheck, 
-  Calendar,
   CheckCircle2, 
   AlertTriangle, 
   AlertOctagon, 
   Wrench,
-  Camera,
-  ShieldCheck
+  Camera
 } from "lucide-react"
 import { formatDateID } from "@/lib/formatters"
 import type { BorrowingItem } from "@/types/database"
