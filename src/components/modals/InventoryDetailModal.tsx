@@ -7,9 +7,9 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
-import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { formatDateID, formatDateTimeID } from "@/lib/formatters"
+import { formatDateID, formatDateTimeID, formatCurrencyID } from "@/lib/formatters"
 import {
   Package,
   Boxes,
@@ -18,18 +18,22 @@ import {
   ShieldCheck,
   Calendar,
   Clock,
-  Wrench,
   FileText,
   Tag,
   Copy,
   Check,
   Edit2,
-  CheckCircle2,
-  AlertCircle,
   ExternalLink,
-  ArrowLeftRight
+  ArrowLeftRight,
+  Maximize2,
+  RotateCcw,
+  CheckCircle2,
+  Wrench,
+  History,
+  SlidersHorizontal,
 } from "lucide-react"
 import type { InventoryItem } from "@/types/database"
+import { cn } from "@/lib/utils"
 
 interface InventoryDetailModalProps {
   isOpen: boolean
@@ -38,6 +42,50 @@ interface InventoryDetailModalProps {
   isAdmin?: boolean
   onBorrow?: (item: InventoryItem) => void
   onEdit?: (item: InventoryItem) => void
+}
+
+interface ParsedNote {
+  raw: string
+  tag: string
+  date?: string
+  content: string
+  type: "return" | "repair" | "maintenance" | "general"
+}
+
+function parseNoteLine(line: string): ParsedNote {
+  const trimmed = line.trim()
+  const match = trimmed.match(/^\[(.*?)\]:\s*(.*)$/)
+  if (match) {
+    const fullTag = match[1].trim()
+    const content = match[2].trim()
+
+    // Extract date if present (e.g. "4/9/2026")
+    const dateMatch = fullTag.match(/(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4})/)
+    const date = dateMatch ? dateMatch[1] : undefined
+    const cleanTag = dateMatch
+      ? fullTag.replace(dateMatch[1], "").trim()
+      : fullTag
+
+    const lower = fullTag.toLowerCase()
+    let type: "return" | "repair" | "maintenance" | "general" = "general"
+    if (lower.includes("pengembalian")) {
+      type = "return"
+    } else if (lower.includes("perbaikan") || lower.includes("selesai")) {
+      type = "repair"
+    } else if (lower.includes("maintenance") || lower.includes("rusak")) {
+      type = "maintenance"
+    }
+
+    return {
+      raw: trimmed,
+      tag: cleanTag || fullTag,
+      date,
+      content,
+      type,
+    }
+  }
+
+  return { raw: trimmed, tag: "Catatan", content: trimmed, type: "general" }
 }
 
 export function InventoryDetailModal({
@@ -49,6 +97,8 @@ export function InventoryDetailModal({
   onEdit,
 }: InventoryDetailModalProps) {
   const [isCopied, setIsCopied] = useState(false)
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState<string>("specs")
 
   if (!item) return null
 
@@ -60,44 +110,47 @@ export function InventoryDetailModal({
     }
   }
 
-  // Parse structured notes if any
-  const noteLines = item.notes ? item.notes.split('\n').filter(Boolean) : []
+  // Parse structured notes into timeline events
+  const noteLines = item.notes
+    ? item.notes.split("\n").map((l) => l.trim()).filter(Boolean)
+    : []
+  const parsedNotes: ParsedNote[] = noteLines.map(parseNoteLine)
 
   const getStatusBadge = () => {
     switch (item.status) {
       case "Available":
         return (
-          <Badge variant="default" className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 text-xs font-mono font-bold">
-            <CheckCircle2 className="h-3 w-3 mr-1" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             Tersedia
-          </Badge>
+          </span>
         )
       case "Borrowed":
         return (
-          <Badge variant="secondary" className="bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30 text-xs font-mono font-bold">
-            <Clock className="h-3 w-3 mr-1" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20">
+            <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
             Dipinjam
-          </Badge>
+          </span>
         )
       case "Maintenance":
         return (
-          <Badge variant="destructive" className="bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 text-xs font-mono font-bold">
-            <Wrench className="h-3 w-3 mr-1" />
-            Perawatan (Maintenance)
-          </Badge>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+            Perawatan
+          </span>
         )
       case "Lost":
         return (
-          <Badge variant="destructive" className="bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30 text-xs font-mono font-bold">
-            <AlertCircle className="h-3 w-3 mr-1" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20">
+            <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
             Hilang
-          </Badge>
+          </span>
         )
       default:
         return (
-          <Badge variant="outline" className="text-xs font-mono">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-muted text-muted-foreground border border-border">
             {item.status}
-          </Badge>
+          </span>
         )
     }
   }
@@ -106,41 +159,67 @@ export function InventoryDetailModal({
     const cond = item.condition || "Bagus"
     const isDamaged = cond.toLowerCase().includes("rusak") || cond.toLowerCase().includes("perbaikan")
     return (
-      <Badge
-        variant="outline"
-        className={`text-xs font-medium ${isDamaged
-            ? "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30"
-            : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
-          }`}
+      <span
+        className={cn(
+          "inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium border",
+          isDamaged
+            ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/25"
+            : "bg-slate-100 dark:bg-muted/60 text-slate-700 dark:text-slate-300 border-border/80"
+        )}
       >
         {cond}
-      </Badge>
+      </span>
     )
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="w-[95vw] sm:max-w-2xl max-h-[92vh] overflow-y-auto p-4 sm:p-6 rounded-2xl">
-        {/* Header */}
-        <DialogHeader className="border-b border-border/60 pb-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-            <div className="flex items-center gap-2.5">
-              <div className="h-9 w-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
-                <Package className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <DialogTitle className="text-base sm:text-lg font-bold text-foreground">
-                    {item.name}
-                  </DialogTitle>
+    <>
+      <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+        <DialogContent className="w-[95vw] sm:max-w-xl max-h-[90vh] overflow-y-auto p-5 sm:p-6 rounded-2xl border-border/80 shadow-2xl">
+          {/* Header & Hero Info */}
+          <DialogHeader className="space-y-0 text-left pb-4 border-b border-border/60">
+            <div className="flex items-center gap-3.5 pr-8">
+              {/* Asset Photo Thumbnail or Icon */}
+              {item.photo_url ? (
+                <button
+                  type="button"
+                  onClick={() => setIsLightboxOpen(true)}
+                  className="relative h-14 w-14 sm:h-16 sm:w-16 rounded-xl overflow-hidden bg-slate-50 dark:bg-muted/30 border border-border/80 shrink-0 group focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all hover:border-primary/50 shadow-2xs"
+                  title="Klik untuk melihat foto penuh"
+                >
+                  <img
+                    src={item.photo_url}
+                    alt={item.name}
+                    className="h-full w-full object-contain p-1 transition-transform duration-200 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                    <Maximize2 className="h-3.5 w-3.5" />
+                  </div>
+                </button>
+              ) : (
+                <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0 shadow-2xs">
+                  <Package className="h-7 w-7" />
                 </div>
-                <DialogDescription className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
-                  <span>Kode Aset:</span>
+              )}
+
+              {/* Title & Identity */}
+              <div className="flex-1 min-w-0 space-y-1">
+                <DialogTitle className="text-lg sm:text-xl font-bold text-foreground tracking-tight leading-tight truncate">
+                  {item.name}
+                </DialogTitle>
+
+                <DialogDescription className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                  {/* Status & Condition Badges */}
+                  {getStatusBadge()}
+                  {getConditionBadge()}
+
+                  {/* Asset Code with Copy Action */}
+                  <span className="text-border">•</span>
                   <button
                     type="button"
                     onClick={handleCopyCode}
-                    className="inline-flex items-center gap-1 font-mono font-bold text-foreground hover:text-primary transition-colors bg-muted/60 px-1.5 py-0.5 rounded text-[11px]"
-                    title="Klik untuk salin kode aset"
+                    className="inline-flex items-center gap-1 font-mono font-medium text-foreground hover:text-primary transition-colors bg-muted/60 hover:bg-muted px-1.5 py-0.5 rounded text-[11px] border border-border/50"
+                    title="Klik untuk menyalin kode aset"
                   >
                     <span>{item.code}</span>
                     {isCopied ? (
@@ -149,239 +228,322 @@ export function InventoryDetailModal({
                       <Copy className="h-3 w-3 text-muted-foreground" />
                     )}
                   </button>
-                  {isCopied && <span className="text-[10px] text-emerald-500 font-medium">Disalin!</span>}
+                  {isCopied && <span className="text-[10px] text-emerald-500 font-semibold">Tersalin!</span>}
                 </DialogDescription>
               </div>
             </div>
+          </DialogHeader>
 
-            <div className="flex items-center gap-2 flex-wrap">
-              {getStatusBadge()}
-              {getConditionBadge()}
-            </div>
-          </div>
-        </DialogHeader>
-
-        <div className="space-y-4 py-2 text-xs">
-          {/* Visual Showcase (if asset has a photo) */}
-          {item.photo_url && (
-            <div className="rounded-2xl border border-border/80 bg-slate-50/70 dark:bg-slate-900/40 p-3.5 flex flex-col sm:flex-row items-center gap-4 overflow-hidden shadow-2xs group">
-              <div className="relative h-28 w-28 shrink-0 rounded-xl overflow-hidden bg-background border border-border/60 flex items-center justify-center shadow-xs">
-                <img
-                  src={item.photo_url}
-                  alt={item.name}
-                  className="h-full w-full object-contain p-1 group-hover:scale-105 transition-transform duration-200"
-                />
-              </div>
-              <div className="space-y-1 text-center sm:text-left flex-1 min-w-0">
-                <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-muted-foreground">
-                  Foto Resmi Unit Aset
-                </span>
-                <p className="text-sm font-bold text-foreground truncate">{item.name}</p>
-                <p className="text-[11px] text-muted-foreground line-clamp-2">
-                  Tersimpan pada penyimpanan cloud inventaris. Gunakan tautan di bawah untuk melihat foto resolusi penuh.
-                </p>
-                <div className="pt-1">
-                  <a
-                    href={item.photo_url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 text-xs text-primary font-medium hover:underline"
-                  >
-                    <span>Buka Foto Resolusi Penuh</span>
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Quick Metrics Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-            <div className="p-3 rounded-lg bg-muted/40 border border-border/70 space-y-1">
-              <div className="flex items-center gap-1.5 text-muted-foreground text-[11px] font-medium">
-                <Boxes className="h-3.5 w-3.5" />
-                <span>Jumlah Stok</span>
-              </div>
-              <p className="text-base font-mono font-bold text-foreground">
-                {item.quantity} <span className="text-xs font-normal text-muted-foreground">unit</span>
+          {/* Quick Metrics Strip: Structured, Balanced Typography */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3 rounded-xl bg-muted/30 border border-border/60 my-4">
+            <div className="space-y-0.5">
+              <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5">
+                <Boxes className="h-3.5 w-3.5 text-muted-foreground/70" />
+                Jumlah Stok
+              </span>
+              <p className="text-sm font-bold font-mono text-foreground">
+                {item.quantity}{" "}
+                <span className="text-xs font-normal text-muted-foreground">unit</span>
               </p>
             </div>
 
-            <div className="p-3 rounded-lg bg-muted/40 border border-border/70 space-y-1">
-              <div className="flex items-center gap-1.5 text-muted-foreground text-[11px] font-medium">
-                <Tag className="h-3.5 w-3.5" />
-                <span>Kategori</span>
-              </div>
-              <p className="text-xs font-semibold text-foreground truncate">
+            <div className="space-y-0.5">
+              <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5">
+                <Tag className="h-3.5 w-3.5 text-muted-foreground/70" />
+                Kategori
+              </span>
+              <p className="text-sm font-semibold text-foreground truncate">
                 {item.category?.name || "Umum"}
               </p>
             </div>
 
-            <div className="p-3 rounded-lg bg-muted/40 border border-border/70 space-y-1">
-              <div className="flex items-center gap-1.5 text-muted-foreground text-[11px] font-medium">
-                <MapPin className="h-3.5 w-3.5" />
-                <span>Lokasi</span>
-              </div>
-              <p className="text-xs font-semibold text-foreground truncate">
+            <div className="space-y-0.5">
+              <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5 text-muted-foreground/70" />
+                Lokasi
+              </span>
+              <p className="text-sm font-semibold text-foreground truncate">
                 {item.location || "-"}
               </p>
             </div>
 
-            <div className="p-3 rounded-lg bg-muted/40 border border-border/70 space-y-1">
-              <div className="flex items-center gap-1.5 text-muted-foreground text-[11px] font-medium">
-                <ShieldCheck className="h-3.5 w-3.5" />
-                <span>Garansi</span>
-              </div>
-              <p className="text-xs font-mono font-semibold text-foreground truncate">
+            <div className="space-y-0.5">
+              <span className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5">
+                <ShieldCheck className="h-3.5 w-3.5 text-muted-foreground/70" />
+                Garansi
+              </span>
+              <p className="text-sm font-semibold text-foreground truncate font-mono">
                 {item.warranty_info || "-"}
               </p>
             </div>
           </div>
 
-          {/* Detailed Information Section */}
-          <div className="rounded-lg border border-border/70 bg-card overflow-hidden">
-            <div className="px-3.5 py-2 bg-muted/30 border-b border-border/60">
-              <span className="text-[11px] font-mono uppercase font-semibold text-foreground">
-                Informasi & Spesifikasi Aset
-              </span>
-            </div>
-            <div className="p-3.5 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div className="space-y-1">
-                <span className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-                  <Building2 className="h-3.5 w-3.5" />
-                  Pemasok / Vendor
-                </span>
-                <p className="font-semibold text-foreground">
-                  {item.supplier || "Vendor internal / tidak tercatat"}
-                </p>
+          {/* Tabbed Navigation: Informasi & Spesifikasi vs Catatan & Riwayat */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-3">
+            <TabsList className="grid grid-cols-2 h-9 p-1 bg-muted/50 rounded-xl border border-border/60">
+              <TabsTrigger
+                value="specs"
+                className="h-7 rounded-lg text-xs font-semibold gap-1.5 transition-all cursor-pointer data-active:bg-background data-active:text-foreground data-active:shadow-2xs"
+              >
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                <span>Spesifikasi Aset</span>
+              </TabsTrigger>
+
+              <TabsTrigger
+                value="history"
+                className="h-7 rounded-lg text-xs font-semibold gap-1.5 transition-all cursor-pointer data-active:bg-background data-active:text-foreground data-active:shadow-2xs"
+              >
+                <History className="h-3.5 w-3.5" />
+                <span>Catatan & Riwayat</span>
+                {parsedNotes.length > 0 && (
+                  <span className="px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold bg-muted-foreground/15 text-foreground">
+                    {parsedNotes.length}
+                  </span>
+                )}
+              </TabsTrigger>
+            </TabsList>
+
+            {/* TAB 1: Spesifikasi Aset */}
+            <TabsContent value="specs" className="space-y-3 focus-visible:outline-none">
+              <div className="rounded-xl border border-border/60 divide-y divide-border/40 overflow-hidden bg-background">
+                <div className="flex items-center justify-between px-3.5 py-2.5 text-xs hover:bg-muted/20 transition-colors">
+                  <span className="text-muted-foreground flex items-center gap-2 font-medium">
+                    <Building2 className="h-3.5 w-3.5 text-muted-foreground/70" />
+                    Pemasok / Vendor
+                  </span>
+                  <span className="font-semibold text-foreground text-right">
+                    {item.supplier || "Vendor Internal"}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between px-3.5 py-2.5 text-xs hover:bg-muted/20 transition-colors">
+                  <span className="text-muted-foreground flex items-center gap-2 font-medium">
+                    <MapPin className="h-3.5 w-3.5 text-muted-foreground/70" />
+                    Lokasi Penyimpanan
+                  </span>
+                  <span className="font-semibold text-foreground text-right">
+                    {item.location || "Gudang Utama"}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between px-3.5 py-2.5 text-xs hover:bg-muted/20 transition-colors">
+                  <span className="text-muted-foreground flex items-center gap-2 font-medium">
+                    <Calendar className="h-3.5 w-3.5 text-muted-foreground/70" />
+                    Tanggal Registrasi
+                  </span>
+                  <span className="font-mono font-medium text-foreground text-right">
+                    {formatDateID(item.created_at)}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between px-3.5 py-2.5 text-xs hover:bg-muted/20 transition-colors">
+                  <span className="text-muted-foreground flex items-center gap-2 font-medium">
+                    <Clock className="h-3.5 w-3.5 text-muted-foreground/70" />
+                    Pembaruan Terakhir
+                  </span>
+                  <span className="font-mono font-medium text-foreground text-right">
+                    {formatDateTimeID(item.updated_at)}
+                  </span>
+                </div>
+
+                {item.purchase_info?.price && (
+                  <div className="flex items-center justify-between px-3.5 py-2.5 text-xs hover:bg-muted/20 transition-colors">
+                    <span className="text-muted-foreground flex items-center gap-2 font-medium">
+                      <Tag className="h-3.5 w-3.5 text-muted-foreground/70" />
+                      Nilai Pembelian
+                    </span>
+                    <span className="font-mono font-semibold text-foreground text-right">
+                      {formatCurrencyID(item.purchase_info.price)}
+                    </span>
+                  </div>
+                )}
               </div>
 
-              <div className="space-y-1">
-                <span className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-                  <MapPin className="h-3.5 w-3.5" />
-                  Lokasi Penyimpanan
-                </span>
-                <p className="font-semibold text-foreground">
-                  {item.location || "Gudang Utama"}
-                </p>
-              </div>
+              {/* Photo preview link if available */}
+              {item.photo_url && (
+                <div className="flex items-center justify-between px-3.5 py-2 rounded-xl bg-muted/30 border border-border/50 text-xs">
+                  <span className="text-muted-foreground flex items-center gap-1.5 font-medium">
+                    <Maximize2 className="h-3.5 w-3.5 text-muted-foreground/70" />
+                    Foto Resmi Tersedia
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsLightboxOpen(true)}
+                    className="inline-flex items-center gap-1 text-primary hover:underline font-semibold"
+                  >
+                    <span>Perbesar Resolusi Penuh</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+            </TabsContent>
 
-              <div className="space-y-1">
-                <span className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-                  <Calendar className="h-3.5 w-3.5" />
-                  Tanggal Didaftarkan
-                </span>
-                <p className="font-mono text-foreground">
-                  {formatDateID(item.created_at)}
-                </p>
-              </div>
-
-              <div className="space-y-1">
-                <span className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5" />
-                  Pembaruan Terakhir
-                </span>
-                <p className="font-mono text-foreground">
-                  {formatDateTimeID(item.updated_at)}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Notes & History Section */}
-          <div className="rounded-lg border border-border/70 bg-card overflow-hidden">
-            <div className="px-3.5 py-2 bg-muted/30 border-b border-border/60 flex items-center justify-between">
-              <span className="text-[11px] font-mono uppercase font-semibold text-foreground flex items-center gap-1.5">
-                <FileText className="h-3.5 w-3.5" />
-                Catatan & Riwayat Aset
-              </span>
-              <span className="text-[10px] text-muted-foreground font-mono">
-                {noteLines.length} catatan
-              </span>
-            </div>
-            <div className="p-3.5 space-y-2 max-h-48 overflow-y-auto">
-              {noteLines.length === 0 ? (
-                <p className="text-muted-foreground italic text-center py-2 text-xs">
-                  Tidak ada catatan tambahan untuk aset ini.
-                </p>
+            {/* TAB 2: Catatan & Riwayat (Activity Feed) */}
+            <TabsContent value="history" className="space-y-3 focus-visible:outline-none">
+              {parsedNotes.length === 0 ? (
+                <div className="py-8 flex flex-col items-center justify-center text-center text-muted-foreground gap-2 rounded-xl border border-dashed border-border/70 p-4">
+                  <div className="h-9 w-9 rounded-full bg-muted/70 flex items-center justify-center">
+                    <FileText className="h-4 w-4 text-muted-foreground/70" />
+                  </div>
+                  <p className="text-xs font-semibold text-foreground">Tidak Ada Catatan Riwayat</p>
+                  <p className="text-[11px] text-muted-foreground max-w-xs">
+                    Riwayat kondisi fisik, pengembalian, dan servis pemeliharaan akan muncul di sini secara otomatis.
+                  </p>
+                </div>
               ) : (
-                noteLines.map((line, idx) => {
-                  const isReturn = line.includes("[Pengembalian")
-                  const isRepair = line.includes("[Perbaikan")
-
-                  return (
+                <div className="rounded-xl border border-border/60 divide-y divide-border/40 overflow-hidden bg-background max-h-60 overflow-y-auto">
+                  {parsedNotes.map((note, idx) => (
                     <div
                       key={idx}
-                      className={`p-2.5 rounded-md border text-xs leading-relaxed ${isReturn
-                          ? "bg-amber-500/5 border-amber-500/20 text-foreground"
-                          : isRepair
-                            ? "bg-emerald-500/5 border-emerald-500/20 text-foreground"
-                            : "bg-muted/30 border-border/60 text-foreground"
-                        }`}
+                      className="flex items-start gap-3 p-3 text-xs hover:bg-muted/20 transition-colors"
                     >
-                      <div className="flex items-start gap-2">
-                        {isReturn && <Wrench className="h-3.5 w-3.5 text-amber-500 shrink-0 mt-0.5" />}
-                        {isRepair && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0 mt-0.5" />}
-                        {!isReturn && !isRepair && <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0 mt-0.5" />}
-                        <span className="break-words">{line}</span>
+                      {/* Icon indicator */}
+                      <div className="pt-0.5 shrink-0">
+                        <span
+                          className={cn(
+                            "flex items-center justify-center h-6 w-6 rounded-lg text-xs font-bold shrink-0",
+                            note.type === "return"
+                              ? "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
+                              : note.type === "repair"
+                              ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
+                              : note.type === "maintenance"
+                              ? "bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/30"
+                              : "bg-muted text-muted-foreground border border-border"
+                          )}
+                        >
+                          {note.type === "return" ? (
+                            <RotateCcw className="h-3 w-3" />
+                          ) : note.type === "repair" ? (
+                            <CheckCircle2 className="h-3 w-3" />
+                          ) : note.type === "maintenance" ? (
+                            <Wrench className="h-3 w-3" />
+                          ) : (
+                            <FileText className="h-3 w-3" />
+                          )}
+                        </span>
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <span
+                            className={cn(
+                              "text-[10px] font-bold uppercase tracking-wider",
+                              note.type === "return"
+                                ? "text-amber-700 dark:text-amber-400"
+                                : note.type === "repair"
+                                ? "text-emerald-700 dark:text-emerald-400"
+                                : note.type === "maintenance"
+                                ? "text-blue-700 dark:text-blue-400"
+                                : "text-foreground"
+                            )}
+                          >
+                            {note.tag}
+                          </span>
+                          {note.date && (
+                            <span className="text-[10px] font-mono text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded border border-border/40 shrink-0">
+                              {note.date}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-foreground/90 leading-relaxed break-words font-normal">
+                          {note.content}
+                        </p>
                       </div>
                     </div>
-                  )
-                })
+                  ))}
+                </div>
               )}
-            </div>
-          </div>
-        </div>
+            </TabsContent>
+          </Tabs>
 
-        {/* Footer Actions */}
-        <DialogFooter className="border-t border-border/60 pt-3 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2.5 w-full">
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          {/* Footer Actions */}
+          <DialogFooter className="pt-4 border-t border-border/60 flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2.5 w-full mt-2">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={onClose}
-              className="h-9 sm:h-8 text-xs rounded-xl flex-1 sm:flex-none justify-center"
+              className="h-9 px-4 text-xs font-medium rounded-xl border-border/80 hover:bg-muted text-muted-foreground hover:text-foreground justify-center"
             >
               Tutup
             </Button>
 
-            <Button
-              type="button"
-              size="sm"
-              disabled={item.status !== "Available" || (item.quantity ?? 0) <= 0}
-              onClick={() => {
-                onClose()
-                onBorrow?.(item)
-              }}
-              className="h-9 sm:h-8 text-xs gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-xs disabled:opacity-50 flex-1 sm:flex-none justify-center"
-              title={
-                item.status !== "Available" || (item.quantity ?? 0) <= 0
-                  ? "Aset tidak tersedia untuk dipinjam saat ini"
-                  : "Ajukan Permohonan Peminjaman Aset"
-              }
-            >
-              <ArrowLeftRight className="h-3.5 w-3.5 shrink-0" />
-              <span>Pinjam Barang</span>
-            </Button>
-          </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              {isAdmin && onEdit && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    onClose()
+                    onEdit(item)
+                  }}
+                  className="h-9 px-3.5 text-xs font-medium gap-1.5 rounded-xl border-border hover:bg-muted flex-1 sm:flex-none justify-center"
+                >
+                  <Edit2 className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span>Edit Aset</span>
+                </Button>
+              )}
 
-          {isAdmin && onEdit && (
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => {
-                onClose()
-                onEdit(item)
-              }}
-              className="h-9 sm:h-8 text-xs gap-1.5 rounded-xl bg-primary text-primary-foreground w-full sm:w-auto justify-center"
-            >
-              <Edit2 className="h-3.5 w-3.5 shrink-0" />
-              <span>Edit Aset Ini</span>
-            </Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+              <Button
+                type="button"
+                size="sm"
+                disabled={item.status !== "Available" || (item.quantity ?? 0) <= 0}
+                onClick={() => {
+                  onClose()
+                  onBorrow?.(item)
+                }}
+                className="h-9 px-4 text-xs font-semibold gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-xs disabled:opacity-50 flex-1 sm:flex-none justify-center"
+                title={
+                  item.status !== "Available" || (item.quantity ?? 0) <= 0
+                    ? "Aset tidak tersedia untuk dipinjam saat ini"
+                    : "Ajukan Permohonan Peminjaman Aset"
+                }
+              >
+                <ArrowLeftRight className="h-3.5 w-3.5" />
+                <span>Pinjam Barang</span>
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Lightbox Modal for Photo Inspection */}
+      {item.photo_url && (
+        <Dialog open={isLightboxOpen} onOpenChange={setIsLightboxOpen}>
+          <DialogContent className="max-w-2xl p-4 bg-background/95 backdrop-blur-md rounded-2xl border border-border/80 shadow-2xl">
+            <DialogHeader className="border-b border-border/60 pb-2.5">
+              <div className="flex items-center justify-between pr-8">
+                <div>
+                  <DialogTitle className="text-sm font-bold text-foreground">
+                    {item.name}
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-muted-foreground font-mono">
+                    {item.code}
+                  </DialogDescription>
+                </div>
+                <a
+                  href={item.photo_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-xs text-primary hover:underline font-medium"
+                >
+                  <span>Buka Gambar Asli</span>
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+            </DialogHeader>
+            <div className="p-4 flex items-center justify-center bg-slate-50 dark:bg-muted/20 rounded-xl max-h-[70vh] overflow-hidden my-2">
+              <img
+                src={item.photo_url}
+                alt={item.name}
+                className="max-h-[60vh] max-w-full object-contain rounded-lg shadow-xs"
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   )
 }
