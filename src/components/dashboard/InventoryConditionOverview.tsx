@@ -1,8 +1,15 @@
 import { useState, useMemo } from "react"
 import { Link } from "react-router-dom"
-import { PieChart, ArrowRight, AlertTriangle, CheckCircle2, RefreshCcw, Wrench, ShieldAlert } from "lucide-react"
+import { PieChart, ArrowRight, AlertTriangle, CheckCircle2, RefreshCcw, Wrench, ShieldAlert, ChevronDown } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+} from "@/components/ui/dropdown-menu"
 import type { InventoryItem, Category } from "@/types/database"
 
 interface InventoryConditionOverviewProps {
@@ -104,33 +111,65 @@ export function InventoryConditionOverview({ inventories, categories }: Inventor
           <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100 dark:border-border/50 mt-2">
             <div className="flex items-center gap-1.5">
               <span className="text-[11px] font-medium text-muted-foreground">Kategori:</span>
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="h-7 px-2 text-xs rounded-lg bg-slate-100 dark:bg-muted border border-slate-200 dark:border-border text-foreground font-medium focus:outline-hidden focus:ring-1 focus:ring-primary cursor-pointer"
-              >
-                <option value="all">Semua Kategori ({inventories.length} item)</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="inline-flex items-center gap-1.5 h-7 px-2.5 text-xs rounded-lg bg-slate-100 dark:bg-muted border border-slate-200 dark:border-border text-foreground font-medium hover:bg-slate-200/70 dark:hover:bg-muted/80 focus:outline-hidden focus:ring-1 focus:ring-primary cursor-pointer transition-colors">
+                  <span className="truncate max-w-[170px]">
+                    {selectedCategory === "all"
+                      ? `Semua Kategori (${inventories.length} item)`
+                      : categories.find((c) => c.id === selectedCategory)?.name ?? "Semua Kategori"}
+                  </span>
+                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="min-w-[180px] max-h-64 overflow-y-auto">
+                  <DropdownMenuRadioGroup value={selectedCategory} onValueChange={setSelectedCategory}>
+                    <DropdownMenuRadioItem value="all" className="cursor-pointer">
+                      Semua Kategori ({inventories.length} item)
+                    </DropdownMenuRadioItem>
+                    {categories.map((c) => (
+                      <DropdownMenuRadioItem key={c.id} value={c.id} className="cursor-pointer">
+                        {c.name}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
             <div className="flex items-center gap-1.5 ml-auto">
               <span className="text-[11px] font-medium text-muted-foreground">Kondisi:</span>
-              <select
-                value={selectedConditionFilter}
-                onChange={(e) => setSelectedConditionFilter(e.target.value)}
-                className="h-7 px-2 text-xs rounded-lg bg-slate-100 dark:bg-muted border border-slate-200 dark:border-border text-foreground font-medium focus:outline-hidden focus:ring-1 focus:ring-primary cursor-pointer"
-              >
-                <option value="all">Semua Status</option>
-                <option value="available">Hanya Tersedia</option>
-                <option value="borrowed">Sedang Dipinjam</option>
-                <option value="maintenance">Dalam Pemeliharaan</option>
-                <option value="damaged">Rusak / Tidak Layak</option>
-              </select>
+              <DropdownMenu>
+                <DropdownMenuTrigger className="inline-flex items-center gap-1.5 h-7 px-2.5 text-xs rounded-lg bg-slate-100 dark:bg-muted border border-slate-200 dark:border-border text-foreground font-medium hover:bg-slate-200/70 dark:hover:bg-muted/80 focus:outline-hidden focus:ring-1 focus:ring-primary cursor-pointer transition-colors">
+                  <span>
+                    {{
+                      all: "Semua Status",
+                      available: "Hanya Tersedia",
+                      borrowed: "Sedang Dipinjam",
+                      maintenance: "Dalam Pemeliharaan",
+                      damaged: "Rusak / Tidak Layak",
+                    }[selectedConditionFilter] ?? "Semua Status"}
+                  </span>
+                  <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[170px]">
+                  <DropdownMenuRadioGroup value={selectedConditionFilter} onValueChange={setSelectedConditionFilter}>
+                    <DropdownMenuRadioItem value="all" className="cursor-pointer">
+                      Semua Status
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="available" className="cursor-pointer">
+                      Hanya Tersedia
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="borrowed" className="cursor-pointer">
+                      Sedang Dipinjam
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="maintenance" className="cursor-pointer">
+                      Dalam Pemeliharaan
+                    </DropdownMenuRadioItem>
+                    <DropdownMenuRadioItem value="damaged" className="cursor-pointer">
+                      Rusak / Tidak Layak
+                    </DropdownMenuRadioItem>
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </CardHeader>
