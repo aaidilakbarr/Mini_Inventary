@@ -1,15 +1,26 @@
+import { useMemo } from "react"
 import { Link } from "react-router-dom"
-import { CalendarCheck2, CreditCard, Package } from "lucide-react"
+import { CalendarCheck2, Wrench } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { getAgendaUrgency } from "@/lib/agenda"
 import { cn } from "@/lib/utils"
-import type { AgendaItem } from "@/lib/api/dashboard"
+import type { ReminderItem } from "@/types/database"
 
 interface UpcomingAgendaCardProps {
-  agenda: AgendaItem[]
+  reminders: ReminderItem[]
 }
 
 const SHORT_MONTHS = ["JAN", "FEB", "MAR", "APR", "MEI", "JUN", "JUL", "AGU", "SEP", "OKT", "NOV", "DES"]
+
+const SOURCE_LABELS: Record<string, string> = {
+  manual: "Manual",
+  inventory: "Perawatan Aset",
+  Inventaris: "Inventaris",
+  Peminjaman: "Peminjaman",
+  Langganan: "Langganan",
+  Perawatan: "Perawatan",
+}
 
 function parseShortDate(dateStr: string) {
   const d = new Date(dateStr)
@@ -20,25 +31,12 @@ function parseShortDate(dateStr: string) {
   }
 }
 
-export function UpcomingAgendaCard({ agenda }: UpcomingAgendaCardProps) {
-  const getSourceIcon = (type: AgendaItem["type"]) => {
-    switch (type) {
-      case "borrowing":
-        return <Package className="h-3 w-3 text-primary" />
-      case "subscription":
-        return <CreditCard className="h-3 w-3 text-emerald-700 dark:text-emerald-400" />
-      case "reminder":
-      default:
-        return <CalendarCheck2 className="h-3 w-3 text-amber-700 dark:text-amber-400" />
-    }
-  }
-
-  const getUrgencyBadge = (item: AgendaItem) => {
-    if (item.isOverdue) return <Badge variant="destructive">Terlambat</Badge>
-    if (item.priority === "Tinggi") return <Badge variant="destructive">Tinggi</Badge>
-    if (item.priority === "Sedang") return <Badge variant="warning">Mendekat</Badge>
-    return <Badge variant="outline">Terjadwal</Badge>
-  }
+export function UpcomingAgendaCard({ reminders }: UpcomingAgendaCardProps) {
+  const sortedAgendas = useMemo(() => {
+    return reminders
+      .filter((item) => item.status !== "Completed" && item.status !== "Dismissed")
+      .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime())
+  }, [reminders])
 
   return (
     <Card className="h-full flex flex-col">
@@ -46,9 +44,9 @@ export function UpcomingAgendaCard({ agenda }: UpcomingAgendaCardProps) {
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <CardTitle>Agenda</CardTitle>
-            {agenda.length > 0 && (
+            {sortedAgendas.length > 0 && (
               <Badge variant="secondary" className="font-mono">
-                {agenda.length}
+                {sortedAgendas.length}
               </Badge>
             )}
           </div>
@@ -59,35 +57,41 @@ export function UpcomingAgendaCard({ agenda }: UpcomingAgendaCardProps) {
       </CardHeader>
 
       <CardContent className="flex-1">
-        {agenda.length === 0 ? (
-          <div className="py-8 text-center text-xs text-muted-foreground border border-dashed border-border rounded-lg">
-            Tidak ada agenda mendatang.
+        {sortedAgendas.length === 0 ? (
+          <div className="py-8 px-4 text-center text-xs text-muted-foreground border border-dashed border-border rounded-lg space-y-1">
+            <p className="font-semibold text-foreground">Tidak ada agenda aktif</p>
+            <p className="text-[11px]">Jadwal dari halaman Agenda akan muncul di sini.</p>
           </div>
         ) : (
-          <div className="space-y-2">
-            {agenda.slice(0, 5).map((item) => {
-              const { day, month } = parseShortDate(item.dueDate)
+          <div className="space-y-2 max-h-[340px] overflow-y-auto pr-0.5">
+            {sortedAgendas.map((item) => {
+              const { day, month } = parseShortDate(item.due_date)
+              const urgency = getAgendaUrgency(item)
+              const isRepair = item.source_type === "inventory"
+              const sourceLabel = SOURCE_LABELS[item.source_type || "manual"] || item.source_type || "Manual"
+
               return (
                 <Link
                   key={item.id}
-                  to={item.link}
+                  to="/agenda"
                   className={cn(
                     "p-2.5 rounded-xl border border-border/80 bg-card flex items-center justify-between gap-2.5 group transition-all duration-150 hover:border-primary/40 hover:bg-accent/40 hover:translate-x-0.5 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
-                    item.isOverdue && "border-destructive/30 bg-destructive/[0.03]"
+                    urgency.state === "overdue" && "border-destructive/30 bg-destructive/[0.03]"
                   )}
                 >
                   <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                    {/* Calendar Date Pill */}
                     <div
                       className={cn(
                         "h-10 w-10 rounded-lg border flex flex-col items-center justify-center shrink-0 leading-none",
-                        item.isOverdue
+                        urgency.state === "overdue"
                           ? "bg-destructive text-destructive-foreground border-destructive"
+                          : urgency.state === "today"
+                          ? "bg-amber-600 text-white border-amber-600"
                           : "bg-muted/60 text-foreground border-border"
                       )}
                     >
                       <span className="text-xs font-extrabold tabular-nums">{day}</span>
-                      <span className="text-[9px] font-bold tracking-wider opacity-80 mt-0.5">
+                      <span className="text-[9px] font-bold tracking-wider opacity-85 mt-0.5">
                         {month}
                       </span>
                     </div>
@@ -97,13 +101,19 @@ export function UpcomingAgendaCard({ agenda }: UpcomingAgendaCardProps) {
                         {item.title}
                       </p>
                       <p className="text-[11px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">
-                        {getSourceIcon(item.type)}
-                        <span className="truncate">{item.subtitle}</span>
+                        {isRepair ? (
+                          <Wrench className="h-3 w-3 text-amber-600 shrink-0" />
+                        ) : (
+                          <CalendarCheck2 className="h-3 w-3 text-primary shrink-0" />
+                        )}
+                        <span className="truncate">{item.description?.trim() || sourceLabel}</span>
                       </p>
                     </div>
                   </div>
 
-                  {getUrgencyBadge(item)}
+                  <Badge variant={urgency.badgeVariant} className="shrink-0">
+                    {urgency.label}
+                  </Badge>
                 </Link>
               )
             })}

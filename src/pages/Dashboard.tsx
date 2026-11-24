@@ -173,7 +173,7 @@ export function Dashboard() {
           />
         </div>
         <div className="order-2 lg:order-3 lg:col-span-3 flex flex-col">
-          <UpcomingAgendaCard agenda={data.upcomingAgenda} />
+          <UpcomingAgendaCard reminders={data.reminders} />
         </div>
       </div>
 

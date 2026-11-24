@@ -167,67 +167,24 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     ? reasonParts.slice(0, 2).join(', ')
     : 'Semua sistem operasional dalam kondisi optimal'
 
-  // Build Unified Upcoming Agenda list
-  const agendaItems: AgendaItem[] = []
-
-  // 1. Borrowings due soon or overdue
-  borrowings
-    .filter(b => b.status === 'Borrowed' && b.due_date)
-    .forEach(b => {
-      const dueDate = new Date(b.due_date)
-      const isOverdue = dueDate < today
-      agendaItems.push({
-        id: `borrow-${b.id}`,
-        type: 'borrowing',
-        title: `Jatuh Tempo: ${b.inventory?.name || 'Aset'}`,
-        subtitle: `Dipinjam oleh ${b.borrower?.full_name || 'Pengguna'}`,
-        dueDate: b.due_date,
-        priority: isOverdue ? 'Tinggi' : 'Sedang',
-        isOverdue,
-        link: '/borrowing',
-      })
-    })
-
-  // 2. Subscriptions renewal in next 30 days
-  subscriptions
-    .filter(s => s.status === 'Active' && s.next_billing_date)
-    .forEach(s => {
-      const billDate = new Date(s.next_billing_date)
-      const diffDays = Math.ceil((billDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-      if (diffDays <= 30) {
-        agendaItems.push({
-          id: `sub-${s.id}`,
-          type: 'subscription',
-          title: `Perpanjangan: ${s.service_name}`,
-          subtitle: `Siklus ${s.billing_cycle || 'Langganan'}`,
-          dueDate: s.next_billing_date,
-          priority: diffDays <= 7 ? 'Tinggi' : 'Sedang',
-          isOverdue: diffDays < 0,
-          link: '/subscriptions',
-        })
-      }
-    })
-
-  // 3. Reminders not completed
-  reminders
-    .filter(r => r.status !== 'Completed' && r.due_date)
-    .forEach(r => {
+  // Build Upcoming Agenda strictly from active Agenda (reminders) items, sorted nearest to furthest
+  const agendaItems: AgendaItem[] = reminders
+    .filter(r => r.status !== 'Completed' && r.status !== 'Dismissed' && r.due_date)
+    .map(r => {
       const dueDate = new Date(r.due_date)
-      const isOverdue = dueDate < today
-      agendaItems.push({
-        id: `rem-${r.id}`,
-        type: 'reminder',
+      const isOverdue = r.status === 'Overdue' || dueDate < today
+      return {
+        id: r.id,
+        type: 'reminder' as const,
         title: r.title,
         subtitle: r.description || 'Agenda operasional',
         dueDate: r.due_date,
         priority: (r.priority as 'Tinggi' | 'Sedang' | 'Rendah') || (isOverdue ? 'Tinggi' : 'Sedang'),
         isOverdue,
         link: '/agenda',
-      })
+      }
     })
-
-  // Sort agenda chronologically
-  agendaItems.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
 
   const lastUpdated = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
 
@@ -238,7 +195,7 @@ export async function fetchDashboardData(): Promise<DashboardData> {
     reminders,
     categories,
     recentActivity,
-    upcomingAgenda: agendaItems.slice(0, 10),
+    upcomingAgenda: agendaItems,
     stats: {
       totalInventories,
       availableInventories,

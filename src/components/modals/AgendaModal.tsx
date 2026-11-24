@@ -19,7 +19,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Loader2 } from "lucide-react"
+import { Loader2, AlertTriangle, Clock, CheckCircle2 } from "lucide-react"
+import { cn } from "@/lib/utils"
 import type { ReminderItem, CreateReminderPayload, ReminderPriority, ReminderStatus } from "@/types/database"
 
 interface AgendaModalProps {
@@ -39,12 +40,38 @@ const STATUS_LABELS: Record<ReminderStatus, string> = {
 
 const SOURCE_LABELS: Record<string, string> = {
   manual: "Manual",
-  inventory: "Inventaris",
+  inventory: "Perawatan Aset",
   Inventaris: "Inventaris",
   Peminjaman: "Peminjaman",
   Langganan: "Langganan",
   Perawatan: "Perawatan",
 }
+
+const PRIORITY_OPTIONS: Array<{
+  value: ReminderPriority
+  label: string
+  activeClass: string
+  icon: React.ElementType
+}> = [
+  {
+    value: "Rendah",
+    label: "Rendah",
+    activeClass: "border-primary bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary",
+    icon: CheckCircle2,
+  },
+  {
+    value: "Sedang",
+    label: "Sedang",
+    activeClass: "border-amber-500 bg-amber-50 text-amber-800 hover:bg-amber-100/70 dark:bg-amber-950/40 dark:text-amber-300",
+    icon: Clock,
+  },
+  {
+    value: "Tinggi",
+    label: "Tinggi",
+    activeClass: "border-destructive bg-destructive/10 text-destructive hover:bg-destructive/15",
+    icon: AlertTriangle,
+  },
+]
 
 export function AgendaModal({
   open,
@@ -113,19 +140,21 @@ export function AgendaModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[92vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-lg max-h-[92dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{initialData ? "Edit Agenda" : "Tambah Agenda"}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 pt-3">
+        <form onSubmit={handleSubmit} className="space-y-4 pt-3 text-xs">
           {errorMsg && <Alert variant="destructive">{errorMsg}</Alert>}
 
           <div className="space-y-1.5">
-            <Label htmlFor="agenda-title" className="text-xs">Judul *</Label>
+            <Label htmlFor="agenda-title" className="text-xs">
+              Judul Agenda <span className="text-destructive">*</span>
+            </Label>
             <Input
               id="agenda-title"
-              placeholder="Judul agenda"
+              placeholder="Contoh: Servis rutin proyektor ruang rapat"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               required
@@ -133,17 +162,50 @@ export function AgendaModal({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="agenda-description" className="text-xs">Catatan</Label>
+            <Label htmlFor="agenda-description" className="text-xs">Deskripsi & Catatan</Label>
             <Textarea
               id="agenda-description"
-              rows={2}
-              placeholder="Catatan tambahan (opsional)"
+              rows={3}
+              placeholder="Detail tindakan, lokasi, atau penanggung jawab (opsional)"
               value={formData.description || ""}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             />
           </div>
 
+          <div className="space-y-1.5">
+            <Label className="text-xs">Prioritas</Label>
+            <div className="grid grid-cols-3 gap-2">
+              {PRIORITY_OPTIONS.map((opt) => {
+                const Icon = opt.icon
+                const isSelected = formData.priority === opt.value
+                return (
+                  <Button
+                    key={opt.value}
+                    type="button"
+                    variant="outline"
+                    onClick={() => setFormData({ ...formData, priority: opt.value })}
+                    className={cn("h-10 gap-1.5", isSelected && opt.activeClass)}
+                  >
+                    <Icon className="h-3.5 w-3.5 shrink-0" />
+                    <span>{opt.label}</span>
+                  </Button>
+                )
+              })}
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs">
+                Jatuh Tempo <span className="text-destructive">*</span>
+              </Label>
+              <DatePicker
+                value={formData.due_date}
+                onChange={(date) => setFormData({ ...formData, due_date: date })}
+                placeholder="Pilih tanggal"
+              />
+            </div>
+
             <div className="space-y-1.5">
               <Label className="text-xs">Sumber</Label>
               <Select
@@ -162,35 +224,9 @@ export function AgendaModal({
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs">Prioritas</Label>
-              <Select
-                value={formData.priority}
-                onValueChange={(val) => setFormData({ ...formData, priority: (val as ReminderPriority) || "Sedang" })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Tinggi">Tinggi</SelectItem>
-                  <SelectItem value="Sedang">Sedang</SelectItem>
-                  <SelectItem value="Rendah">Rendah</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs">Jatuh Tempo *</Label>
-              <DatePicker
-                value={formData.due_date}
-                onChange={(date) => setFormData({ ...formData, due_date: date })}
-                placeholder="Pilih tanggal"
-              />
-            </div>
-
+          {initialData && (
             <div className="space-y-1.5">
               <Label className="text-xs">Status</Label>
               <Select
@@ -209,7 +245,7 @@ export function AgendaModal({
                 </SelectContent>
               </Select>
             </div>
-          </div>
+          )}
 
           <DialogFooter>
             <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
@@ -217,7 +253,7 @@ export function AgendaModal({
             </Button>
             <Button type="submit" size="sm" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-              <span>{initialData ? "Simpan" : "Buat Agenda"}</span>
+              <span>{initialData ? "Simpan Perubahan" : "Buat Agenda"}</span>
             </Button>
           </DialogFooter>
         </form>
