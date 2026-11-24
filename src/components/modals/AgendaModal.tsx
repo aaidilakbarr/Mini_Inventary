@@ -22,7 +22,7 @@ import {
 import { Loader2 } from "lucide-react"
 import type { ReminderItem, CreateReminderPayload, ReminderPriority, ReminderStatus } from "@/types/database"
 
-interface ReminderModalProps {
+interface AgendaModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   initialData?: ReminderItem | null
@@ -37,12 +37,21 @@ const STATUS_LABELS: Record<ReminderStatus, string> = {
   Dismissed: "Diabaikan",
 }
 
-export function ReminderModal({
+const SOURCE_LABELS: Record<string, string> = {
+  manual: "Manual",
+  inventory: "Inventaris",
+  Inventaris: "Inventaris",
+  Peminjaman: "Peminjaman",
+  Langganan: "Langganan",
+  Perawatan: "Perawatan",
+}
+
+export function AgendaModal({
   open,
   onOpenChange,
   initialData,
   onSubmit,
-}: ReminderModalProps) {
+}: AgendaModalProps) {
   const [formData, setFormData] = useState<CreateReminderPayload>({
     title: "",
     description: "",
@@ -82,7 +91,7 @@ export function ReminderModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.title.trim()) {
-      setErrorMsg("Judul wajib diisi.")
+      setErrorMsg("Judul agenda wajib diisi.")
       return
     }
     if (!formData.due_date) {
@@ -96,7 +105,7 @@ export function ReminderModal({
       await onSubmit(formData)
       onOpenChange(false)
     } catch (err: any) {
-      setErrorMsg(err.message || "Gagal menyimpan pengingat.")
+      setErrorMsg(err.message || "Gagal menyimpan agenda.")
     } finally {
       setIsSubmitting(false)
     }
@@ -106,17 +115,17 @@ export function ReminderModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md max-h-[92vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{initialData ? "Edit Pengingat" : "Tambah Pengingat"}</DialogTitle>
+          <DialogTitle>{initialData ? "Edit Agenda" : "Tambah Agenda"}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 pt-3">
           {errorMsg && <Alert variant="destructive">{errorMsg}</Alert>}
 
           <div className="space-y-1.5">
-            <Label htmlFor="title" className="text-xs">Judul *</Label>
+            <Label htmlFor="agenda-title" className="text-xs">Judul *</Label>
             <Input
-              id="title"
-              placeholder="Judul pengingat"
+              id="agenda-title"
+              placeholder="Judul agenda"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               required
@@ -124,9 +133,9 @@ export function ReminderModal({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="description" className="text-xs">Catatan</Label>
+            <Label htmlFor="agenda-description" className="text-xs">Catatan</Label>
             <Textarea
-              id="description"
+              id="agenda-description"
               rows={2}
               placeholder="Catatan tambahan (opsional)"
               value={formData.description || ""}
@@ -142,7 +151,7 @@ export function ReminderModal({
                 onValueChange={(val) => setFormData({ ...formData, source_type: val || "manual" })}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue>{SOURCE_LABELS[formData.source_type || "manual"] || formData.source_type}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="manual">Manual</SelectItem>
@@ -208,7 +217,7 @@ export function ReminderModal({
             </Button>
             <Button type="submit" size="sm" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-              <span>{initialData ? "Simpan" : "Buat Pengingat"}</span>
+              <span>{initialData ? "Simpan" : "Buat Agenda"}</span>
             </Button>
           </DialogFooter>
         </form>

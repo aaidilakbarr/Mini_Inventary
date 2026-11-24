@@ -1,10 +1,10 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { Dashboard } from '@/pages/Dashboard'
 import { InventoryPage } from '@/pages/Inventory'
 import { BorrowingPage } from '@/pages/Borrowing'
 import { SubscriptionsPage } from '@/pages/Subscriptions'
-import { RemindersPage } from '@/pages/Reminders'
+import { AgendaPage } from '@/pages/Agenda'
 import { LoginPage } from '@/pages/Login'
 import { RegisterPage } from '@/pages/Register'
 import { AuthProvider } from '@/context/AuthContext'
@@ -57,13 +57,14 @@ function App() {
                   }
                 />
                 <Route 
-                  path="reminders" 
+                  path="agenda" 
                   element={
                     <ProtectedRoute allowedRoles={['admin']}>
-                      <RemindersPage />
+                      <AgendaPage />
                     </ProtectedRoute>
                   } 
                 />
+                <Route path="reminders" element={<Navigate to="/agenda" replace />} />
                 <Route 
                   path="audit-logs" 
                   element={

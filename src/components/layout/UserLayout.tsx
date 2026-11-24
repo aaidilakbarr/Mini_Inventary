@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { NotificationBell } from "@/components/layout/NotificationBell"
 
 interface UserNavItem {
   name: string
@@ -71,8 +72,10 @@ export function UserLayout() {
           })}
         </nav>
 
-        {/* Right User & Labeled Mobile Trigger */}
+        {/* Right Notifications, User & Labeled Mobile Trigger */}
         <div className="flex items-center gap-2 z-10">
+          <NotificationBell />
+
           <div
             className={cn(
               "hidden md:flex items-center gap-2 px-2 py-1 rounded-lg border transition-colors",

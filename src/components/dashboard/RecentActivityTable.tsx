@@ -43,7 +43,7 @@ export function RecentActivityTable({ logs, onViewDetail }: RecentActivityTableP
     if (e.includes("inventory")) return <Badge variant="info">Inventaris</Badge>
     if (e.includes("borrowing")) return <Badge variant="default">Peminjaman</Badge>
     if (e.includes("subscription")) return <Badge variant="success">Langganan</Badge>
-    if (e.includes("reminder")) return <Badge variant="warning">Pengingat</Badge>
+    if (e.includes("reminder")) return <Badge variant="warning">Agenda</Badge>
     return <Badge variant="outline">{entityType || "Sistem"}</Badge>
   }
 
@@ -95,7 +95,7 @@ export function RecentActivityTable({ logs, onViewDetail }: RecentActivityTableP
             <TabsTrigger value="inventory" className="flex-none">Inventaris</TabsTrigger>
             <TabsTrigger value="borrowing" className="flex-none">Peminjaman</TabsTrigger>
             <TabsTrigger value="subscription" className="flex-none">Langganan</TabsTrigger>
-            <TabsTrigger value="reminder" className="flex-none">Pengingat</TabsTrigger>
+            <TabsTrigger value="reminder" className="flex-none">Agenda</TabsTrigger>
           </TabsList>
         </Tabs>
       </CardHeader>

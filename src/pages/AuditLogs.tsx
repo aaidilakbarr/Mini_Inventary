@@ -38,7 +38,7 @@ const ENTITY_LABELS: Record<string, string> = {
   inventory: "Inventaris",
   borrowing: "Peminjaman",
   subscription: "Langganan",
-  reminder: "Pengingat",
+  reminder: "Agenda",
   profiles: "Profil",
   categories: "Kategori",
 }

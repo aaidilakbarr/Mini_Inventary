@@ -11,7 +11,7 @@ import {
   Trash2,
   Edit2,
   Loader2,
-  BellRing,
+  CalendarCheck2,
   Wrench,
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
@@ -27,7 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { ReminderModal } from "@/components/modals/ReminderModal"
+import { AgendaModal } from "@/components/modals/AgendaModal"
 import { DeleteConfirmDialog } from "@/components/modals/DeleteConfirmDialog"
 import {
   fetchReminders,
@@ -39,8 +39,8 @@ import {
 import { formatDateID } from "@/lib/formatters"
 import type { ReminderItem, CreateReminderPayload, ReminderStatus } from "@/types/database"
 
-export function RemindersPage() {
-  const [reminders, setReminders] = useState<ReminderItem[]>([])
+export function AgendaPage() {
+  const [agendaItems, setAgendaItems] = useState<ReminderItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [filterTab, setFilterTab] = useState("Semua")
@@ -56,9 +56,9 @@ export function RemindersPage() {
     try {
       setIsLoading(true)
       const data = await fetchReminders()
-      setReminders(data)
+      setAgendaItems(data)
     } catch (err) {
-      console.error("Gagal memuat data pengingat:", err)
+      console.error("Gagal memuat data agenda:", err)
     } finally {
       setIsLoading(false)
     }
@@ -67,6 +67,14 @@ export function RemindersPage() {
   useEffect(() => {
     loadData()
   }, [loadData])
+
+  const isAgendaOverdue = (item: ReminderItem) => {
+    if (item.status === "Completed" || item.status === "Dismissed") return false
+    if (item.status === "Overdue") return true
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return Boolean(item.due_date) && new Date(item.due_date) < today
+  }
 
   const handleSave = async (payload: CreateReminderPayload) => {
     if (editingItem) {
@@ -83,7 +91,7 @@ export function RemindersPage() {
       await updateReminderStatus(item.id, nextStatus)
       await loadData()
     } catch (err) {
-      console.error("Gagal memperbarui status pengingat:", err)
+      console.error("Gagal memperbarui status agenda:", err)
     }
   }
 
@@ -96,30 +104,31 @@ export function RemindersPage() {
       setDeletingItem(null)
       await loadData()
     } catch (err) {
-      console.error("Gagal menghapus pengingat:", err)
+      console.error("Gagal menghapus agenda:", err)
     } finally {
       setIsDeleting(false)
     }
   }
 
-  const filtered = reminders.filter((item) => {
+  const filtered = agendaItems.filter((item) => {
     const q = searchTerm.toLowerCase()
     const matchesSearch =
       item.title.toLowerCase().includes(q) ||
       (item.description || "").toLowerCase().includes(q)
 
+    const overdue = isAgendaOverdue(item)
     let matchesTab = true
-    if (filterTab === "Mendatang") matchesTab = item.status === "Upcoming" || item.status === "Due Today"
-    else if (filterTab === "Prioritas Tinggi") matchesTab = item.priority === "Tinggi"
+    if (filterTab === "Mendatang") matchesTab = !overdue && (item.status === "Upcoming" || item.status === "Due Today")
+    else if (filterTab === "Prioritas Tinggi") matchesTab = item.priority === "Tinggi" && item.status !== "Completed"
     else if (filterTab === "Selesai") matchesTab = item.status === "Completed"
-    else if (filterTab === "Terlambat") matchesTab = item.status === "Overdue"
+    else if (filterTab === "Terlambat") matchesTab = overdue
 
     return matchesSearch && matchesTab
   })
 
-  const activeCount = reminders.filter((r) => r.status !== "Completed").length
-  const highPriorityCount = reminders.filter((r) => r.priority === "Tinggi" && r.status !== "Completed").length
-  const completedCount = reminders.filter((r) => r.status === "Completed").length
+  const activeCount = agendaItems.filter((r) => r.status !== "Completed").length
+  const highPriorityCount = agendaItems.filter((r) => r.priority === "Tinggi" && r.status !== "Completed").length
+  const completedCount = agendaItems.filter((r) => r.status === "Completed").length
 
   const filterTabs = ["Semua", "Mendatang", "Prioritas Tinggi", "Terlambat", "Selesai"]
 
@@ -127,9 +136,12 @@ export function RemindersPage() {
     <div className="space-y-4 sm:space-y-5 animate-enter">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <h1 className="text-xl sm:text-[28px] font-bold tracking-tight text-foreground">
-          Pengingat
-        </h1>
+        <div className="flex items-baseline gap-2.5">
+          <h1 className="text-xl sm:text-[28px] font-bold tracking-tight text-foreground">
+            Agenda
+          </h1>
+          <span className="text-xs font-mono text-muted-foreground">{filtered.length} jadwal</span>
+        </div>
 
         <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full md:w-auto">
           <Button variant="outline" size="sm" onClick={loadData} disabled={isLoading}>
@@ -144,7 +156,7 @@ export function RemindersPage() {
             }}
           >
             <Plus className="h-3.5 w-3.5" />
-            <span>Tambah Pengingat</span>
+            <span>Tambah Agenda</span>
           </Button>
         </div>
       </div>
@@ -196,7 +208,7 @@ export function RemindersPage() {
           <div className="relative w-full lg:w-72">
             <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
-              placeholder="Cari pengingat..."
+              placeholder="Cari agenda..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-8 h-10 sm:h-9"
@@ -220,12 +232,12 @@ export function RemindersPage() {
         {isLoading ? (
           <div className="h-40 flex flex-col items-center justify-center gap-2 text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
-            <p className="text-xs">Memuat pengingat...</p>
+            <p className="text-xs">Memuat agenda...</p>
           </div>
         ) : filtered.length === 0 ? (
           <div className="h-40 flex flex-col items-center justify-center gap-2.5 text-muted-foreground p-6 text-center">
-            <BellRing className="h-7 w-7 text-muted-foreground/60" />
-            <p className="text-xs font-semibold text-foreground">Tidak ada pengingat</p>
+            <CalendarCheck2 className="h-7 w-7 text-muted-foreground/60" />
+            <p className="text-xs font-semibold text-foreground">Tidak ada agenda</p>
             <Button
               size="sm"
               variant="outline"
@@ -235,7 +247,7 @@ export function RemindersPage() {
               }}
             >
               <Plus className="h-3.5 w-3.5" />
-              <span>Tambah Pengingat</span>
+              <span>Tambah Agenda</span>
             </Button>
           </div>
         ) : (
@@ -256,6 +268,7 @@ export function RemindersPage() {
                 <TableBody>
                   {filtered.map((item) => {
                     const isDone = item.status === "Completed"
+                    const overdue = isAgendaOverdue(item)
                     return (
                       <TableRow key={item.id} className={isDone ? "opacity-60" : ""}>
                         <TableCell className="text-center py-3">
@@ -309,9 +322,9 @@ export function RemindersPage() {
                             {item.priority}
                           </Badge>
                         </TableCell>
-                        <TableCell className="py-3 text-xs font-mono text-muted-foreground">
-                          <span className="inline-flex items-center gap-1.5">
-                            <Calendar className="h-3 w-3" />
+                        <TableCell className="py-3 text-xs font-mono">
+                          <span className={`inline-flex items-center gap-1.5 ${overdue ? "text-destructive font-bold" : "text-muted-foreground"}`}>
+                            {overdue ? <AlertTriangle className="h-3 w-3" /> : <Calendar className="h-3 w-3" />}
                             {formatDateID(item.due_date)}
                           </span>
                         </TableCell>
@@ -366,6 +379,7 @@ export function RemindersPage() {
             <div className="md:hidden divide-y divide-border">
               {filtered.map((item) => {
                 const isDone = item.status === "Completed"
+                const overdue = isAgendaOverdue(item)
                 return (
                   <div key={item.id} className={`p-4 space-y-3 text-xs ${isDone ? "opacity-65" : ""}`}>
                     <div className="flex items-start gap-2.5">
@@ -407,8 +421,8 @@ export function RemindersPage() {
                           </p>
                         )}
                         <div className="flex items-center gap-2 pt-1 flex-wrap">
-                          <span className="inline-flex items-center gap-1 font-mono text-[11px] text-muted-foreground">
-                            <Calendar className="h-3 w-3" />
+                          <span className={`inline-flex items-center gap-1 font-mono text-[11px] ${overdue ? "text-destructive font-bold" : "text-muted-foreground"}`}>
+                            {overdue ? <AlertTriangle className="h-3 w-3" /> : <Calendar className="h-3 w-3" />}
                             {formatDateID(item.due_date)}
                           </span>
                           {item.source_type === "inventory" ? (
@@ -459,7 +473,7 @@ export function RemindersPage() {
         )}
       </Card>
 
-      <ReminderModal
+      <AgendaModal
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
         initialData={editingItem}
@@ -469,8 +483,8 @@ export function RemindersPage() {
       <DeleteConfirmDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
-        title="Hapus Pengingat"
-        description={`Hapus pengingat "${deletingItem?.title}"?`}
+        title="Hapus Agenda"
+        description={`Hapus agenda "${deletingItem?.title}"?`}
         onConfirm={handleDelete}
         isLoading={isDeleting}
       />

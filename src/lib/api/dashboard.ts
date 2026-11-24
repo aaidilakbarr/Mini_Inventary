@@ -218,11 +218,11 @@ export async function fetchDashboardData(): Promise<DashboardData> {
         id: `rem-${r.id}`,
         type: 'reminder',
         title: r.title,
-        subtitle: r.description || 'Pengingat operasional',
+        subtitle: r.description || 'Agenda operasional',
         dueDate: r.due_date,
         priority: (r.priority as 'Tinggi' | 'Sedang' | 'Rendah') || (isOverdue ? 'Tinggi' : 'Sedang'),
         isOverdue,
-        link: '/reminders',
+        link: '/agenda',
       })
     })
 

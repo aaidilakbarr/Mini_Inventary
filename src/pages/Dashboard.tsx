@@ -84,7 +84,7 @@ export function Dashboard() {
       ["Total Tindakan Diperlukan", s.actionableCount],
       ["Langganan Aktif", s.activeSubscriptions],
       ["Estimasi Beban Langganan Bulanan", `IDR ${Math.round(s.monthlySubscriptionCost).toLocaleString("id-ID")}`],
-      ["Agenda Pengingat Aktif", s.urgentRemindersCount],
+      ["Agenda Aktif", s.urgentRemindersCount],
     ]
 
     const csvContent = "data:text/csv;charset=utf-8," + rows.map((e) => e.join(",")).join("\n")

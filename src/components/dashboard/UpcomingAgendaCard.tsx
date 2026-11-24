@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom"
-import { Bell, CreditCard, Package } from "lucide-react"
+import { CalendarCheck2, CreditCard, Package } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
@@ -29,7 +29,7 @@ export function UpcomingAgendaCard({ agenda }: UpcomingAgendaCardProps) {
         return <CreditCard className="h-3 w-3 text-emerald-700 dark:text-emerald-400" />
       case "reminder":
       default:
-        return <Bell className="h-3 w-3 text-amber-700 dark:text-amber-400" />
+        return <CalendarCheck2 className="h-3 w-3 text-amber-700 dark:text-amber-400" />
     }
   }
 
@@ -52,7 +52,7 @@ export function UpcomingAgendaCard({ agenda }: UpcomingAgendaCardProps) {
               </Badge>
             )}
           </div>
-          <Link to="/reminders" className="text-xs font-semibold text-primary hover:underline">
+          <Link to="/agenda" className="text-xs font-semibold text-primary hover:underline">
             Semua
           </Link>
         </div>

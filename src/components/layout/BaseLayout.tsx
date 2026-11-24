@@ -5,7 +5,7 @@ import {
   Package,
   ArrowLeftRight,
   CreditCard,
-  Bell,
+  CalendarCheck2,
   History,
   Settings,
   Search,
@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
+import { NotificationBell } from "@/components/layout/NotificationBell"
 import {
   Dialog,
   DialogContent,
@@ -123,9 +124,9 @@ export function BaseLayout() {
       badgeVariant: "outline",
     },
     {
-      name: "Pengingat",
-      href: "/reminders",
-      icon: Bell,
+      name: "Agenda",
+      href: "/agenda",
+      icon: CalendarCheck2,
       badge: counts.urgentReminders > 0 ? String(counts.urgentReminders) : undefined,
       badgeVariant: "destructive",
     },
@@ -143,7 +144,7 @@ export function BaseLayout() {
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, count: 0 },
     { name: "Inventaris", href: "/inventory", icon: Package, count: 0 },
     { name: "Pinjam", href: "/borrowing", icon: ArrowLeftRight, count: counts.pendingBorrowings },
-    { name: "Agenda", href: "/reminders", icon: Bell, count: counts.urgentReminders },
+    { name: "Agenda", href: "/agenda", icon: CalendarCheck2, count: counts.urgentReminders },
   ]
 
   const secondaryNavItems: SecondaryNavItem[] = [
@@ -173,7 +174,7 @@ export function BaseLayout() {
     if (location.pathname.startsWith("/inventory")) return "Inventaris"
     if (location.pathname.startsWith("/borrowing")) return "Peminjaman"
     if (location.pathname.startsWith("/subscriptions")) return "Langganan"
-    if (location.pathname.startsWith("/reminders")) return "Pengingat"
+    if (location.pathname.startsWith("/agenda") || location.pathname.startsWith("/reminders")) return "Agenda"
     if (location.pathname.startsWith("/audit-logs")) return "Log Audit"
     if (location.pathname.startsWith("/settings")) return "Pengaturan"
     if (location.pathname.startsWith("/profile")) return "Profil"
@@ -398,16 +399,7 @@ export function BaseLayout() {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <Link
-              to="/reminders"
-              aria-label="Pengingat"
-              className="relative inline-flex h-10 w-10 lg:h-9 lg:w-9 items-center justify-center rounded-lg border border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground transition-all duration-150 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-            >
-              <Bell className="h-4 w-4" />
-              {counts.urgentReminders > 0 && (
-                <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" />
-              )}
-            </Link>
+            <NotificationBell />
 
             <Link
               to="/profile"
@@ -524,9 +516,9 @@ export function BaseLayout() {
               </div>
             </div>
             <div className="flex items-start gap-2.5 p-2.5 rounded-lg bg-muted/50">
-              <Bell className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+              <CalendarCheck2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold text-foreground">Pengingat</p>
+                <p className="font-semibold text-foreground">Agenda</p>
                 <p>Pantau jadwal servis aset, garansi, dan perpanjangan lisensi.</p>
               </div>
             </div>
