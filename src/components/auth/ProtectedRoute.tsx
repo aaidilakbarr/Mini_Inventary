@@ -1,6 +1,7 @@
-import { Navigate, useLocation } from 'react-router-dom'
-import { useAuth } from '@/hooks/useAuth'
-import type { UserRole } from '@/types/auth'
+import { Navigate, useLocation } from "react-router-dom"
+import { Loader2 } from "lucide-react"
+import { useAuth } from "@/hooks/useAuth"
+import type { UserRole } from "@/types/auth"
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -14,11 +15,9 @@ export function ProtectedRoute({ children, allowedRoles, redirectTo }: Protected
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex flex-col items-center justify-center space-y-4">
-        <div className="h-10 w-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-        <p className="text-xs font-mono text-muted-foreground animate-pulse">
-          Memverifikasi kredensial keamanan...
-        </p>
+      <div className="min-h-dvh bg-background flex flex-col items-center justify-center gap-3">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <p className="text-xs text-muted-foreground">Memverifikasi sesi...</p>
       </div>
     )
   }
@@ -28,7 +27,7 @@ export function ProtectedRoute({ children, allowedRoles, redirectTo }: Protected
   }
 
   if (allowedRoles && !allowedRoles.includes(role)) {
-    const fallbackPath = redirectTo || (role === 'admin' ? '/dashboard' : '/inventory')
+    const fallbackPath = redirectTo || (role === "admin" ? "/dashboard" : "/inventory")
     return <Navigate to={fallbackPath} replace />
   }
 

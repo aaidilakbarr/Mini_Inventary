@@ -10,19 +10,20 @@ import {
   Loader2,
   Calendar,
   Layers,
-  AlertCircle
+  AlertCircle,
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from "@/components/ui/table"
 import { SubscriptionModal } from "@/components/modals/SubscriptionModal"
 import { DeleteConfirmDialog } from "@/components/modals/DeleteConfirmDialog"
@@ -30,7 +31,7 @@ import {
   fetchSubscriptions,
   createSubscription,
   updateSubscription,
-  deleteSubscription
+  deleteSubscription,
 } from "@/lib/api/subscriptions"
 import { fetchCategories } from "@/lib/api/categories"
 import { useAuth } from "@/hooks/useAuth"
@@ -45,11 +46,9 @@ export function SubscriptionsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("Semua")
 
-  // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<SubscriptionItem | null>(null)
 
-  // Delete dialog states
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [deletingItem, setDeletingItem] = useState<SubscriptionItem | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -59,7 +58,7 @@ export function SubscriptionsPage() {
       setIsLoading(true)
       const [subsData, catsData] = await Promise.all([
         fetchSubscriptions(),
-        fetchCategories('subscription'),
+        fetchCategories("subscription"),
       ])
       setSubscriptions(subsData)
       setCategories(catsData)
@@ -73,21 +72,6 @@ export function SubscriptionsPage() {
   useEffect(() => {
     loadData()
   }, [loadData])
-
-  const handleOpenAdd = () => {
-    setEditingItem(null)
-    setIsModalOpen(true)
-  }
-
-  const handleOpenEdit = (item: SubscriptionItem) => {
-    setEditingItem(item)
-    setIsModalOpen(true)
-  }
-
-  const handleOpenDelete = (item: SubscriptionItem) => {
-    setDeletingItem(item)
-    setIsDeleteDialogOpen(true)
-  }
 
   const handleSave = async (payload: CreateSubscriptionPayload) => {
     if (editingItem) {
@@ -116,17 +100,17 @@ export function SubscriptionsPage() {
   const exportCSV = () => {
     if (subscriptions.length === 0) return
     const headers = ["Nama Layanan", "Penyedia", "Kategori", "Biaya (IDR)", "Siklus", "Tagihan Berikutnya", "Metode Pembayaran", "Status"]
-    const rows = subscriptions.map(s => [
+    const rows = subscriptions.map((s) => [
       `"${s.service_name}"`,
-      `"${s.provider || '-'}"`,
-      `"${s.category?.name || '-'}"`,
+      `"${s.provider || "-"}"`,
+      `"${s.category?.name || "-"}"`,
       s.cost,
       `"${s.billing_cycle}"`,
       `"${s.next_billing_date}"`,
-      `"${s.payment_method || '-'}"`,
-      `"${s.status}"`
+      `"${s.payment_method || "-"}"`,
+      `"${s.status}"`,
     ])
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n")
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n")
     const encodedUri = encodeURI(csvContent)
     const link = document.createElement("a")
     link.setAttribute("href", encodedUri)
@@ -136,23 +120,23 @@ export function SubscriptionsPage() {
     document.body.removeChild(link)
   }
 
-  // Calculate stats
-  const activeSubs = subscriptions.filter(s => s.status === 'Active')
+  const activeSubs = subscriptions.filter((s) => s.status === "Active")
   const totalMonthlyCost = activeSubs.reduce((acc, curr) => {
     const cost = Number(curr.cost) || 0
-    if (curr.billing_cycle === 'Monthly') return acc + cost
-    if (curr.billing_cycle === 'Quarterly') return acc + (cost / 3)
-    if (curr.billing_cycle === 'Semi-Annually') return acc + (cost / 6)
-    if (curr.billing_cycle === 'Yearly') return acc + (cost / 12)
+    if (curr.billing_cycle === "Monthly") return acc + cost
+    if (curr.billing_cycle === "Quarterly") return acc + cost / 3
+    if (curr.billing_cycle === "Semi-Annually") return acc + cost / 6
+    if (curr.billing_cycle === "Yearly") return acc + cost / 12
     return acc + cost
   }, 0)
 
   const filteredItems = subscriptions.filter((item) => {
+    const q = searchTerm.toLowerCase()
     const matchesSearch =
-      item.service_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.provider || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.category?.name || "").toLowerCase().includes(searchTerm.toLowerCase())
-    
+      item.service_name.toLowerCase().includes(q) ||
+      (item.provider || "").toLowerCase().includes(q) ||
+      (item.category?.name || "").toLowerCase().includes(q)
+
     let matchesStatus = true
     if (statusFilter === "Aktif") matchesStatus = item.status === "Active"
     else if (statusFilter === "Jatuh Tempo") matchesStatus = item.status === "Past Due"
@@ -164,45 +148,47 @@ export function SubscriptionsPage() {
 
   const statusOptions = ["Semua", "Aktif", "Jatuh Tempo", "Dibatalkan", "Kedaluwarsa"]
 
+  const renderStatusBadge = (status: string) => {
+    if (status === "Active") return <Badge variant="success">Aktif</Badge>
+    if (status === "Past Due") return <Badge variant="destructive">Jatuh Tempo</Badge>
+    if (status === "Cancelled") return <Badge variant="secondary">Dibatalkan</Badge>
+    return <Badge variant="outline">Kedaluwarsa</Badge>
+  }
+
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">Langganan & Lisensi</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-            Lacak pengeluaran biaya berkala, lisensi software, dan siklus tagihan aktif.
-          </p>
-        </div>
-        <div className={`${isAdmin ? 'grid grid-cols-2 sm:flex' : 'flex'} items-center gap-2 sm:gap-2.5 w-full md:w-auto`}>
+    <div className="space-y-4 sm:space-y-5 animate-enter">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <h1 className="text-xl sm:text-[28px] font-bold tracking-tight text-foreground">
+          Langganan
+        </h1>
+
+        <div className={`${isAdmin ? "grid grid-cols-2 sm:flex" : "flex"} items-center gap-2 w-full md:w-auto`}>
           <Button
             variant="outline"
             size="sm"
             onClick={loadData}
             disabled={isLoading}
-            className={`h-9 px-3 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs justify-center ${!isAdmin ? 'w-full sm:w-auto' : ''}`}
+            className={!isAdmin ? "w-full sm:w-auto" : ""}
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-3.5 w-3.5 text-muted-foreground ${isLoading ? "animate-spin" : ""}`} />
             <span>Segarkan</span>
           </Button>
           {isAdmin && (
             <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={exportCSV}
-                disabled={subscriptions.length === 0}
-                className="h-9 px-3 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs justify-center"
-              >
-                <Download className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                <span className="truncate">Ekspor CSV</span>
+              <Button variant="outline" size="sm" onClick={exportCSV} disabled={subscriptions.length === 0}>
+                <Download className="h-3.5 w-3.5 text-muted-foreground" />
+                <span>Ekspor</span>
               </Button>
               <Button
                 size="sm"
-                onClick={handleOpenAdd}
-                className="col-span-2 sm:col-span-1 h-9 px-4 text-xs font-bold rounded-xl gap-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-primary dark:hover:bg-primary/90 text-white shadow-sm justify-center"
+                onClick={() => {
+                  setEditingItem(null)
+                  setIsModalOpen(true)
+                }}
+                className="col-span-2 sm:col-span-1"
               >
-                <Plus className="h-4 w-4 stroke-[2.5] shrink-0" />
+                <Plus className="h-3.5 w-3.5" />
                 <span>Tambah Langganan</span>
               </Button>
             </>
@@ -210,193 +196,250 @@ export function SubscriptionsPage() {
         </div>
       </div>
 
-      {/* Summary KPI Cards */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-4">
-        <Card className="border-border/80 shadow-xs">
-          <CardContent className="p-2.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
-            <div>
-              <p className="text-[10px] sm:text-[11px] font-medium text-muted-foreground truncate">Beban Bulanan</p>
-              <p className="text-xs sm:text-lg font-bold font-mono text-foreground mt-0.5 truncate" title={formatCurrencyID(totalMonthlyCost)}>
+      {/* Responsive KPI Strip: 1 full-width + 2 half-width on mobile, 3-col on desktop */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+        <Card className="col-span-2 sm:col-span-1 border-t-2 border-t-primary">
+          <CardContent className="p-4 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground">Beban Bulanan</p>
+              <p className="text-lg font-extrabold text-foreground tabular-nums mt-0.5 truncate" title={formatCurrencyID(totalMonthlyCost)}>
                 {formatCurrencyID(totalMonthlyCost)}
               </p>
             </div>
-            <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0 self-end sm:self-auto">
-              <CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <div className="h-9 w-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shrink-0">
+              <CreditCard className="h-4 w-4" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-border/80 shadow-xs">
-          <CardContent className="p-2.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+        <Card>
+          <CardContent className="p-4 flex items-center justify-between gap-2">
             <div>
-              <p className="text-[10px] sm:text-[11px] font-medium text-muted-foreground truncate">Aktif</p>
-              <p className="text-sm sm:text-lg font-bold font-mono text-foreground mt-0.5">
-                {activeSubs.length} <span className="text-[10px] sm:text-xs font-normal text-muted-foreground hidden xs:inline">Layanan</span>
+              <p className="text-xs text-muted-foreground">Aktif</p>
+              <p className="text-lg font-extrabold text-foreground tabular-nums mt-0.5">
+                {activeSubs.length}
               </p>
             </div>
-            <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0 self-end sm:self-auto">
-              <Layers className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <div className="h-9 w-9 rounded-lg bg-emerald-700 text-white flex items-center justify-center shrink-0">
+              <Layers className="h-4 w-4" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-border/80 shadow-xs">
-          <CardContent className="p-2.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+        <Card>
+          <CardContent className="p-4 flex items-center justify-between gap-2">
             <div>
-              <p className="text-[10px] sm:text-[11px] font-medium text-muted-foreground truncate">Total Akun</p>
-              <p className="text-sm sm:text-lg font-bold font-mono text-foreground mt-0.5">
-                {subscriptions.length} <span className="text-[10px] sm:text-xs font-normal text-muted-foreground hidden xs:inline">Akun</span>
+              <p className="text-xs text-muted-foreground">Total</p>
+              <p className="text-lg font-extrabold text-foreground tabular-nums mt-0.5">
+                {subscriptions.length}
               </p>
             </div>
-            <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600 shrink-0 self-end sm:self-auto">
-              <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <div className="h-9 w-9 rounded-lg bg-muted text-foreground flex items-center justify-center shrink-0">
+              <Calendar className="h-4 w-4" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filter and Search Bar */}
-      <Card className="border-border/80 shadow-xs">
-        <CardContent className="p-3 sm:p-3.5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-          <div className="relative w-full md:w-80">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+      {/* Search & Filter */}
+      <Card>
+        <CardContent className="p-3.5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+          <div className="relative w-full lg:w-72">
+            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
-              placeholder="Cari langganan atau provider..."
+              placeholder="Cari layanan atau penyedia..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8 h-8.5 sm:h-8 text-xs bg-muted/30 border-border/80 w-full rounded-xl"
+              className="pl-8 h-10 sm:h-9"
             />
           </div>
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 w-full md:w-auto scrollbar-none">
-            {statusOptions.map((st) => (
-              <Button
-                key={st}
-                variant={statusFilter === st ? "default" : "outline"}
-                size="sm"
-                onClick={() => setStatusFilter(st)}
-                className="h-7.5 sm:h-7 text-xs px-3 rounded-full shrink-0 whitespace-nowrap"
-              >
-                {st}
-              </Button>
-            ))}
-          </div>
+
+          <Tabs value={statusFilter} onValueChange={(val) => setStatusFilter(val || "Semua")}>
+            <TabsList className="w-full lg:w-fit overflow-x-auto justify-start">
+              {statusOptions.map((st) => (
+                <TabsTrigger key={st} value={st} className="flex-none">
+                  {st}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
         </CardContent>
       </Card>
 
-      {/* Main Subscriptions Table */}
-      <Card className="border-border/80 shadow-xs">
-        <div className="p-0 overflow-x-auto">
-          <Table className="min-w-[800px] w-full">
-            <TableHeader className="bg-muted/40">
-              <TableRow className="border-border/60">
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Layanan / Provider</TableHead>
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Kategori</TableHead>
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Biaya</TableHead>
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Siklus</TableHead>
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Tagihan Berikutnya</TableHead>
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Status</TableHead>
-                {isAdmin && <TableHead className="text-[11px] font-mono uppercase font-semibold h-9 text-right">Aksi</TableHead>}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={isAdmin ? 7 : 6} className="h-36 text-center">
-                    <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
-                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                      <p className="text-xs">Memuat data langganan...</p>
+      {/* Main Content: Desktop Table + Mobile Stacked Cards */}
+      <Card className="overflow-hidden">
+        {isLoading ? (
+          <div className="h-40 flex flex-col items-center justify-center gap-2 text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            <p className="text-xs">Memuat langganan...</p>
+          </div>
+        ) : filteredItems.length === 0 ? (
+          <div className="h-40 flex flex-col items-center justify-center gap-2.5 text-muted-foreground p-6 text-center">
+            <CreditCard className="h-7 w-7 text-muted-foreground/60" />
+            <p className="text-xs font-semibold text-foreground">Belum ada data langganan</p>
+            {isAdmin && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setEditingItem(null)
+                  setIsModalOpen(true)
+                }}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Tambah Langganan</span>
+              </Button>
+            )}
+          </div>
+        ) : (
+          <>
+            {/* Desktop Table */}
+            <div className="hidden md:block">
+              <Table className="min-w-[780px]">
+                <TableHeader className="bg-muted/40">
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="px-4 text-xs font-semibold text-muted-foreground">Layanan</TableHead>
+                    <TableHead className="text-xs font-semibold text-muted-foreground">Kategori</TableHead>
+                    <TableHead className="text-xs font-semibold text-muted-foreground">Biaya</TableHead>
+                    <TableHead className="text-xs font-semibold text-muted-foreground">Siklus</TableHead>
+                    <TableHead className="text-xs font-semibold text-muted-foreground">Tagihan Berikutnya</TableHead>
+                    <TableHead className="text-xs font-semibold text-muted-foreground">Status</TableHead>
+                    {isAdmin && (
+                      <TableHead className="px-4 text-right text-xs font-semibold text-muted-foreground">Aksi</TableHead>
+                    )}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredItems.map((item) => {
+                    const isPastDue = item.status === "Past Due"
+                    return (
+                      <TableRow key={item.id}>
+                        <TableCell className="px-4 py-3">
+                          <p className="font-semibold text-xs text-foreground">{item.service_name}</p>
+                          {item.provider && (
+                            <p className="text-[11px] text-muted-foreground">{item.provider}</p>
+                          )}
+                        </TableCell>
+                        <TableCell className="py-3">
+                          <Badge variant="outline">{item.category?.name || "Umum"}</Badge>
+                        </TableCell>
+                        <TableCell className="py-3 font-mono text-xs font-bold text-foreground tabular-nums">
+                          {formatCurrencyID(item.cost)}
+                        </TableCell>
+                        <TableCell className="py-3 text-xs text-muted-foreground">
+                          {item.billing_cycle}
+                        </TableCell>
+                        <TableCell className="py-3 text-xs font-mono">
+                          <span className={isPastDue ? "text-destructive font-bold inline-flex items-center gap-1" : "text-foreground"}>
+                            {isPastDue && <AlertCircle className="h-3 w-3" />}
+                            {formatDateID(item.next_billing_date)}
+                          </span>
+                        </TableCell>
+                        <TableCell className="py-3">{renderStatusBadge(item.status)}</TableCell>
+                        {isAdmin && (
+                          <TableCell className="px-4 py-3 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon-xs"
+                                onClick={() => {
+                                  setEditingItem(item)
+                                  setIsModalOpen(true)
+                                }}
+                                className="text-muted-foreground hover:text-foreground"
+                                aria-label={`Edit ${item.service_name}`}
+                              >
+                                <Edit2 className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon-xs"
+                                onClick={() => {
+                                  setDeletingItem(item)
+                                  setIsDeleteDialogOpen(true)
+                                }}
+                                className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                aria-label={`Hapus ${item.service_name}`}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Mobile Stacked Cards */}
+            <div className="md:hidden divide-y divide-border">
+              {filteredItems.map((item) => {
+                const isPastDue = item.status === "Past Due"
+                return (
+                  <div key={item.id} className="p-4 space-y-3 text-xs">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-bold text-sm text-foreground truncate">{item.service_name}</p>
+                        <p className="text-[11px] text-muted-foreground truncate">
+                          {item.provider || "Umum"} · {item.category?.name || "Umum"}
+                        </p>
+                      </div>
+                      {renderStatusBadge(item.status)}
                     </div>
-                  </TableCell>
-                </TableRow>
-              ) : filteredItems.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={isAdmin ? 7 : 6} className="h-36 text-center">
-                    <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
-                      <CreditCard className="h-8 w-8 text-muted-foreground/60" />
-                      <p className="text-xs font-medium text-foreground">Tidak ada data langganan</p>
-                      <p className="text-[11px]">Coba sesuaikan kata kunci pencarian atau filter status Anda.</p>
-                      {isAdmin && (
-                        <Button size="sm" variant="outline" onClick={handleOpenAdd} className="h-7 text-xs mt-1">
-                          <Plus className="h-3 w-3 mr-1" /> Tambah Langganan
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredItems.map((item) => {
-                  const isPastDue = item.status === "Past Due"
-                  return (
-                    <TableRow key={item.id} className="border-border/50 hover:bg-muted/30">
-                      <TableCell className="py-3">
-                        <p className="font-semibold text-xs text-foreground">{item.service_name}</p>
-                        <p className="text-[10px] text-muted-foreground">{item.provider || "Penyedia Eksternal"}</p>
-                      </TableCell>
-                      <TableCell className="py-3">
-                        <Badge variant="outline" className="text-[10px] font-normal px-2.5 py-0.5 rounded-full border-border">
-                          {item.category?.name || "Umum"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="py-3 font-mono text-xs font-bold text-foreground">
-                        {formatCurrencyID(item.cost)}
-                      </TableCell>
-                      <TableCell className="py-3 text-xs text-muted-foreground">
-                        {item.billing_cycle}
-                      </TableCell>
-                      <TableCell className="py-3 text-xs font-mono">
-                        <span className={isPastDue ? "text-destructive font-bold flex items-center gap-1" : "text-foreground"}>
-                          {isPastDue && <AlertCircle className="h-3 w-3 inline" />}
+
+                    <div className="grid grid-cols-2 gap-2 p-2.5 rounded-lg bg-muted/40 text-[11px]">
+                      <div>
+                        <span className="text-muted-foreground block">Biaya ({item.billing_cycle})</span>
+                        <span className="font-mono font-bold text-foreground tabular-nums">
+                          {formatCurrencyID(item.cost)}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground block">Tagihan Berikutnya</span>
+                        <span className={`font-mono font-semibold ${isPastDue ? "text-destructive" : "text-foreground"}`}>
                           {formatDateID(item.next_billing_date)}
                         </span>
-                      </TableCell>
-                      <TableCell className="py-3">
-                        <Badge
-                          variant={
-                            item.status === "Active" ? "default" :
-                            item.status === "Past Due" ? "destructive" :
-                            item.status === "Cancelled" ? "secondary" : "outline"
-                          }
-                          className="text-[10px] font-mono px-2.5 py-0.5 rounded-full"
+                      </div>
+                    </div>
+
+                    {isAdmin && (
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setEditingItem(item)
+                            setIsModalOpen(true)
+                          }}
+                          className="flex-1"
                         >
-                          {item.status === "Active" ? "Aktif" :
-                           item.status === "Past Due" ? "Jatuh Tempo" :
-                           item.status === "Cancelled" ? "Dibatalkan" : "Kedaluwarsa"}
-                        </Badge>
-                      </TableCell>
-                      {isAdmin && (
-                        <TableCell className="py-3 text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleOpenEdit(item)}
-                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                              title="Edit Langganan"
-                            >
-                              <Edit2 className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleOpenDelete(item)}
-                              className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                              title="Hapus Langganan"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      )}
-                    </TableRow>
-                  )
-                })
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                          <Edit2 className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span>Edit</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon-sm"
+                          onClick={() => {
+                            setDeletingItem(item)
+                            setIsDeleteDialogOpen(true)
+                          }}
+                          className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                          aria-label={`Hapus ${item.service_name}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </>
+        )}
       </Card>
 
-      {/* Subscription Modal */}
       <SubscriptionModal
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
@@ -405,12 +448,11 @@ export function SubscriptionsPage() {
         onSubmit={handleSave}
       />
 
-      {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
-        title="Hapus Catatan Langganan"
-        description={`Apakah Anda yakin ingin menghapus langganan "${deletingItem?.service_name}"? Tindakan ini tidak dapat dibatalkan.`}
+        title="Hapus Langganan"
+        description={`Hapus langganan "${deletingItem?.service_name}"? Tindakan ini tidak dapat dibatalkan.`}
         onConfirm={handleDelete}
         isLoading={isDeleting}
       />

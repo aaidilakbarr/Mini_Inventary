@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,65 +6,89 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%; /* Clean subtle slate-50 tint #F8FAFC */
-    --foreground: 222.2 84% 4.9%; /* Deep dark slate-950 #020817 */
-    
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    
-    --primary: 221.2 83.2% 53.3%; /* Professional vibrant blue #2563EB */
-    --primary-foreground: 210 40% 98%;
-    
-    --secondary: 215 25% 92%; /* Clean slate-200 */
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    
-    --accent: 24.6 95% 53.1%; /* Delivery Orange #F97316 */
-    --accent-foreground: 0 0% 100%;
-    
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Quiet neutral canvas (#F4F7FB) & crisp white surfaces (#FFFFFF) */
+    --background: 214 44% 97%;
+    --foreground: 222 47% 11%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* Primary cobalt identity (#2563EB) */
+    --primary: 221 83% 53%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Quiet structural neutrals */
+    --secondary: 214 32% 93%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 214 32% 95%;
+    --muted-foreground: 215 19% 40%;
+
+    /* Neutral interactive hover accent for shadcn menus/selects/calendar */
+    --accent: 214 32% 93%;
+    --accent-foreground: 222 47% 11%;
+
+    /* Dedicated rare brand highlight (#F97316) */
+    --highlight: 25 95% 53%;
+    --highlight-foreground: 0 0% 100%;
+
+    /* Semantic status tokens */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 158 64% 34%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 32 95% 37%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 214 28% 89%;
+    --input: 214 28% 86%;
+    --ring: 221 83% 53%;
+
     --radius: 0.625rem;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 222 47% 7%;
     --foreground: 210 40% 98%;
-    
-    --card: 222.2 84% 6.5%;
+
+    --card: 222 44% 10%;
     --card-foreground: 210 40% 98%;
-    
-    --popover: 222.2 84% 6.5%;
+
+    --popover: 222 44% 10%;
     --popover-foreground: 210 40% 98%;
-    
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    
-    --secondary: 217.2 32.6% 17.5%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 11%;
+
+    --secondary: 217 30% 17%;
     --secondary-foreground: 210 40% 98%;
-    
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    
-    --accent: 24.6 95% 53.1%;
-    --accent-foreground: 0 0% 100%;
-    
-    --destructive: 0 62.8% 30.6%;
+
+    --muted: 217 30% 16%;
+    --muted-foreground: 215 20% 66%;
+
+    --accent: 217 30% 19%;
+    --accent-foreground: 210 40% 98%;
+
+    --highlight: 25 95% 56%;
+    --highlight-foreground: 0 0% 100%;
+
+    --destructive: 0 68% 50%;
     --destructive-foreground: 210 40% 98%;
-    
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 217.2 91.2% 59.8%;
+
+    --success: 158 58% 40%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 32 95% 44%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 217 28% 19%;
+    --input: 217 28% 22%;
+    --ring: 217 91% 60%;
   }
 }
 
@@ -72,12 +96,75 @@
   * {
     @apply border-border;
   }
+  html {
+    overflow-x: hidden;
+  }
   body {
-    @apply bg-background text-foreground font-sans antialiased selection:bg-primary/20 selection:text-primary;
+    @apply bg-background text-foreground font-sans antialiased selection:bg-primary/15 selection:text-primary overflow-x-hidden;
   }
 }
 
-/* Custom scrollbars */
+/* Purposeful subtle entrance & progress animations (MOTION 2) */
+@keyframes fade-up-subtle {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bar-expand {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@layer utilities {
+  .animate-enter {
+    animation: fade-up-subtle 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .animate-bar {
+    transform-origin: left center;
+    animation: bar-expand 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .stagger-1 {
+    animation-delay: 40ms;
+  }
+  .stagger-2 {
+    animation-delay: 80ms;
+  }
+  .stagger-3 {
+    animation-delay: 120ms;
+  }
+  .stagger-4 {
+    animation-delay: 160ms;
+  }
+  .card-interactive {
+    @apply transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 active:scale-[0.99];
+  }
+  .pb-safe {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Subtle custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -86,7 +173,7 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.2);
+  background: hsl(var(--muted-foreground) / 0.22);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {

@@ -2,11 +2,12 @@ import * as React from "react"
 import { Calendar as CalendarIcon, X } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { formatDateID } from "@/lib/formatters"
 
 export interface DatePickerProps {
-  value?: string // YYYY-MM-DD
+  value?: string
   onChange?: (date: string) => void
   placeholder?: string
   disabled?: boolean
@@ -63,7 +64,7 @@ export function DatePicker({
       <PopoverTrigger
         disabled={disabled}
         className={cn(
-          "flex h-8 w-full items-center justify-between rounded-lg border border-input bg-transparent px-2.5 text-xs transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-50 text-left font-normal",
+          "flex h-9 w-full cursor-pointer items-center justify-between rounded-lg border border-input bg-card px-2.5 text-xs transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 text-left font-normal",
           !value && "text-muted-foreground",
           className
         )}
@@ -80,8 +81,15 @@ export function DatePicker({
             role="button"
             tabIndex={0}
             onClick={handleClear}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault()
+                onChange?.("")
+              }
+            }}
             className="p-0.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             title="Hapus tanggal"
+            aria-label="Hapus tanggal"
           >
             <X className="size-3" />
           </span>
@@ -90,42 +98,22 @@ export function DatePicker({
 
       <PopoverContent className="w-auto p-0 z-50 rounded-xl" align="start">
         {showPresets && (
-          <div className="flex flex-wrap items-center gap-1 p-2 border-b border-border/60 bg-muted/20">
-            <button
-              type="button"
-              onClick={() => setRelativeDays(0)}
-              className="px-2 py-1 text-[10px] font-medium rounded-md bg-secondary hover:bg-secondary/80 text-secondary-foreground transition-colors"
-            >
+          <div className="flex flex-wrap items-center gap-1 p-2 border-b border-border bg-muted/40">
+            <Button type="button" variant="secondary" size="xs" onClick={() => setRelativeDays(0)}>
               Hari Ini
-            </button>
-            <button
-              type="button"
-              onClick={() => setRelativeDays(3)}
-              className="px-2 py-1 text-[10px] font-medium rounded-md bg-secondary hover:bg-secondary/80 text-secondary-foreground transition-colors"
-            >
+            </Button>
+            <Button type="button" variant="secondary" size="xs" onClick={() => setRelativeDays(3)}>
               +3 Hari
-            </button>
-            <button
-              type="button"
-              onClick={() => setRelativeDays(7)}
-              className="px-2 py-1 text-[10px] font-medium rounded-md bg-secondary hover:bg-secondary/80 text-secondary-foreground transition-colors"
-            >
+            </Button>
+            <Button type="button" variant="secondary" size="xs" onClick={() => setRelativeDays(7)}>
               +7 Hari
-            </button>
-            <button
-              type="button"
-              onClick={() => setRelativeMonths(1)}
-              className="px-2 py-1 text-[10px] font-medium rounded-md bg-secondary hover:bg-secondary/80 text-secondary-foreground transition-colors"
-            >
+            </Button>
+            <Button type="button" variant="secondary" size="xs" onClick={() => setRelativeMonths(1)}>
               +1 Bulan
-            </button>
-            <button
-              type="button"
-              onClick={() => setRelativeMonths(12)}
-              className="px-2 py-1 text-[10px] font-medium rounded-md bg-secondary hover:bg-secondary/80 text-secondary-foreground transition-colors"
-            >
+            </Button>
+            <Button type="button" variant="secondary" size="xs" onClick={() => setRelativeMonths(12)}>
               +1 Tahun
-            </button>
+            </Button>
           </div>
         )}
         <Calendar

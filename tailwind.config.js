@@ -19,8 +19,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["'Plus Jakarta Sans'", "'Fira Sans'", "sans-serif"],
-        mono: ["'Fira Code'", "monospace"],
+        sans: ["'Plus Jakarta Sans'", "system-ui", "sans-serif"],
+        mono: ["'Fira Code'", "ui-monospace", "monospace"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -39,6 +39,18 @@ export default {
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
+        },
+        success: {
+          DEFAULT: "hsl(var(--success))",
+          foreground: "hsl(var(--success-foreground))",
+        },
+        warning: {
+          DEFAULT: "hsl(var(--warning))",
+          foreground: "hsl(var(--warning-foreground))",
+        },
+        highlight: {
+          DEFAULT: "hsl(var(--highlight))",
+          foreground: "hsl(var(--highlight-foreground))",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",

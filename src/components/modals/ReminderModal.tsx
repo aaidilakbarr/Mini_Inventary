@@ -2,14 +2,15 @@ import { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { Alert } from "@/components/ui/alert"
 import { DatePicker } from "@/components/ui/date-picker"
 import {
   Select,
@@ -26,6 +27,14 @@ interface ReminderModalProps {
   onOpenChange: (open: boolean) => void
   initialData?: ReminderItem | null
   onSubmit: (payload: CreateReminderPayload) => Promise<void>
+}
+
+const STATUS_LABELS: Record<ReminderStatus, string> = {
+  Upcoming: "Mendatang",
+  "Due Today": "Hari Ini",
+  Overdue: "Terlambat",
+  Completed: "Selesai",
+  Dismissed: "Diabaikan",
 }
 
 export function ReminderModal({
@@ -58,13 +67,11 @@ export function ReminderModal({
     } else {
       const d = new Date()
       d.setDate(d.getDate() + 3)
-      const formattedDate = d.toISOString().split("T")[0]
-
       setFormData({
         title: "",
         description: "",
         source_type: "manual",
-        due_date: formattedDate,
+        due_date: d.toISOString().split("T")[0],
         priority: "Sedang",
         status: "Upcoming",
       })
@@ -75,11 +82,11 @@ export function ReminderModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.title.trim()) {
-      setErrorMsg("Judul pengingat wajib diisi")
+      setErrorMsg("Judul wajib diisi.")
       return
     }
     if (!formData.due_date) {
-      setErrorMsg("Tanggal tenggat waktu wajib diisi")
+      setErrorMsg("Tanggal jatuh tempo wajib diisi.")
       return
     }
 
@@ -89,7 +96,7 @@ export function ReminderModal({
       await onSubmit(formData)
       onOpenChange(false)
     } catch (err: any) {
-      setErrorMsg(err.message || "Gagal menyimpan pengingat")
+      setErrorMsg(err.message || "Gagal menyimpan pengingat.")
     } finally {
       setIsSubmitting(false)
     }
@@ -97,58 +104,46 @@ export function ReminderModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] sm:max-w-md max-h-[92vh] overflow-y-auto p-4 sm:p-6 rounded-2xl">
+      <DialogContent className="sm:max-w-md max-h-[92vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{initialData ? "Edit Pengingat" : "Tambah Pengingat Baru"}</DialogTitle>
-          <DialogDescription>
-            {initialData
-              ? "Perbarui tanggal jatuh tempo, judul, atau prioritas pengingat."
-              : "Buat pengingat kustom untuk garansi, jadwal servis, atau agenda penting."}
-          </DialogDescription>
+          <DialogTitle>{initialData ? "Edit Pengingat" : "Tambah Pengingat"}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 py-2">
-          {errorMsg && (
-            <div className="p-2.5 text-xs rounded-lg bg-destructive/10 text-destructive border border-destructive/20 font-medium">
-              {errorMsg}
-            </div>
-          )}
+        <form onSubmit={handleSubmit} className="space-y-4 pt-3">
+          {errorMsg && <Alert variant="destructive">{errorMsg}</Alert>}
 
           <div className="space-y-1.5">
-            <Label htmlFor="title" className="text-xs font-semibold">Judul Pengingat *</Label>
+            <Label htmlFor="title" className="text-xs">Judul *</Label>
             <Input
               id="title"
-              placeholder="Masukkan Judul Pengingat"
+              placeholder="Judul pengingat"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="h-8 text-xs"
               required
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="description" className="text-xs font-semibold">Deskripsi</Label>
-            <textarea
+            <Label htmlFor="description" className="text-xs">Catatan</Label>
+            <Textarea
               id="description"
               rows={2}
-              placeholder="Tambahkan Detail Instruksi / Layanan yang perlu ditindaklanjuti"
+              placeholder="Catatan tambahan (opsional)"
               value={formData.description || ""}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full text-xs rounded-lg border border-input bg-background p-2 text-foreground outline-none focus:border-ring"
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="source_type" className="text-xs font-semibold">Kategori Sumber</Label>
+              <Label className="text-xs">Sumber</Label>
               <Select
-                value={formData.source_type || ""}
-                onValueChange={(val) => setFormData({ ...formData, source_type: val as string })}
+                value={formData.source_type || "manual"}
+                onValueChange={(val) => setFormData({ ...formData, source_type: val || "manual" })}
               >
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue placeholder="Pilih kategori Sumber" />
+                <SelectTrigger>
+                  <SelectValue />
                 </SelectTrigger>
-
                 <SelectContent>
                   <SelectItem value="manual">Manual</SelectItem>
                   <SelectItem value="Inventaris">Inventaris</SelectItem>
@@ -160,12 +155,12 @@ export function ReminderModal({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="priority" className="text-xs font-semibold">Prioritas</Label>
+              <Label className="text-xs">Prioritas</Label>
               <Select
                 value={formData.priority}
-                onValueChange={(val) => setFormData({ ...formData, priority: val as ReminderPriority })}
+                onValueChange={(val) => setFormData({ ...formData, priority: (val as ReminderPriority) || "Sedang" })}
               >
-                <SelectTrigger className="h-8 text-xs">
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -177,55 +172,43 @@ export function ReminderModal({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="due_date" className="text-xs font-semibold">Tanggal Jatuh Tempo *</Label>
+              <Label className="text-xs">Jatuh Tempo *</Label>
               <DatePicker
                 value={formData.due_date}
                 onChange={(date) => setFormData({ ...formData, due_date: date })}
-                placeholder="Pilih tgl jatuh tempo..."
+                placeholder="Pilih tanggal"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="status" className="text-xs font-semibold">Status</Label>
+              <Label className="text-xs">Status</Label>
               <Select
-                value={formData.status}
-                onValueChange={(val) => setFormData({ ...formData, status: val as ReminderStatus })}
+                value={formData.status || "Upcoming"}
+                onValueChange={(val) => setFormData({ ...formData, status: (val as ReminderStatus) || "Upcoming" })}
               >
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue />
+                <SelectTrigger>
+                  <SelectValue>{STATUS_LABELS[formData.status || "Upcoming"]}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Upcoming">Mendatang (Upcoming)</SelectItem>
-                  <SelectItem value="Due Today">Hari Ini (Due Today)</SelectItem>
-                  <SelectItem value="Overdue">Terlambat (Overdue)</SelectItem>
-                  <SelectItem value="Completed">Selesai (Completed)</SelectItem>
-                  <SelectItem value="Dismissed">Diabaikan (Dismissed)</SelectItem>
+                  {Object.entries(STATUS_LABELS).map(([k, label]) => (
+                    <SelectItem key={k} value={k}>
+                      {label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          <DialogFooter className="pt-3 border-t border-border/50 flex flex-row items-center justify-between gap-2.5">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => onOpenChange(false)}
-              disabled={isSubmitting}
-              className="h-9 rounded-xl text-xs flex-1 sm:flex-none justify-center"
-            >
+          <DialogFooter>
+            <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
               Batal
             </Button>
-            <Button
-              type="submit"
-              size="sm"
-              disabled={isSubmitting}
-              className="h-9 rounded-xl text-xs bg-primary text-primary-foreground gap-1.5 flex-1 sm:flex-none justify-center"
-            >
+            <Button type="submit" size="sm" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-              <span>{initialData ? "Simpan Perubahan" : "Buat Pengingat"}</span>
+              <span>{initialData ? "Simpan" : "Buat Pengingat"}</span>
             </Button>
           </DialogFooter>
         </form>

@@ -1,26 +1,29 @@
 import { useState, useEffect, useCallback } from "react"
-import { 
-  Building2, 
-  ArrowLeftRight, 
-  BellRing, 
-  Send, 
-  Tag, 
-  Users, 
-  Save, 
-  ShieldCheck, 
-  Plus, 
-  Edit2, 
-  Trash2, 
-  Loader2, 
+import {
+  Building2,
+  ArrowLeftRight,
+  BellRing,
+  Send,
+  Tag,
+  Users,
+  Save,
+  Plus,
+  Edit2,
+  Trash2,
+  Loader2,
   Check,
+  AlertCircle,
   Mail,
-  MessageSquare
+  MessageSquare,
 } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { Alert } from "@/components/ui/alert"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { CategoryModal } from "@/components/modals/CategoryModal"
@@ -34,40 +37,39 @@ import { useAuth } from "@/hooks/useAuth"
 import type { Category } from "@/types/database"
 import type { UserProfile, UserRole } from "@/types/auth"
 
+const ROLE_LABELS: Record<UserRole, string> = {
+  admin: "Admin",
+  staff: "Staf",
+  user: "User",
+}
+
 export function SettingsPage() {
   const { profile: currentAdmin } = useAuth()
-  const [activeTab, setActiveTab] = useState<"organization" | "borrowing" | "reminders" | "notifications" | "categories" | "users">("organization")
+  const [activeTab, setActiveTab] = useState("organization")
 
-  // Organization state
-  const [orgName, setOrgName] = useState(() => localStorage.getItem("setting_org_name") || "PT. Sinergi Inovasi Digital")
-  const [orgAddress, setOrgAddress] = useState(() => localStorage.getItem("setting_org_address") || "Gedung Cyber 2 Lantai 15, Jl. HR Rasuna Said, Jakarta")
-  const [orgEmail, setOrgEmail] = useState(() => localStorage.getItem("setting_org_email") || "admin@sinergidigital.co.id")
+  const [orgName, setOrgName] = useState(() => localStorage.getItem("setting_org_name") || "")
+  const [orgAddress, setOrgAddress] = useState(() => localStorage.getItem("setting_org_address") || "")
+  const [orgEmail, setOrgEmail] = useState(() => localStorage.getItem("setting_org_email") || "")
   const [orgLogo, setOrgLogo] = useState(() => localStorage.getItem("setting_org_logo") || "")
 
-  // Borrowing Rules state
   const [defaultLoanDays, setDefaultLoanDays] = useState(() => localStorage.getItem("setting_loan_days") || "7")
   const [maxItemsPerUser, setMaxItemsPerUser] = useState(() => localStorage.getItem("setting_max_items") || "3")
   const [gracePeriodDays, setGracePeriodDays] = useState(() => localStorage.getItem("setting_grace_period") || "1")
   const [requireApproval, setRequireApproval] = useState(() => localStorage.getItem("setting_require_approval") !== "false")
 
-  // Reminder Automation Thresholds state
   const [warrantyLeadDays, setWarrantyLeadDays] = useState(() => localStorage.getItem("setting_warranty_lead") || "30")
   const [borrowingLeadDays, setBorrowingLeadDays] = useState(() => localStorage.getItem("setting_borrowing_lead") || "3")
   const [subscriptionLeadDays, setSubscriptionLeadDays] = useState(() => localStorage.getItem("setting_subscription_lead") || "7")
 
-  // Notification Channels state
   const [inAppActive, setInAppActive] = useState(() => localStorage.getItem("setting_inapp_active") !== "false")
-  const [smtpHost, setSmtpHost] = useState(() => localStorage.getItem("setting_smtp_host") || "smtp.resend.com")
-  const [smtpSender, setSmtpSender] = useState(() => localStorage.getItem("setting_smtp_sender") || "system@invhub.internal")
+  const [smtpHost, setSmtpHost] = useState(() => localStorage.getItem("setting_smtp_host") || "")
+  const [smtpSender, setSmtpSender] = useState(() => localStorage.getItem("setting_smtp_sender") || "")
   const [telegramToken, setTelegramToken] = useState(() => localStorage.getItem("setting_tg_token") || "")
   const [telegramChatId, setTelegramChatId] = useState(() => localStorage.getItem("setting_tg_chat_id") || "")
   const [whatsappEndpoint, setWhatsappEndpoint] = useState(() => localStorage.getItem("setting_wa_endpoint") || "")
 
-  // Feedback states
-  const [saveSuccess, setSaveSuccess] = useState(false)
-  const [testSuccess, setTestSuccess] = useState<string | null>(null)
+  const [feedback, setFeedback] = useState<{ type: "success" | "info" | "error"; message: string } | null>(null)
 
-  // Master Data: Categories
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoadingCategories, setIsLoadingCategories] = useState(false)
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false)
@@ -76,10 +78,14 @@ export function SettingsPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isDeletingCat, setIsDeletingCat] = useState(false)
 
-  // Master Data: Users & Roles
   const [users, setUsers] = useState<UserProfile[]>([])
   const [isLoadingUsers, setIsLoadingUsers] = useState(false)
   const [updatingUserId, setUpdatingUserId] = useState<string | null>(null)
+
+  const showFeedback = (type: "success" | "info" | "error", message: string) => {
+    setFeedback({ type, message })
+    setTimeout(() => setFeedback(null), 4000)
+  }
 
   const loadCategories = useCallback(async () => {
     try {
@@ -105,34 +111,35 @@ export function SettingsPage() {
     }
   }, [])
 
-  // Load centralized settings from Supabase on mount
   useEffect(() => {
     let isMounted = true
-    fetchSystemSettings().then((s) => {
-      if (!isMounted) return
-      setOrgName(s.organization.name)
-      setOrgAddress(s.organization.address)
-      setOrgEmail(s.organization.email)
-      setOrgLogo(s.organization.logo)
+    fetchSystemSettings()
+      .then((s) => {
+        if (!isMounted) return
+        setOrgName(s.organization.name)
+        setOrgAddress(s.organization.address)
+        setOrgEmail(s.organization.email)
+        setOrgLogo(s.organization.logo)
 
-      setDefaultLoanDays(String(s.borrowing_rules.default_loan_days))
-      setMaxItemsPerUser(String(s.borrowing_rules.max_items_per_user))
-      setGracePeriodDays(String(s.borrowing_rules.grace_period_days))
-      setRequireApproval(s.borrowing_rules.require_approval)
+        setDefaultLoanDays(String(s.borrowing_rules.default_loan_days))
+        setMaxItemsPerUser(String(s.borrowing_rules.max_items_per_user))
+        setGracePeriodDays(String(s.borrowing_rules.grace_period_days))
+        setRequireApproval(s.borrowing_rules.require_approval)
 
-      setWarrantyLeadDays(String(s.reminder_thresholds.warranty_lead_days))
-      setBorrowingLeadDays(String(s.reminder_thresholds.borrowing_lead_days))
-      setSubscriptionLeadDays(String(s.reminder_thresholds.subscription_lead_days))
+        setWarrantyLeadDays(String(s.reminder_thresholds.warranty_lead_days))
+        setBorrowingLeadDays(String(s.reminder_thresholds.borrowing_lead_days))
+        setSubscriptionLeadDays(String(s.reminder_thresholds.subscription_lead_days))
 
-      setInAppActive(s.notifications.in_app_active)
-      setSmtpHost(s.notifications.smtp_host)
-      setSmtpSender(s.notifications.smtp_sender)
-      setTelegramToken(s.notifications.telegram_token)
-      setTelegramChatId(s.notifications.telegram_chat_id)
-      setWhatsappEndpoint(s.notifications.whatsapp_endpoint)
-    }).catch((err) => {
-      console.warn("Gagal memuat pengaturan sistem dari Supabase, menggunakan cache lokal:", err)
-    })
+        setInAppActive(s.notifications.in_app_active)
+        setSmtpHost(s.notifications.smtp_host)
+        setSmtpSender(s.notifications.smtp_sender)
+        setTelegramToken(s.notifications.telegram_token)
+        setTelegramChatId(s.notifications.telegram_chat_id)
+        setWhatsappEndpoint(s.notifications.whatsapp_endpoint)
+      })
+      .catch((err) => {
+        console.warn("Gagal memuat pengaturan sistem dari Supabase:", err)
+      })
 
     return () => {
       isMounted = false
@@ -140,11 +147,8 @@ export function SettingsPage() {
   }, [])
 
   useEffect(() => {
-    if (activeTab === "categories") {
-      loadCategories()
-    } else if (activeTab === "users") {
-      loadUsers()
-    }
+    if (activeTab === "categories") loadCategories()
+    else if (activeTab === "users") loadUsers()
   }, [activeTab, loadCategories, loadUsers])
 
   const handleSaveOrganization = async () => {
@@ -154,7 +158,7 @@ export function SettingsPage() {
       email: orgEmail,
       logo: orgLogo,
     })
-    triggerSaveToast()
+    showFeedback("success", "Profil organisasi disimpan.")
   }
 
   const handleSaveBorrowingRules = async () => {
@@ -164,7 +168,7 @@ export function SettingsPage() {
       grace_period_days: Number(gracePeriodDays) || 1,
       require_approval: Boolean(requireApproval),
     })
-    triggerSaveToast()
+    showFeedback("success", "Aturan peminjaman disimpan.")
   }
 
   const handleSaveReminderRules = async () => {
@@ -173,7 +177,7 @@ export function SettingsPage() {
       borrowing_lead_days: Number(borrowingLeadDays) || 3,
       subscription_lead_days: Number(subscriptionLeadDays) || 7,
     })
-    triggerSaveToast()
+    showFeedback("success", "Ambang batas pengingat disimpan.")
   }
 
   const handleSaveNotifications = async () => {
@@ -185,28 +189,21 @@ export function SettingsPage() {
       telegram_chat_id: telegramChatId,
       whatsapp_endpoint: whatsappEndpoint,
     })
-    triggerSaveToast()
+    showFeedback("success", "Saluran notifikasi disimpan.")
   }
 
-  const triggerSaveToast = () => {
-    setSaveSuccess(true)
-    setTimeout(() => setSaveSuccess(false), 3000)
-  }
-
-  const handleTestNotification = (channel: string) => {
-    setTestSuccess(`Uji kirim notifikasi ${channel} berhasil diantrikan!`)
-    setTimeout(() => setTestSuccess(null), 4000)
-  }
-
-  // Category Actions
-  const handleCategorySubmit = async (name: string, type: 'inventory' | 'subscription' | 'general', description?: string) => {
+  const handleCategorySubmit = async (
+    name: string,
+    type: "inventory" | "subscription" | "general",
+    description?: string
+  ) => {
     if (editingCategory) {
       await updateCategory(editingCategory.id, name, type, description)
       recordAuditLog({
         action: "UPDATE",
         entity_type: "category",
         entity_id: editingCategory.id,
-        details: { name, type, description }
+        details: { name, type, description },
       })
     } else {
       const created = await createCategory(name, type, description)
@@ -214,7 +211,7 @@ export function SettingsPage() {
         action: "CREATE",
         entity_type: "category",
         entity_id: created?.id,
-        details: { name, type, description }
+        details: { name, type, description },
       })
     }
     await loadCategories()
@@ -229,7 +226,7 @@ export function SettingsPage() {
         action: "DELETE",
         entity_type: "category",
         entity_id: deletingCategory.id,
-        details: { name: deletingCategory.name, type: deletingCategory.type }
+        details: { name: deletingCategory.name, type: deletingCategory.type },
       })
       setIsDeleteDialogOpen(false)
       setDeletingCategory(null)
@@ -241,10 +238,9 @@ export function SettingsPage() {
     }
   }
 
-  // User Role Actions
   const handleRoleChange = async (targetUser: UserProfile, newRole: UserRole) => {
-    if (targetUser.id === currentAdmin?.id && newRole === 'staff') {
-      alert("Anda tidak dapat menurunkan role akun administrator Anda sendiri saat sedang aktif.")
+    if (targetUser.id === currentAdmin?.id && newRole !== "admin") {
+      showFeedback("error", "Tidak dapat menurunkan peran akun admin yang sedang aktif.")
       return
     }
 
@@ -259,588 +255,635 @@ export function SettingsPage() {
           user_email: targetUser.email,
           user_name: targetUser.full_name,
           old_role: targetUser.role,
-          new_role: newRole
-        }
+          new_role: newRole,
+        },
       })
       await loadUsers()
+      showFeedback("success", `Peran ${targetUser.full_name || targetUser.email} diperbarui.`)
     } catch (err: any) {
-      alert(err?.message || "Gagal memperbarui peran pengguna.")
+      showFeedback("error", err?.message || "Gagal memperbarui peran pengguna.")
     } finally {
       setUpdatingUserId(null)
     }
   }
 
   const tabs = [
-    { id: "organization", label: "Profil Organisasi", icon: Building2 },
-    { id: "borrowing", label: "Aturan Peminjaman", icon: ArrowLeftRight },
-    { id: "reminders", label: "Otomasi Pengingat", icon: BellRing },
-    { id: "notifications", label: "Saluran Notifikasi", icon: Send },
-    { id: "categories", label: "Master Kategori", icon: Tag },
-    { id: "users", label: "Manajemen Pengguna", icon: Users },
+    { id: "organization", label: "Organisasi", icon: Building2 },
+    { id: "borrowing", label: "Peminjaman", icon: ArrowLeftRight },
+    { id: "reminders", label: "Pengingat", icon: BellRing },
+    { id: "notifications", label: "Notifikasi", icon: Send },
+    { id: "categories", label: "Kategori", icon: Tag },
+    { id: "users", label: "Pengguna", icon: Users },
   ] as const
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-              Pengaturan Sistem
-            </h1>
-            <Badge variant="outline" className="h-5 px-2.5 text-[10px] font-mono gap-1 text-primary border-primary/30 bg-primary/5 rounded-full">
-              <ShieldCheck className="h-3 w-3" />
-              <span>Admin Mode</span>
-            </Badge>
-          </div>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-            Kelola preferensi instansi, parameter aturan peminjaman, ambang batas pengingat, dan delegasi peran pengguna.
-          </p>
-        </div>
-
-        {saveSuccess && (
-          <div className="flex items-center gap-1.5 text-xs text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg animate-in fade-in">
-            <Check className="h-3.5 w-3.5" />
-            <span>Pengaturan berhasil disimpan!</span>
-          </div>
-        )}
+    <div className="space-y-4 sm:space-y-5 animate-enter">
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-xl sm:text-[28px] font-bold tracking-tight text-foreground">
+          Pengaturan
+        </h1>
       </div>
 
-      {testSuccess && (
-        <div className="flex items-center gap-2 text-xs text-blue-600 bg-blue-500/10 border border-blue-500/20 p-3 rounded-lg animate-in fade-in">
-          <Check className="h-4 w-4" />
-          <span>{testSuccess}</span>
-        </div>
+      {feedback && (
+        <Alert
+          variant={
+            feedback.type === "success"
+              ? "success"
+              : feedback.type === "error"
+              ? "destructive"
+              : "info"
+          }
+          className="items-center"
+        >
+          {feedback.type === "error" ? (
+            <AlertCircle className="h-4 w-4 shrink-0" />
+          ) : (
+            <Check className="h-4 w-4 shrink-0" />
+          )}
+          <span className="font-medium">{feedback.message}</span>
+        </Alert>
       )}
 
-      {/* Settings Navigation Tabs */}
-      <div className="flex items-center gap-1.5 border-b border-border/80 overflow-x-auto pb-1 select-none">
-        {tabs.map((tab) => {
-          const Icon = tab.icon
-          const isActive = activeTab === tab.id
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-t-lg transition-colors whitespace-nowrap border-b-2 -mb-1 ${
-                isActive
-                  ? "border-primary text-primary font-semibold bg-primary/5"
-                  : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/40"
-              }`}
-            >
-              <Icon className="h-3.5 w-3.5" />
-              <span>{tab.label}</span>
-            </button>
-          )
-        })}
-      </div>
+      <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val || "organization")} className="space-y-4">
+        <TabsList className="w-full sm:w-fit overflow-x-auto justify-start">
+          {tabs.map((tab) => {
+            const Icon = tab.icon
+            return (
+              <TabsTrigger key={tab.id} value={tab.id} className="flex-none">
+                <Icon className="h-3.5 w-3.5" />
+                <span>{tab.label}</span>
+              </TabsTrigger>
+            )
+          })}
+        </TabsList>
 
-      {/* Tab 1: Organization Profile */}
-      {activeTab === "organization" && (
-        <Card className="border-border/80 bg-card shadow-xs">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-sm font-semibold">Identitas & Profil Organisasi</CardTitle>
-            <CardDescription className="text-xs">
-              Informasi identitas instansi yang digunakan pada kop dashboard, laporan ekspor, dan email notifikasi.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 text-xs">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="org-name" className="text-xs font-semibold">Nama Organisasi / Perusahaan</Label>
-                <Input
-                  id="org-name"
-                  value={orgName}
-                  onChange={(e) => setOrgName(e.target.value)}
-                  className="h-8 text-xs bg-muted/40"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="org-email" className="text-xs font-semibold">Email Kontak Administrator</Label>
-                <Input
-                  id="org-email"
-                  type="email"
-                  value={orgEmail}
-                  onChange={(e) => setOrgEmail(e.target.value)}
-                  className="h-8 text-xs bg-muted/40"
-                />
-              </div>
-
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="org-address" className="text-xs font-semibold">Alamat Kantor / Kantor Pusat</Label>
-                <Input
-                  id="org-address"
-                  value={orgAddress}
-                  onChange={(e) => setOrgAddress(e.target.value)}
-                  className="h-8 text-xs bg-muted/40"
-                />
-              </div>
-
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="org-logo" className="text-xs font-semibold">URL Logo Instansi (Opsional)</Label>
-                <Input
-                  id="org-logo"
-                  placeholder="https://domain.com/logo.png"
-                  value={orgLogo}
-                  onChange={(e) => setOrgLogo(e.target.value)}
-                  className="h-8 text-xs bg-muted/40"
-                />
-              </div>
-            </div>
-
-            <div className="pt-3 border-t border-border/60 flex justify-end">
-              <Button size="sm" onClick={handleSaveOrganization} className="h-8 text-xs font-medium gap-1.5">
-                <Save className="h-3.5 w-3.5" />
-                <span>Simpan Perubahan</span>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Tab 2: Borrowing Rules */}
-      {activeTab === "borrowing" && (
-        <Card className="border-border/80 bg-card shadow-xs">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-sm font-semibold">Parameter & Aturan Peminjaman Aset</CardTitle>
-            <CardDescription className="text-xs">
-              Konfigurasi kebijakan masa peminjaman, kuota peminjam, dan toleransi keterlambatan (overdue).
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 text-xs">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="loan-days" className="text-xs font-semibold">Default Masa Pinjam (Hari)</Label>
-                <Input
-                  id="loan-days"
-                  type="number"
-                  min="1"
-                  max="90"
-                  value={defaultLoanDays}
-                  onChange={(e) => setDefaultLoanDays(e.target.value)}
-                  className="h-8 text-xs bg-muted/40"
-                />
-                <p className="text-[10px] text-muted-foreground">Durasi standar saat staf mengajukan pinjaman.</p>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="max-items" className="text-xs font-semibold">Batas Maksimal Unit per User</Label>
-                <Input
-                  id="max-items"
-                  type="number"
-                  min="1"
-                  max="10"
-                  value={maxItemsPerUser}
-                  onChange={(e) => setMaxItemsPerUser(e.target.value)}
-                  className="h-8 text-xs bg-muted/40"
-                />
-                <p className="text-[10px] text-muted-foreground">Maksimal barang aktif yang boleh dipinjam bersamaan.</p>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="grace-days" className="text-xs font-semibold">Grace Period Overdue (Hari)</Label>
-                <Input
-                  id="grace-days"
-                  type="number"
-                  min="0"
-                  max="7"
-                  value={gracePeriodDays}
-                  onChange={(e) => setGracePeriodDays(e.target.value)}
-                  className="h-8 text-xs bg-muted/40"
-                />
-                <p className="text-[10px] text-muted-foreground">Toleransi sebelum status ditandai terlambat.</p>
-              </div>
-            </div>
-
-            <div className="pt-3 border-t border-border/60 flex items-center justify-between">
-              <div className="space-y-0.5">
-                <p className="font-semibold text-foreground">Wajib Persetujuan Admin</p>
-                <p className="text-[11px] text-muted-foreground">Semua pengajuan peminjaman oleh staf harus diverifikasi oleh Admin.</p>
-              </div>
-              <Button
-                variant={requireApproval ? "default" : "outline"}
-                size="sm"
-                onClick={() => setRequireApproval(!requireApproval)}
-                className="h-7 text-xs"
-              >
-                {requireApproval ? "Aktif (Wajib Review)" : "Non-aktif (Auto Approve)"}
-              </Button>
-            </div>
-
-            <div className="pt-3 border-t border-border/60 flex justify-end">
-              <Button size="sm" onClick={handleSaveBorrowingRules} className="h-8 text-xs font-medium gap-1.5">
-                <Save className="h-3.5 w-3.5" />
-                <span>Simpan Aturan Peminjaman</span>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Tab 3: Reminders Automation */}
-      {activeTab === "reminders" && (
-        <Card className="border-border/80 bg-card shadow-xs">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-sm font-semibold">Ambang Batas & Otomasi Pengingat (Lead Time)</CardTitle>
-            <CardDescription className="text-xs">
-              Tentukan berapa hari sebelum jatuh tempo sistem akan otomatis memicu status pengingat (*Due Soon / Upcoming*).
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 text-xs">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="p-3.5 rounded-lg bg-muted/30 border border-border/70 space-y-2">
-                <div className="flex items-center gap-2 text-primary font-semibold">
-                  <ShieldCheck className="h-4 w-4" />
-                  <span>Garansi Aset</span>
-                </div>
-                <Label htmlFor="warranty-lead" className="text-[11px] text-muted-foreground">
-                  Peringatan Awal (Hari Sebelum Habis)
-                </Label>
-                <Input
-                  id="warranty-lead"
-                  type="number"
-                  min="1"
-                  max="90"
-                  value={warrantyLeadDays}
-                  onChange={(e) => setWarrantyLeadDays(e.target.value)}
-                  className="h-8 text-xs bg-background"
-                />
-                <p className="text-[10px] text-muted-foreground">Default: 30 hari sebelum garansi berakhir.</p>
-              </div>
-
-              <div className="p-3.5 rounded-lg bg-muted/30 border border-border/70 space-y-2">
-                <div className="flex items-center gap-2 text-amber-600 font-semibold">
-                  <ArrowLeftRight className="h-4 w-4" />
-                  <span>Jatuh Tempo Pinjam</span>
-                </div>
-                <Label htmlFor="borrow-lead" className="text-[11px] text-muted-foreground">
-                  Peringatan Pengembalian (H-X)
-                </Label>
-                <Input
-                  id="borrow-lead"
-                  type="number"
-                  min="1"
-                  max="14"
-                  value={borrowingLeadDays}
-                  onChange={(e) => setBorrowingLeadDays(e.target.value)}
-                  className="h-8 text-xs bg-background"
-                />
-                <p className="text-[10px] text-muted-foreground">Default: 3 hari sebelum due date.</p>
-              </div>
-
-              <div className="p-3.5 rounded-lg bg-muted/30 border border-border/70 space-y-2">
-                <div className="flex items-center gap-2 text-blue-600 font-semibold">
-                  <Building2 className="h-4 w-4" />
-                  <span>Tagihan Langganan</span>
-                </div>
-                <Label htmlFor="sub-lead" className="text-[11px] text-muted-foreground">
-                  Peringatan Perpanjangan (H-X)
-                </Label>
-                <Input
-                  id="sub-lead"
-                  type="number"
-                  min="1"
-                  max="30"
-                  value={subscriptionLeadDays}
-                  onChange={(e) => setSubscriptionLeadDays(e.target.value)}
-                  className="h-8 text-xs bg-background"
-                />
-                <p className="text-[10px] text-muted-foreground">Default: 7 hari sebelum renewal billing.</p>
-              </div>
-            </div>
-
-            <div className="pt-3 border-t border-border/60 flex justify-end">
-              <Button size="sm" onClick={handleSaveReminderRules} className="h-8 text-xs font-medium gap-1.5">
-                <Save className="h-3.5 w-3.5" />
-                <span>Simpan Pengaturan Pengingat</span>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Tab 4: Notification Channels */}
-      {activeTab === "notifications" && (
-        <Card className="border-border/80 bg-card shadow-xs">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-sm font-semibold">Integrasi Saluran Notifikasi Eksternal</CardTitle>
-            <CardDescription className="text-xs">
-              Konfigurasi webhook dan gateway untuk pengiriman peringatan realtime (*In-App, Email, Telegram, WhatsApp*).
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 text-xs">
-            {/* In-App Notifications */}
-            <div className="p-3.5 rounded-lg bg-muted/30 border border-border/70 flex items-center justify-between">
-              <div>
-                <p className="font-semibold text-foreground">Notifikasi In-App (Dashboard)</p>
-                <p className="text-[11px] text-muted-foreground">Menampilkan banner peringatan dan badge counter realtime di sidebar.</p>
-              </div>
-              <Button
-                variant={inAppActive ? "default" : "outline"}
-                size="sm"
-                onClick={() => setInAppActive(!inAppActive)}
-                className="h-7 text-xs"
-              >
-                {inAppActive ? "Aktif" : "Non-aktif"}
-              </Button>
-            </div>
-
-            {/* Email SMTP */}
-            <div className="p-3.5 rounded-lg bg-muted/30 border border-border/70 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 font-semibold text-foreground">
-                  <Mail className="h-4 w-4 text-primary" />
-                  <span>Email Gateway (SMTP / Resend)</span>
-                </div>
-                <Button variant="outline" size="sm" onClick={() => handleTestNotification("Email")} className="h-6 text-[10px]">
-                  Uji Kirim Email
-                </Button>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label className="text-[11px]">SMTP Server / Host</Label>
-                  <Input value={smtpHost} onChange={(e) => setSmtpHost(e.target.value)} className="h-8 text-xs bg-background" />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-[11px]">Sender Email</Label>
-                  <Input value={smtpSender} onChange={(e) => setSmtpSender(e.target.value)} className="h-8 text-xs bg-background" />
-                </div>
-              </div>
-            </div>
-
-            {/* Telegram Bot */}
-            <div className="p-3.5 rounded-lg bg-muted/30 border border-border/70 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 font-semibold text-foreground">
-                  <MessageSquare className="h-4 w-4 text-blue-500" />
-                  <span>Telegram Bot Alert</span>
-                </div>
-                <Button variant="outline" size="sm" onClick={() => handleTestNotification("Telegram")} className="h-6 text-[10px]">
-                  Uji Kirim Telegram
-                </Button>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label className="text-[11px]">Bot Token</Label>
-                  <Input 
-                    type="password"
-                    placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11" 
-                    value={telegramToken} 
-                    onChange={(e) => setTelegramToken(e.target.value)} 
-                    className="h-8 text-xs bg-background" 
+        {/* Tab 1: Organization */}
+        <TabsContent value="organization">
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle>Profil Organisasi</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="org-name" className="text-xs">Nama Organisasi</Label>
+                  <Input
+                    id="org-name"
+                    placeholder="Nama perusahaan atau instansi"
+                    value={orgName}
+                    onChange={(e) => setOrgName(e.target.value)}
                   />
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-[11px]">Target Group / Chat ID</Label>
-                  <Input 
-                    placeholder="-100123456789" 
-                    value={telegramChatId} 
-                    onChange={(e) => setTelegramChatId(e.target.value)} 
-                    className="h-8 text-xs bg-background" 
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="org-email" className="text-xs">Email Administrator</Label>
+                  <Input
+                    id="org-email"
+                    type="email"
+                    placeholder="admin@perusahaan.com"
+                    value={orgEmail}
+                    onChange={(e) => setOrgEmail(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label htmlFor="org-address" className="text-xs">Alamat Kantor</Label>
+                  <Input
+                    id="org-address"
+                    placeholder="Alamat lengkap kantor"
+                    value={orgAddress}
+                    onChange={(e) => setOrgAddress(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label htmlFor="org-logo" className="text-xs">URL Logo (Opsional)</Label>
+                  <Input
+                    id="org-logo"
+                    placeholder="https://domain.com/logo.png"
+                    value={orgLogo}
+                    onChange={(e) => setOrgLogo(e.target.value)}
                   />
                 </div>
               </div>
-            </div>
 
-            {/* WhatsApp Gateway */}
-            <div className="p-3.5 rounded-lg bg-muted/30 border border-border/70 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 font-semibold text-foreground">
-                  <Send className="h-4 w-4 text-emerald-600" />
-                  <span>WhatsApp Gateway (Fonnte / Waha)</span>
-                </div>
-                <Button variant="outline" size="sm" onClick={() => handleTestNotification("WhatsApp")} className="h-6 text-[10px]">
-                  Uji Kirim WA
+              <div className="pt-3 border-t border-border flex justify-end">
+                <Button size="sm" onClick={handleSaveOrganization}>
+                  <Save className="h-3.5 w-3.5" />
+                  <span>Simpan</span>
                 </Button>
               </div>
-              <div className="space-y-1">
-                <Label className="text-[11px]">API Endpoint Webhook URL</Label>
-                <Input 
-                  placeholder="https://api.fonnte.com/send" 
-                  value={whatsappEndpoint} 
-                  onChange={(e) => setWhatsappEndpoint(e.target.value)} 
-                  className="h-8 text-xs bg-background" 
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Tab 2: Borrowing Rules */}
+        <TabsContent value="borrowing">
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle>Aturan Peminjaman</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="loan-days" className="text-xs">Masa Pinjam Default (Hari)</Label>
+                  <Input
+                    id="loan-days"
+                    type="number"
+                    min="1"
+                    max="90"
+                    value={defaultLoanDays}
+                    onChange={(e) => setDefaultLoanDays(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="max-items" className="text-xs">Maksimal Unit / Pengguna</Label>
+                  <Input
+                    id="max-items"
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={maxItemsPerUser}
+                    onChange={(e) => setMaxItemsPerUser(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="grace-days" className="text-xs">Toleransi Keterlambatan (Hari)</Label>
+                  <Input
+                    id="grace-days"
+                    type="number"
+                    min="0"
+                    max="7"
+                    value={gracePeriodDays}
+                    onChange={(e) => setGracePeriodDays(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-border flex items-center justify-between gap-4">
+                <Label htmlFor="require-approval" className="text-xs font-medium cursor-pointer">
+                  Wajib persetujuan admin sebelum peminjaman aktif
+                </Label>
+                <Switch
+                  id="require-approval"
+                  checked={requireApproval}
+                  onCheckedChange={setRequireApproval}
                 />
               </div>
-            </div>
 
-            <div className="pt-3 border-t border-border/60 flex justify-end">
-              <Button size="sm" onClick={handleSaveNotifications} className="h-8 text-xs font-medium gap-1.5">
-                <Save className="h-3.5 w-3.5" />
-                <span>Simpan Pengaturan Notifikasi</span>
+              <div className="pt-3 border-t border-border flex justify-end">
+                <Button size="sm" onClick={handleSaveBorrowingRules}>
+                  <Save className="h-3.5 w-3.5" />
+                  <span>Simpan</span>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Tab 3: Reminders */}
+        <TabsContent value="reminders">
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle>Ambang Batas Pengingat (H-Hari)</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="warranty-lead" className="text-xs">Garansi Aset (Hari)</Label>
+                  <Input
+                    id="warranty-lead"
+                    type="number"
+                    min="1"
+                    max="90"
+                    value={warrantyLeadDays}
+                    onChange={(e) => setWarrantyLeadDays(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="borrow-lead" className="text-xs">Tenggat Peminjaman (Hari)</Label>
+                  <Input
+                    id="borrow-lead"
+                    type="number"
+                    min="1"
+                    max="14"
+                    value={borrowingLeadDays}
+                    onChange={(e) => setBorrowingLeadDays(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="sub-lead" className="text-xs">Perpanjangan Langganan (Hari)</Label>
+                  <Input
+                    id="sub-lead"
+                    type="number"
+                    min="1"
+                    max="30"
+                    value={subscriptionLeadDays}
+                    onChange={(e) => setSubscriptionLeadDays(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-border flex justify-end">
+                <Button size="sm" onClick={handleSaveReminderRules}>
+                  <Save className="h-3.5 w-3.5" />
+                  <span>Simpan</span>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Tab 4: Notifications */}
+        <TabsContent value="notifications">
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle>Saluran Notifikasi</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="p-3.5 rounded-lg bg-muted/40 border border-border flex items-center justify-between gap-4">
+                <Label htmlFor="inapp-switch" className="text-xs font-medium cursor-pointer">
+                  Notifikasi In-App
+                </Label>
+                <Switch
+                  id="inapp-switch"
+                  checked={inAppActive}
+                  onCheckedChange={setInAppActive}
+                />
+              </div>
+
+              <div className="p-3.5 rounded-lg border border-border space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                    <Mail className="h-4 w-4 text-primary" />
+                    <span>Email (SMTP)</span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    onClick={() => showFeedback("info", "Uji kirim Email diantrikan.")}
+                  >
+                    Uji Kirim
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="smtp-host" className="text-xs">Host</Label>
+                    <Input
+                      id="smtp-host"
+                      placeholder="smtp.domain.com"
+                      value={smtpHost}
+                      onChange={(e) => setSmtpHost(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="smtp-sender" className="text-xs">Pengirim</Label>
+                    <Input
+                      id="smtp-sender"
+                      placeholder="noreply@domain.com"
+                      value={smtpSender}
+                      onChange={(e) => setSmtpSender(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-lg border border-border space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                    <MessageSquare className="h-4 w-4 text-primary" />
+                    <span>Telegram Bot</span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    onClick={() => showFeedback("info", "Uji kirim Telegram diantrikan.")}
+                  >
+                    Uji Kirim
+                  </Button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="tg-token" className="text-xs">Bot Token</Label>
+                    <Input
+                      id="tg-token"
+                      type="password"
+                      placeholder="Token bot Telegram"
+                      value={telegramToken}
+                      onChange={(e) => setTelegramToken(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="tg-chat" className="text-xs">Chat ID</Label>
+                    <Input
+                      id="tg-chat"
+                      placeholder="-100..."
+                      value={telegramChatId}
+                      onChange={(e) => setTelegramChatId(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-lg border border-border space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                    <Send className="h-4 w-4 text-emerald-600" />
+                    <span>WhatsApp Gateway</span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    onClick={() => showFeedback("info", "Uji kirim WhatsApp diantrikan.")}
+                  >
+                    Uji Kirim
+                  </Button>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="wa-url" className="text-xs">Webhook URL</Label>
+                  <Input
+                    id="wa-url"
+                    placeholder="https://api.gateway.com/send"
+                    value={whatsappEndpoint}
+                    onChange={(e) => setWhatsappEndpoint(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-border flex justify-end">
+                <Button size="sm" onClick={handleSaveNotifications}>
+                  <Save className="h-3.5 w-3.5" />
+                  <span>Simpan</span>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Tab 5: Categories */}
+        <TabsContent value="categories">
+          <Card>
+            <CardHeader className="pb-4 flex flex-row items-center justify-between space-y-0">
+              <CardTitle>Master Kategori</CardTitle>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setEditingCategory(null)
+                  setIsCategoryModalOpen(true)
+                }}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>Tambah Kategori</span>
               </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="border-t border-border">
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader className="bg-muted/40">
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="px-5 text-xs font-semibold text-muted-foreground">Nama</TableHead>
+                        <TableHead className="text-xs font-semibold text-muted-foreground">Modul</TableHead>
+                        <TableHead className="text-xs font-semibold text-muted-foreground">Keterangan</TableHead>
+                        <TableHead className="px-5 w-[90px] text-right text-xs font-semibold text-muted-foreground">Aksi</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {isLoadingCategories ? (
+                        <TableRow>
+                          <TableCell colSpan={4} className="h-28 text-center">
+                            <Loader2 className="h-5 w-5 animate-spin mx-auto text-primary" />
+                          </TableCell>
+                        </TableRow>
+                      ) : categories.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={4} className="h-28 text-center text-xs text-muted-foreground">
+                            Belum ada kategori.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        categories.map((cat) => (
+                          <TableRow key={cat.id}>
+                            <TableCell className="px-5 py-3 text-xs font-semibold text-foreground">
+                              {cat.name}
+                            </TableCell>
+                            <TableCell className="py-3">
+                              <Badge variant={cat.type === "inventory" ? "default" : cat.type === "subscription" ? "info" : "outline"} className="uppercase font-mono text-[10px]">
+                                {cat.type}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="py-3 text-xs text-muted-foreground">
+                              {cat.description || "-"}
+                            </TableCell>
+                            <TableCell className="px-5 py-3 text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="icon-xs"
+                                  onClick={() => {
+                                    setEditingCategory(cat)
+                                    setIsCategoryModalOpen(true)
+                                  }}
+                                  aria-label={`Edit ${cat.name}`}
+                                >
+                                  <Edit2 className="h-3.5 w-3.5 text-muted-foreground" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon-xs"
+                                  onClick={() => {
+                                    setDeletingCategory(cat)
+                                    setIsDeleteDialogOpen(true)
+                                  }}
+                                  className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                  aria-label={`Hapus ${cat.name}`}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
 
-      {/* Tab 5: Categories Master Data */}
-      {activeTab === "categories" && (
-        <Card className="border-border/80 bg-card shadow-xs">
-          <CardHeader className="pb-4 flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-sm font-semibold">Master Kategori Aset & Layanan</CardTitle>
-              <CardDescription className="text-xs">
-                Kelola kategori pengelompokan yang tersedia pada formulir inventaris aset dan langganan.
-              </CardDescription>
-            </div>
-            <Button
-              size="sm"
-              onClick={() => {
-                setEditingCategory(null)
-                setIsCategoryModalOpen(true)
-              }}
-              className="h-8 text-xs font-medium gap-1.5 bg-primary text-primary-foreground"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              <span>Tambah Kategori</span>
-            </Button>
-          </CardHeader>
-          <CardContent className="space-y-4 text-xs">
-            <div className="rounded-lg border border-border/80 overflow-hidden">
-              <Table>
-                <TableHeader className="bg-muted/40">
-                  <TableRow>
-                    <TableHead className="text-xs font-semibold text-foreground">Nama Kategori</TableHead>
-                    <TableHead className="text-xs font-semibold text-foreground">Tipe Modul</TableHead>
-                    <TableHead className="text-xs font-semibold text-foreground">Deskripsi</TableHead>
-                    <TableHead className="w-[100px] text-right text-xs font-semibold text-foreground">Aksi</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+                {/* Mobile Category Cards */}
+                <div className="md:hidden divide-y divide-border">
                   {isLoadingCategories ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="h-32 text-center">
-                        <Loader2 className="h-5 w-5 animate-spin mx-auto text-primary" />
-                        <p className="text-xs text-muted-foreground mt-2">Memuat daftar kategori...</p>
-                      </TableCell>
-                    </TableRow>
+                    <div className="py-10 text-center">
+                      <Loader2 className="h-5 w-5 animate-spin mx-auto text-primary" />
+                    </div>
                   ) : categories.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="h-28 text-center text-muted-foreground">
-                        Belum ada kategori terdaftar. Silakan tambahkan kategori baru.
-                      </TableCell>
-                    </TableRow>
+                    <div className="py-10 text-center text-xs text-muted-foreground">
+                      Belum ada kategori.
+                    </div>
                   ) : (
                     categories.map((cat) => (
-                      <TableRow key={cat.id} className="border-b border-border/60">
-                        <TableCell className="font-semibold text-foreground">{cat.name}</TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant="secondary" 
-                            className={`font-mono text-[10px] uppercase ${
-                              cat.type === 'inventory' 
-                                ? 'bg-primary/10 text-primary border-primary/20' 
-                                : cat.type === 'subscription'
-                                ? 'bg-blue-500/10 text-blue-600 border-blue-500/20'
-                                : 'bg-muted text-muted-foreground'
-                            }`}
-                          >
-                            {cat.type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-muted-foreground">{cat.description || '-'}</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                              onClick={() => {
-                                setEditingCategory(cat)
-                                setIsCategoryModalOpen(true)
-                              }}
-                            >
-                              <Edit2 className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 text-destructive hover:text-destructive/80"
-                              onClick={() => {
-                                setDeletingCategory(cat)
-                                setIsDeleteDialogOpen(true)
-                              }}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
+                      <div key={cat.id} className="p-4 flex items-center justify-between gap-3">
+                        <div className="min-w-0 space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs font-bold text-foreground">{cat.name}</span>
+                            <Badge variant={cat.type === "inventory" ? "default" : cat.type === "subscription" ? "info" : "outline"} className="uppercase font-mono text-[10px]">
+                              {cat.type}
+                            </Badge>
                           </div>
-                        </TableCell>
-                      </TableRow>
+                          {cat.description && (
+                            <p className="text-[11px] text-muted-foreground truncate">{cat.description}</p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Button
+                            variant="outline"
+                            size="icon-sm"
+                            onClick={() => {
+                              setEditingCategory(cat)
+                              setIsCategoryModalOpen(true)
+                            }}
+                            aria-label={`Edit ${cat.name}`}
+                          >
+                            <Edit2 className="h-3.5 w-3.5 text-muted-foreground" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon-sm"
+                            onClick={() => {
+                              setDeletingCategory(cat)
+                              setIsDeleteDialogOpen(true)
+                            }}
+                            className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                            aria-label={`Hapus ${cat.name}`}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
                     ))
                   )}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-      {/* Tab 6: User Management & RBAC */}
-      {activeTab === "users" && (
-        <Card className="border-border/80 bg-card shadow-xs">
-          <CardHeader className="pb-4">
-            <CardTitle className="text-sm font-semibold">Manajemen Pengguna & Otorisasi Peran (RBAC)</CardTitle>
-            <CardDescription className="text-xs">
-              Kelola hak akses pengguna sistem. Perubahan peran akan langsung memperbarui hak akses operasional dan visibilitas audit log.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 text-xs">
-            <div className="rounded-lg border border-border/80 overflow-hidden">
-              <Table>
-                <TableHeader className="bg-muted/40">
-                  <TableRow>
-                    <TableHead className="text-xs font-semibold text-foreground">Pengguna</TableHead>
-                    <TableHead className="text-xs font-semibold text-foreground">Email</TableHead>
-                    <TableHead className="text-xs font-semibold text-foreground">Terdaftar Pada</TableHead>
-                    <TableHead className="w-[160px] text-xs font-semibold text-foreground">Peran (Role)</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+        {/* Tab 6: Users */}
+        <TabsContent value="users">
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle>Pengguna & Peran</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="border-t border-border">
+                <div className="hidden md:block">
+                  <Table>
+                    <TableHeader className="bg-muted/40">
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="px-5 text-xs font-semibold text-muted-foreground">Pengguna</TableHead>
+                        <TableHead className="text-xs font-semibold text-muted-foreground">Email</TableHead>
+                        <TableHead className="text-xs font-semibold text-muted-foreground">Terdaftar</TableHead>
+                        <TableHead className="px-5 w-[160px] text-xs font-semibold text-muted-foreground">Peran</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {isLoadingUsers ? (
+                        <TableRow>
+                          <TableCell colSpan={4} className="h-28 text-center">
+                            <Loader2 className="h-5 w-5 animate-spin mx-auto text-primary" />
+                          </TableCell>
+                        </TableRow>
+                      ) : users.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={4} className="h-28 text-center text-xs text-muted-foreground">
+                            Tidak ada pengguna terdaftar.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        users.map((u) => {
+                          const isSelf = u.id === currentAdmin?.id
+                          const isUpdating = updatingUserId === u.id
+
+                          return (
+                            <TableRow key={u.id}>
+                              <TableCell className="px-5 py-3">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="h-7 w-7 rounded-md bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs shrink-0">
+                                    {u.full_name ? u.full_name.charAt(0).toUpperCase() : "U"}
+                                  </div>
+                                  <span className="text-xs font-semibold text-foreground">{u.full_name}</span>
+                                  {isSelf && <Badge variant="default">Anda</Badge>}
+                                </div>
+                              </TableCell>
+                              <TableCell className="py-3 font-mono text-xs text-muted-foreground">{u.email}</TableCell>
+                              <TableCell className="py-3 text-xs text-muted-foreground">
+                                {u.created_at ? formatDateID(u.created_at) : "-"}
+                              </TableCell>
+                              <TableCell className="px-5 py-3">
+                                <div className="flex items-center gap-2">
+                                  <Select
+                                    value={u.role}
+                                    onValueChange={(newRole) => {
+                                      if (newRole) handleRoleChange(u, newRole as UserRole)
+                                    }}
+                                    disabled={isUpdating}
+                                  >
+                                    <SelectTrigger size="sm" className="w-28" aria-label={`Peran ${u.full_name}`}>
+                                      <SelectValue>{ROLE_LABELS[u.role]}</SelectValue>
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="admin">Admin</SelectItem>
+                                      <SelectItem value="staff">Staf</SelectItem>
+                                      <SelectItem value="user">User</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  {isUpdating && <Loader2 className="h-3.5 w-3.5 animate-spin text-primary shrink-0" />}
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )
+                        })
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {/* Mobile User Cards */}
+                <div className="md:hidden divide-y divide-border">
                   {isLoadingUsers ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="h-32 text-center">
-                        <Loader2 className="h-5 w-5 animate-spin mx-auto text-primary" />
-                        <p className="text-xs text-muted-foreground mt-2">Memuat daftar pengguna...</p>
-                      </TableCell>
-                    </TableRow>
+                    <div className="py-10 text-center">
+                      <Loader2 className="h-5 w-5 animate-spin mx-auto text-primary" />
+                    </div>
                   ) : users.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={4} className="h-28 text-center text-muted-foreground">
-                        Tidak ada pengguna terdaftar.
-                      </TableCell>
-                    </TableRow>
+                    <div className="py-10 text-center text-xs text-muted-foreground">
+                      Tidak ada pengguna terdaftar.
+                    </div>
                   ) : (
                     users.map((u) => {
                       const isSelf = u.id === currentAdmin?.id
                       const isUpdating = updatingUserId === u.id
-
                       return (
-                        <TableRow key={u.id} className="border-b border-border/60">
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <div className="h-7 w-7 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-xs">
-                                {u.full_name ? u.full_name.charAt(0).toUpperCase() : 'U'}
-                              </div>
-                              <div>
-                                <p className="font-semibold text-foreground leading-tight flex items-center gap-1.5">
-                                  {u.full_name}
-                                  {isSelf && (
-                                    <span className="text-[9px] font-mono px-1 py-0.2 bg-primary/10 text-primary rounded border border-primary/20">
-                                      Anda
-                                    </span>
-                                  )}
-                                </p>
-                              </div>
+                        <div key={u.id} className="p-4 space-y-3">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-xs shrink-0">
+                              {u.full_name ? u.full_name.charAt(0).toUpperCase() : "U"}
                             </div>
-                          </TableCell>
-                          <TableCell className="font-mono text-muted-foreground">{u.email}</TableCell>
-                          <TableCell className="text-muted-foreground">
-                            {u.created_at ? formatDateID(u.created_at) : '-'}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-1.5">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-xs font-bold text-foreground truncate">{u.full_name}</span>
+                                {isSelf && <Badge variant="default">Anda</Badge>}
+                              </div>
+                              <p className="text-[11px] font-mono text-muted-foreground truncate">{u.email}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="text-[11px] text-muted-foreground">
+                              {u.created_at ? formatDateID(u.created_at) : "-"}
+                            </span>
+                            <div className="flex items-center gap-2">
                               <Select
                                 value={u.role}
                                 onValueChange={(newRole) => {
@@ -848,31 +891,29 @@ export function SettingsPage() {
                                 }}
                                 disabled={isUpdating}
                               >
-                                <SelectTrigger className="h-7 text-xs bg-muted/40 border-border/80 w-32">
-                                  <SelectValue />
+                                <SelectTrigger className="h-10 w-32" aria-label={`Peran ${u.full_name}`}>
+                                  <SelectValue>{ROLE_LABELS[u.role]}</SelectValue>
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="admin">Admin (Full)</SelectItem>
-                                  <SelectItem value="staff">Staff (Operator)</SelectItem>
-                                  <SelectItem value="user">User (Viewer)</SelectItem>
+                                  <SelectItem value="admin">Admin</SelectItem>
+                                  <SelectItem value="staff">Staf</SelectItem>
+                                  <SelectItem value="user">User</SelectItem>
                                 </SelectContent>
                               </Select>
-
                               {isUpdating && <Loader2 className="h-3.5 w-3.5 animate-spin text-primary shrink-0" />}
                             </div>
-                          </TableCell>
-                        </TableRow>
+                          </div>
+                        </div>
                       )
                     })
                   )}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
-      {/* Category Modal */}
       <CategoryModal
         isOpen={isCategoryModalOpen}
         onClose={() => {
@@ -883,12 +924,11 @@ export function SettingsPage() {
         initialData={editingCategory}
       />
 
-      {/* Delete Category Confirmation Dialog */}
       <DeleteConfirmDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
         title="Hapus Kategori"
-        description={`Apakah Anda yakin ingin menghapus kategori "${deletingCategory?.name}"? Aset yang terkait dengan kategori ini mungkin akan kehilangan referensi kategori.`}
+        description={`Hapus kategori "${deletingCategory?.name}"?`}
         onConfirm={handleDeleteCategory}
         isLoading={isDeletingCat}
       />

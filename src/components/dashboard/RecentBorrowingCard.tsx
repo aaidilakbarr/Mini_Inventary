@@ -1,10 +1,11 @@
 import { useState, useMemo } from "react"
 import { Link } from "react-router-dom"
-import { ArrowLeftRight, Clock, User, ArrowRight, ChevronLeft, ChevronRight, Package, Eye } from "lucide-react"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+import { Clock, User, ChevronLeft, ChevronRight, Package, Eye, Calendar } from "lucide-react"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { formatDateID } from "@/lib/formatters"
+import { cn } from "@/lib/utils"
 import type { BorrowingItem } from "@/types/database"
 
 interface RecentBorrowingCardProps {
@@ -16,11 +17,6 @@ interface RecentBorrowingCardProps {
 export function RecentBorrowingCard({ borrowings, onViewDetail }: RecentBorrowingCardProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
 
-  // Prioritise borrowings operationally:
-  // 1. Overdue
-  // 2. Pending Approval
-  // 3. Active Borrowed
-  // 4. Returned / other
   const sortedBorrowings = useMemo(() => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -50,114 +46,95 @@ export function RecentBorrowingCard({ borrowings, onViewDetail }: RecentBorrowin
 
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  const isOverdue = activeItem?.status === "Borrowed" && new Date(activeItem.due_date) < today
 
-  const getStatusBadge = (item: BorrowingItem) => {
-    if (isOverdue) {
-      return (
-        <Badge variant="destructive" className="text-[10px] font-semibold px-2 py-0.5 rounded-full">
-          Terlambat
-        </Badge>
-      )
-    }
-    if (item.status === "Pending Approval") {
-      return (
-        <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-300 text-[10px] font-semibold px-2 py-0.5 rounded-full">
-          Menunggu
-        </Badge>
-      )
-    }
-    if (item.status === "Borrowed") {
-      return (
-        <Badge className="bg-blue-500/15 text-blue-700 dark:text-blue-300 border-blue-300 text-[10px] font-semibold px-2 py-0.5 rounded-full">
-          Dipinjam
-        </Badge>
-      )
-    }
-    if (item.status === "Returned") {
-      return (
-        <Badge variant="outline" className="text-[10px] font-semibold px-2 py-0.5 rounded-full text-emerald-600 border-emerald-300">
-          Dikembalikan
-        </Badge>
-      )
-    }
-    return (
-      <Badge variant="secondary" className="text-[10px] font-semibold px-2 py-0.5 rounded-full">
-        {item.status}
-      </Badge>
-    )
+  const getDueDelta = (item: BorrowingItem) => {
+    if (item.status !== "Borrowed" || !item.due_date) return null
+    const due = new Date(item.due_date)
+    due.setHours(0, 0, 0, 0)
+    const diffDays = Math.round((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    if (diffDays < 0) return { label: `Terlambat ${Math.abs(diffDays)} hr`, overdue: true }
+    if (diffDays === 0) return { label: "Hari ini", overdue: false }
+    return { label: `H-${diffDays}`, overdue: false }
   }
 
-  return (
-    <Card className="h-full border border-slate-200/90 dark:border-border/80 bg-white dark:bg-card rounded-2xl shadow-xs flex flex-col justify-between">
-      <div>
-        <CardHeader className="p-4 sm:p-5 pb-3">
-          <div className="flex items-center justify-between gap-2">
-            <div className="space-y-0.5 min-w-0">
-              <div className="flex items-center gap-2">
-                <div className="h-7 w-7 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center">
-                  <ArrowLeftRight className="h-4 w-4" />
-                </div>
-                <CardTitle className="text-sm sm:text-base font-bold text-foreground truncate">
-                  Peminjaman Terkini
-                </CardTitle>
-              </div>
-              <CardDescription className="text-xs text-muted-foreground">
-                Transaksi prioritas operasional tertinggi
-              </CardDescription>
-            </div>
+  const isOverdue = activeItem?.status === "Borrowed" && new Date(activeItem.due_date) < today
+  const dueDelta = activeItem ? getDueDelta(activeItem) : null
 
-            {totalItems > 1 && (
-              <div className="flex items-center gap-1">
+  const renderStatusBadge = (item: BorrowingItem) => {
+    const itemOverdue = item.status === "Borrowed" && new Date(item.due_date) < today
+    if (itemOverdue) return <Badge variant="destructive">Terlambat</Badge>
+    if (item.status === "Pending Approval") return <Badge variant="warning">Menunggu</Badge>
+    if (item.status === "Borrowed") return <Badge variant="info">Dipinjam</Badge>
+    if (item.status === "Returned") return <Badge variant="success">Dikembalikan</Badge>
+    return <Badge variant="secondary">{item.status}</Badge>
+  }
+
+  const queueItems = sortedBorrowings.slice(0, 3)
+
+  return (
+    <Card className="h-full flex flex-col justify-between">
+      <div>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle>Peminjaman</CardTitle>
+            {totalItems > 1 ? (
+              <div className="flex items-center gap-0.5">
                 <Button
+                  type="button"
                   variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 rounded-md"
+                  size="icon-xs"
                   onClick={() => setCurrentIndex((prev) => (prev > 0 ? prev - 1 : totalItems - 1))}
-                  title="Sebelumnya"
+                  aria-label="Peminjaman sebelumnya"
                 >
                   <ChevronLeft className="h-3.5 w-3.5" />
                 </Button>
-                <span className="text-[11px] font-mono text-muted-foreground">
+                <span className="text-[11px] font-mono text-muted-foreground px-1 tabular-nums">
                   {currentIndex + 1}/{totalItems}
                 </span>
                 <Button
+                  type="button"
                   variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 rounded-md"
+                  size="icon-xs"
                   onClick={() => setCurrentIndex((prev) => (prev < totalItems - 1 ? prev + 1 : 0))}
-                  title="Berikutnya"
+                  aria-label="Peminjaman berikutnya"
                 >
                   <ChevronRight className="h-3.5 w-3.5" />
                 </Button>
               </div>
+            ) : (
+              <Link to="/borrowing" className="text-xs font-semibold text-primary hover:underline">
+                Semua
+              </Link>
             )}
           </div>
         </CardHeader>
 
-        <CardContent className="p-4 sm:p-5 pt-0">
+        <CardContent className="space-y-3.5">
           {!activeItem ? (
-            <div className="p-6 text-center text-xs text-muted-foreground border border-dashed border-border rounded-xl">
-              Belum ada riwayat transaksi peminjaman.
+            <div className="py-8 text-center text-xs text-muted-foreground border border-dashed border-border rounded-lg">
+              Belum ada peminjaman.
             </div>
           ) : (
-            <div className="space-y-3.5">
-              {/* Main Transaction Highlight Card */}
-              <div className={`p-3.5 rounded-xl border transition-all ${
-                isOverdue
-                  ? "border-rose-200 dark:border-rose-900/50 bg-rose-50/30 dark:bg-rose-950/20"
-                  : activeItem.status === "Pending Approval"
-                  ? "border-amber-200 dark:border-amber-900/50 bg-amber-50/30 dark:bg-amber-950/20"
-                  : "border-slate-200/90 dark:border-border/80 bg-slate-50/50 dark:bg-muted/30"
-              }`}>
-                <div className="flex items-start justify-between gap-2 mb-2.5">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="h-8 w-8 rounded-lg bg-card border border-border flex items-center justify-center text-foreground shrink-0 shadow-2xs">
+            <>
+              {/* Highlighted Priority Record */}
+              <div
+                className={cn(
+                  "p-3 rounded-xl border space-y-3 transition-colors",
+                  isOverdue
+                    ? "border-destructive/40 bg-destructive/5"
+                    : activeItem.status === "Pending Approval"
+                    ? "border-amber-300 dark:border-amber-800/60 bg-amber-50/50 dark:bg-amber-950/20"
+                    : "border-border bg-muted/30"
+                )}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="h-9 w-9 rounded-lg bg-card border border-border flex items-center justify-center shrink-0 overflow-hidden">
                       {activeItem.inventory?.photo_url ? (
                         <img
                           src={activeItem.inventory.photo_url}
                           alt={activeItem.inventory.name}
-                          className="h-full w-full object-cover rounded-lg"
+                          className="h-full w-full object-cover"
                         />
                       ) : (
                         <Package className="h-4 w-4 text-muted-foreground" />
@@ -165,70 +142,115 @@ export function RecentBorrowingCard({ borrowings, onViewDetail }: RecentBorrowin
                     </div>
                     <div className="min-w-0">
                       <p className="text-xs font-bold text-foreground truncate">
-                        {activeItem.inventory?.name || "Nama Barang"}
+                        {activeItem.inventory?.name || "Aset"}
                       </p>
-                      <p className="text-[10px] font-mono text-muted-foreground truncate">
-                        Kode: {activeItem.inventory?.code || "-"}
+                      <p className="text-[11px] font-mono text-muted-foreground truncate">
+                        {activeItem.inventory?.code || "-"}
                       </p>
                     </div>
                   </div>
-                  {getStatusBadge(activeItem)}
+                  {renderStatusBadge(activeItem)}
                 </div>
 
-                <div className="space-y-1.5 pt-1.5 border-t border-border/60 text-xs">
-                  <div className="flex items-center justify-between text-muted-foreground">
-                    <span className="flex items-center gap-1 text-[11px]">
-                      <User className="h-3 w-3 text-muted-foreground/80" />
+                <div className="space-y-1.5 pt-2.5 border-t border-border/70 text-xs">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-1.5 text-muted-foreground">
+                      <User className="h-3.5 w-3.5" />
                       Peminjam
                     </span>
-                    <span className="font-semibold text-foreground truncate max-w-[140px]">
-                      {activeItem.borrower?.full_name || "Staf / Pengguna"}
+                    <span className="font-semibold text-foreground truncate max-w-[130px]">
+                      {activeItem.borrower?.full_name || "Staf"}
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between text-muted-foreground">
-                    <span className="flex items-center gap-1 text-[11px]">
-                      <Clock className="h-3 w-3 text-muted-foreground/80" />
-                      Tenggat Waktu
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-1.5 text-muted-foreground">
+                      <Calendar className="h-3.5 w-3.5" />
+                      Pinjam
                     </span>
-                    <span className={`font-mono text-[11px] font-semibold ${
-                      isOverdue ? "text-rose-600 dark:text-rose-400" : "text-foreground"
-                    }`}>
-                      {formatDateID(activeItem.due_date)}
+                    <span className="font-mono text-[11px] text-foreground">
+                      {formatDateID(activeItem.request_date)}
                     </span>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-1.5 text-muted-foreground">
+                      <Clock className="h-3.5 w-3.5" />
+                      Tenggat
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={`font-mono text-[11px] font-semibold ${
+                          isOverdue ? "text-destructive" : "text-foreground"
+                        }`}
+                      >
+                        {formatDateID(activeItem.due_date)}
+                      </span>
+                      {dueDelta && (
+                        <Badge variant={dueDelta.overdue ? "destructive" : "secondary"} className="h-4 px-1.5 text-[10px]">
+                          {dueDelta.label}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onViewDetail(activeItem)}
-                  className="w-full h-8 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs cursor-pointer"
-                >
-                  <Eye className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span>Lihat Detail</span>
-                </Button>
-              </div>
-            </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onViewDetail(activeItem)}
+                className="w-full"
+              >
+                <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                <span>Lihat Detail</span>
+              </Button>
+
+              {/* Compact Queue Switcher (Real next records) */}
+              {queueItems.length > 1 && (
+                <div className="pt-2 border-t border-border space-y-1.5">
+                  <span className="text-[11px] font-semibold text-muted-foreground block">
+                    Prioritas Teratas
+                  </span>
+                  <div className="space-y-1">
+                    {queueItems.map((qItem, idx) => (
+                      <Button
+                        key={qItem.id}
+                        type="button"
+                        variant="ghost"
+                        onClick={() => setCurrentIndex(idx)}
+                        className={cn(
+                          "w-full h-auto justify-between gap-2 px-2.5 py-2 text-xs font-normal rounded-lg",
+                          idx === currentIndex
+                            ? "bg-primary/10 text-primary font-semibold hover:bg-primary/15 hover:text-primary"
+                            : "text-foreground hover:bg-accent"
+                        )}
+                      >
+                        <span className="truncate">{qItem.inventory?.name || "Aset"}</span>
+                        <span className="text-[10px] font-mono text-muted-foreground shrink-0">
+                          {qItem.borrower?.full_name?.split(" ")[0] || "Staf"}
+                        </span>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </div>
 
-      <div className="p-4 sm:p-5 pt-0">
-        <Link to="/borrowing" className="block">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full h-7 text-xs text-primary hover:bg-primary/5 gap-1 font-semibold justify-center cursor-pointer"
+      {totalItems > 1 && (
+        <div className="px-4 sm:px-5 pb-4 pt-0">
+          <Link
+            to="/borrowing"
+            className="block text-center text-xs font-semibold text-primary hover:underline py-1"
           >
-            <span>Semua Transaksi Peminjaman</span>
-            <ArrowRight className="h-3 w-3" />
-          </Button>
-        </Link>
-      </div>
+            Semua peminjaman
+          </Link>
+        </div>
+      )}
     </Card>
   )
 }

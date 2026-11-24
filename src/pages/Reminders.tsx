@@ -6,24 +6,26 @@ import {
   Calendar,
   AlertTriangle,
   CheckCircle2,
+  Circle,
   Clock,
   Trash2,
   Edit2,
   Loader2,
   BellRing,
-  Wrench
+  Wrench,
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from "@/components/ui/table"
 import { ReminderModal } from "@/components/modals/ReminderModal"
 import { DeleteConfirmDialog } from "@/components/modals/DeleteConfirmDialog"
@@ -32,7 +34,7 @@ import {
   createReminder,
   updateReminder,
   updateReminderStatus,
-  deleteReminder
+  deleteReminder,
 } from "@/lib/api/reminders"
 import { formatDateID } from "@/lib/formatters"
 import type { ReminderItem, CreateReminderPayload, ReminderStatus } from "@/types/database"
@@ -43,11 +45,9 @@ export function RemindersPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterTab, setFilterTab] = useState("Semua")
 
-  // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<ReminderItem | null>(null)
 
-  // Delete dialog states
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [deletingItem, setDeletingItem] = useState<ReminderItem | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -67,21 +67,6 @@ export function RemindersPage() {
   useEffect(() => {
     loadData()
   }, [loadData])
-
-  const handleOpenAdd = () => {
-    setEditingItem(null)
-    setIsModalOpen(true)
-  }
-
-  const handleOpenEdit = (item: ReminderItem) => {
-    setEditingItem(item)
-    setIsModalOpen(true)
-  }
-
-  const handleOpenDelete = (item: ReminderItem) => {
-    setDeletingItem(item)
-    setIsDeleteDialogOpen(true)
-  }
 
   const handleSave = async (payload: CreateReminderPayload) => {
     if (editingItem) {
@@ -117,11 +102,11 @@ export function RemindersPage() {
     }
   }
 
-  // Filter items
   const filtered = reminders.filter((item) => {
+    const q = searchTerm.toLowerCase()
     const matchesSearch =
-      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.description || "").toLowerCase().includes(searchTerm.toLowerCase())
+      item.title.toLowerCase().includes(q) ||
+      (item.description || "").toLowerCase().includes(q)
 
     let matchesTab = true
     if (filterTab === "Mendatang") matchesTab = item.status === "Upcoming" || item.status === "Due Today"
@@ -132,256 +117,348 @@ export function RemindersPage() {
     return matchesSearch && matchesTab
   })
 
-  // Quick stats
-  const activeCount = reminders.filter(r => r.status !== 'Completed').length
-  const highPriorityCount = reminders.filter(r => r.priority === 'Tinggi' && r.status !== 'Completed').length
-  const completedCount = reminders.filter(r => r.status === 'Completed').length
+  const activeCount = reminders.filter((r) => r.status !== "Completed").length
+  const highPriorityCount = reminders.filter((r) => r.priority === "Tinggi" && r.status !== "Completed").length
+  const completedCount = reminders.filter((r) => r.status === "Completed").length
 
   const filterTabs = ["Semua", "Mendatang", "Prioritas Tinggi", "Terlambat", "Selesai"]
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">Pengingat & Agenda</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-            Pusat notifikasi jadwal pemeliharaan aset, tagihan lisensi, dan agenda penting internal.
-          </p>
-        </div>
-        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-2.5 w-full md:w-auto">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadData}
-            disabled={isLoading}
-            className="h-9 px-3.5 text-xs font-semibold rounded-xl border-slate-200/90 dark:border-border hover:bg-slate-50 dark:hover:bg-muted/60 gap-1.5 shadow-2xs justify-center"
-          >
-            <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? "animate-spin" : ""}`} />
+    <div className="space-y-4 sm:space-y-5 animate-enter">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <h1 className="text-xl sm:text-[28px] font-bold tracking-tight text-foreground">
+          Pengingat
+        </h1>
+
+        <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full md:w-auto">
+          <Button variant="outline" size="sm" onClick={loadData} disabled={isLoading}>
+            <RefreshCw className={`h-3.5 w-3.5 text-muted-foreground ${isLoading ? "animate-spin" : ""}`} />
             <span>Segarkan</span>
           </Button>
           <Button
             size="sm"
-            onClick={handleOpenAdd}
-            className="h-9 px-4 text-xs font-bold rounded-xl gap-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-primary dark:hover:bg-primary/90 text-white shadow-sm justify-center"
+            onClick={() => {
+              setEditingItem(null)
+              setIsModalOpen(true)
+            }}
           >
-            <Plus className="h-4 w-4 stroke-[2.5]" />
+            <Plus className="h-3.5 w-3.5" />
             <span>Tambah Pengingat</span>
           </Button>
         </div>
       </div>
 
-      {/* Summary KPI Cards */}
-      <div className="grid grid-cols-3 gap-2 sm:gap-4">
-        <Card className="border-border/80 shadow-xs">
-          <CardContent className="p-2.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+      {/* Responsive KPI Strip: 2-col + 1 full-width on mobile, 3-col on desktop */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+        <Card>
+          <CardContent className="p-4 flex items-center justify-between gap-2">
             <div>
-              <p className="text-[10px] sm:text-[11px] font-medium text-muted-foreground truncate">Aktif / Menunggu</p>
-              <p className="text-sm sm:text-lg font-bold font-mono text-foreground mt-0.5">
-                {activeCount} <span className="text-[10px] sm:text-xs font-normal text-muted-foreground hidden xs:inline">Item</span>
-              </p>
+              <p className="text-xs text-muted-foreground">Aktif</p>
+              <p className="text-lg font-extrabold text-foreground tabular-nums mt-0.5">{activeCount}</p>
             </div>
-            <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600 shrink-0 self-end sm:self-auto">
-              <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <div className="h-9 w-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shrink-0">
+              <Clock className="h-4 w-4" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-border/80 shadow-xs">
-          <CardContent className="p-2.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+        <Card>
+          <CardContent className="p-4 flex items-center justify-between gap-2">
             <div>
-              <p className="text-[10px] sm:text-[11px] font-medium text-muted-foreground truncate">Prioritas Tinggi</p>
-              <p className="text-sm sm:text-lg font-bold font-mono text-destructive mt-0.5">
-                {highPriorityCount} <span className="text-[10px] sm:text-xs font-normal text-muted-foreground hidden xs:inline">Penting</span>
-              </p>
+              <p className="text-xs text-muted-foreground">Prioritas Tinggi</p>
+              <p className="text-lg font-extrabold text-destructive tabular-nums mt-0.5">{highPriorityCount}</p>
             </div>
-            <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-lg bg-destructive/10 flex items-center justify-center text-destructive shrink-0 self-end sm:self-auto">
-              <AlertTriangle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <div className="h-9 w-9 rounded-lg bg-destructive text-destructive-foreground flex items-center justify-center shrink-0">
+              <AlertTriangle className="h-4 w-4" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-border/80 shadow-xs">
-          <CardContent className="p-2.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+        <Card className="col-span-2 sm:col-span-1">
+          <CardContent className="p-4 flex items-center justify-between gap-2">
             <div>
-              <p className="text-[10px] sm:text-[11px] font-medium text-muted-foreground truncate">Telah Selesai</p>
-              <p className="text-sm sm:text-lg font-bold font-mono text-emerald-600 mt-0.5">
-                {completedCount} <span className="text-[10px] sm:text-xs font-normal text-muted-foreground hidden xs:inline">Tuntas</span>
+              <p className="text-xs text-muted-foreground">Selesai</p>
+              <p className="text-lg font-extrabold text-emerald-700 dark:text-emerald-400 tabular-nums mt-0.5">
+                {completedCount}
               </p>
             </div>
-            <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0 self-end sm:self-auto">
-              <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <div className="h-9 w-9 rounded-lg bg-emerald-700 text-white flex items-center justify-center shrink-0">
+              <CheckCircle2 className="h-4 w-4" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filter and Search Bar */}
-      <Card className="border-border/80 shadow-xs">
-        <CardContent className="p-3 sm:p-3.5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-          <div className="relative w-full md:w-80">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+      {/* Search & Filter */}
+      <Card>
+        <CardContent className="p-3.5 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+          <div className="relative w-full lg:w-72">
+            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
-              placeholder="Cari judul pengingat atau keterangan..."
+              placeholder="Cari pengingat..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8 h-8.5 sm:h-8 text-xs bg-muted/30 border-border/80 w-full rounded-xl"
+              className="pl-8 h-10 sm:h-9"
             />
           </div>
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 w-full md:w-auto scrollbar-none">
-            {filterTabs.map((tab) => (
-              <Button
-                key={tab}
-                variant={filterTab === tab ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFilterTab(tab)}
-                className="h-7.5 sm:h-7 text-xs px-3 rounded-full shrink-0 whitespace-nowrap"
-              >
-                {tab}
-              </Button>
-            ))}
-          </div>
+
+          <Tabs value={filterTab} onValueChange={(val) => setFilterTab(val || "Semua")}>
+            <TabsList className="w-full lg:w-fit overflow-x-auto justify-start">
+              {filterTabs.map((tab) => (
+                <TabsTrigger key={tab} value={tab} className="flex-none">
+                  {tab}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
         </CardContent>
       </Card>
 
-      {/* Main Reminders Table */}
-      <Card className="border-border/80 shadow-xs">
-        <div className="p-0 overflow-x-auto">
-          <Table className="min-w-[700px] w-full">
-            <TableHeader className="bg-muted/40">
-              <TableRow className="border-border/60">
-                <TableHead className="w-12 text-center h-9">Status</TableHead>
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Agenda / Pengingat</TableHead>
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Prioritas</TableHead>
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Jatuh Tempo</TableHead>
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9">Sumber</TableHead>
-                <TableHead className="text-[11px] font-mono uppercase font-semibold h-9 text-right">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-36 text-center">
-                    <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
-                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                      <p className="text-xs">Memuat pengingat...</p>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : filtered.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-36 text-center">
-                    <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
-                      <BellRing className="h-8 w-8 text-muted-foreground/60" />
-                      <p className="text-xs font-medium text-foreground">Tidak ada agenda pengingat</p>
-                      <p className="text-[11px]">Belum ada jadwal yang tercatat atau cocok dengan filter.</p>
-                      <Button size="sm" variant="outline" onClick={handleOpenAdd} className="h-7 text-xs mt-1">
-                        <Plus className="h-3 w-3 mr-1" /> Buat Pengingat Baru
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filtered.map((item) => {
-                  const isDone = item.status === "Completed"
-                  return (
-                    <TableRow key={item.id} className={`border-border/50 hover:bg-muted/30 ${isDone ? "opacity-60 bg-muted/20" : ""}`}>
-                      <TableCell className="text-center py-3">
-                        <button
-                          type="button"
-                          onClick={() => handleToggleStatus(item)}
-                          className="hover:scale-110 transition-transform focus:outline-none"
-                          title={
-                            isDone 
-                              ? "Tandai Belum Selesai" 
-                              : item.source_type === "inventory" 
-                                ? "Tandai Selesai Servis (Otomatis mengembalikan 1 unit ke stok inventaris)" 
-                                : "Tandai Selesai"
-                          }
-                        >
-                          {isDone ? (
-                            <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                          ) : (
-                            <div className={`h-4 w-4 rounded-full border-2 ${item.source_type === "inventory" ? "border-amber-500 hover:border-amber-600 bg-amber-500/10" : "border-muted-foreground/60 hover:border-primary"}`} />
-                          )}
-                        </button>
-                      </TableCell>
-                      <TableCell className="py-3">
-                        <div className="flex items-center gap-1.5 flex-wrap">
+      {/* Main Content: Desktop Table + Mobile Stacked Cards */}
+      <Card className="overflow-hidden">
+        {isLoading ? (
+          <div className="h-40 flex flex-col items-center justify-center gap-2 text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            <p className="text-xs">Memuat pengingat...</p>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="h-40 flex flex-col items-center justify-center gap-2.5 text-muted-foreground p-6 text-center">
+            <BellRing className="h-7 w-7 text-muted-foreground/60" />
+            <p className="text-xs font-semibold text-foreground">Tidak ada pengingat</p>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setEditingItem(null)
+                setIsModalOpen(true)
+              }}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>Tambah Pengingat</span>
+            </Button>
+          </div>
+        ) : (
+          <>
+            {/* Desktop Table */}
+            <div className="hidden md:block">
+              <Table className="min-w-[680px]">
+                <TableHeader className="bg-muted/40">
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="w-12 text-center text-xs font-semibold text-muted-foreground">Selesai</TableHead>
+                    <TableHead className="text-xs font-semibold text-muted-foreground">Agenda</TableHead>
+                    <TableHead className="text-xs font-semibold text-muted-foreground">Prioritas</TableHead>
+                    <TableHead className="text-xs font-semibold text-muted-foreground">Jatuh Tempo</TableHead>
+                    <TableHead className="text-xs font-semibold text-muted-foreground">Sumber</TableHead>
+                    <TableHead className="px-4 text-right text-xs font-semibold text-muted-foreground">Aksi</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filtered.map((item) => {
+                    const isDone = item.status === "Completed"
+                    return (
+                      <TableRow key={item.id} className={isDone ? "opacity-60" : ""}>
+                        <TableCell className="text-center py-3">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-xs"
+                            onClick={() => handleToggleStatus(item)}
+                            aria-label={isDone ? `Tandai belum selesai: ${item.title}` : `Tandai selesai: ${item.title}`}
+                            title={
+                              isDone
+                                ? "Tandai belum selesai"
+                                : item.source_type === "inventory"
+                                ? "Selesai servis (kembalikan ke stok)"
+                                : "Tandai selesai"
+                            }
+                          >
+                            {isDone ? (
+                              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                            ) : (
+                              <Circle
+                                className={`h-4 w-4 ${
+                                  item.source_type === "inventory"
+                                    ? "text-amber-600"
+                                    : "text-muted-foreground"
+                                }`}
+                              />
+                            )}
+                          </Button>
+                        </TableCell>
+                        <TableCell className="py-3">
                           <p className={`font-semibold text-xs text-foreground ${isDone ? "line-through text-muted-foreground" : ""}`}>
                             {item.title}
                           </p>
-                          {item.source_type === "inventory" && !isDone && (
-                            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
-                              (Centang jika servis selesai)
-                            </span>
+                          {item.description && (
+                            <p className="text-[11px] text-muted-foreground line-clamp-1">
+                              {item.description}
+                            </p>
                           )}
+                        </TableCell>
+                        <TableCell className="py-3">
+                          <Badge
+                            variant={
+                              item.priority === "Tinggi"
+                                ? "destructive"
+                                : item.priority === "Sedang"
+                                ? "warning"
+                                : "outline"
+                            }
+                          >
+                            {item.priority}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="py-3 text-xs font-mono text-muted-foreground">
+                          <span className="inline-flex items-center gap-1.5">
+                            <Calendar className="h-3 w-3" />
+                            {formatDateID(item.due_date)}
+                          </span>
+                        </TableCell>
+                        <TableCell className="py-3">
+                          {item.source_type === "inventory" ? (
+                            <Badge variant="warning">
+                              <Wrench className="h-3 w-3" />
+                              <span>Perawatan</span>
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="capitalize">
+                              {item.source_type || "manual"}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="px-4 py-3 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon-xs"
+                              onClick={() => {
+                                setEditingItem(item)
+                                setIsModalOpen(true)
+                              }}
+                              className="text-muted-foreground hover:text-foreground"
+                              aria-label={`Edit ${item.title}`}
+                            >
+                              <Edit2 className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon-xs"
+                              onClick={() => {
+                                setDeletingItem(item)
+                                setIsDeleteDialogOpen(true)
+                              }}
+                              className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                              aria-label={`Hapus ${item.title}`}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Mobile Stacked Cards */}
+            <div className="md:hidden divide-y divide-border">
+              {filtered.map((item) => {
+                const isDone = item.status === "Completed"
+                return (
+                  <div key={item.id} className={`p-4 space-y-3 text-xs ${isDone ? "opacity-65" : ""}`}>
+                    <div className="flex items-start gap-2.5">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon-sm"
+                        onClick={() => handleToggleStatus(item)}
+                        className="shrink-0 mt-0.5"
+                        aria-label={isDone ? `Tandai belum selesai: ${item.title}` : `Tandai selesai: ${item.title}`}
+                      >
+                        {isDone ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                        ) : (
+                          <Circle className={`h-4 w-4 ${item.source_type === "inventory" ? "text-amber-600" : "text-muted-foreground"}`} />
+                        )}
+                      </Button>
+
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className={`font-bold text-sm text-foreground ${isDone ? "line-through text-muted-foreground" : ""}`}>
+                            {item.title}
+                          </p>
+                          <Badge
+                            variant={
+                              item.priority === "Tinggi"
+                                ? "destructive"
+                                : item.priority === "Sedang"
+                                ? "warning"
+                                : "outline"
+                            }
+                          >
+                            {item.priority}
+                          </Badge>
                         </div>
                         {item.description && (
-                          <p className="text-[10px] text-muted-foreground line-clamp-1">{item.description}</p>
+                          <p className="text-[11px] text-muted-foreground line-clamp-2">
+                            {item.description}
+                          </p>
                         )}
-                      </TableCell>
-                      <TableCell className="py-3">
-                        <Badge
-                          variant={
-                            item.priority === "Tinggi" ? "destructive" :
-                            item.priority === "Sedang" ? "secondary" : "outline"
-                          }
-                          className="text-[10px] font-mono px-2.5 py-0.5 rounded-full"
-                        >
-                          {item.priority}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="py-3 text-xs font-mono">
-                        <div className="flex items-center gap-1.5 text-muted-foreground">
-                          <Calendar className="h-3 w-3" />
-                          <span>{formatDateID(item.due_date)}</span>
+                        <div className="flex items-center gap-2 pt-1 flex-wrap">
+                          <span className="inline-flex items-center gap-1 font-mono text-[11px] text-muted-foreground">
+                            <Calendar className="h-3 w-3" />
+                            {formatDateID(item.due_date)}
+                          </span>
+                          {item.source_type === "inventory" ? (
+                            <Badge variant="warning">
+                              <Wrench className="h-3 w-3" />
+                              <span>Perawatan</span>
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="capitalize">
+                              {item.source_type || "manual"}
+                            </Badge>
+                          )}
                         </div>
-                      </TableCell>
-                      <TableCell className="py-3">
-                        {item.source_type === "inventory" ? (
-                          <Badge variant="outline" className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30 gap-1 inline-flex items-center">
-                            <Wrench className="h-3 w-3" />
-                            <span>Perbaikan Aset</span>
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-[10px] font-mono capitalize px-2.5 py-0.5 rounded-full">
-                            {item.source_type || "manual"}
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="py-3 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleOpenEdit(item)}
-                            className="h-7 w-7 text-muted-foreground hover:text-foreground"
-                            title="Edit Pengingat"
-                          >
-                            <Edit2 className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleOpenDelete(item)}
-                            className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                            title="Hapus Pengingat"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setEditingItem(item)
+                          setIsModalOpen(true)
+                        }}
+                        className="flex-1"
+                      >
+                        <Edit2 className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span>Edit</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon-sm"
+                        onClick={() => {
+                          setDeletingItem(item)
+                          setIsDeleteDialogOpen(true)
+                        }}
+                        className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                        aria-label={`Hapus ${item.title}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </>
+        )}
       </Card>
 
-      {/* Reminder Modal */}
       <ReminderModal
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
@@ -389,12 +466,11 @@ export function RemindersPage() {
         onSubmit={handleSave}
       />
 
-      {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
         title="Hapus Pengingat"
-        description={`Apakah Anda yakin ingin menghapus agenda "${deletingItem?.title}"?`}
+        description={`Hapus pengingat "${deletingItem?.title}"?`}
         onConfirm={handleDelete}
         isLoading={isDeleting}
       />

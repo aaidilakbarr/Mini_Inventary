@@ -22,25 +22,25 @@ export function DeleteConfirmDialog({
   open,
   onOpenChange,
   title = "Konfirmasi Hapus",
-  description = "Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan.",
+  description = "Data yang dihapus tidak dapat dikembalikan.",
   onConfirm,
   isLoading = false,
 }: DeleteConfirmDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
-        <DialogHeader>
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-destructive/10 text-destructive flex items-center justify-center shrink-0">
-              <AlertTriangle className="h-5 w-5" />
+        <DialogHeader className="border-b-0 pb-2">
+          <div className="flex items-start gap-3">
+            <div className="h-9 w-9 rounded-lg bg-destructive/10 text-destructive flex items-center justify-center shrink-0">
+              <AlertTriangle className="h-4 w-4" />
             </div>
-            <div>
-              <DialogTitle className="text-base sm:text-lg">{title}</DialogTitle>
-              <DialogDescription className="mt-1">{description}</DialogDescription>
+            <div className="space-y-1">
+              <DialogTitle>{title}</DialogTitle>
+              <DialogDescription>{description}</DialogDescription>
             </div>
           </div>
         </DialogHeader>
-        <DialogFooter className="mt-4">
+        <DialogFooter className="mt-2">
           <Button
             type="button"
             variant="outline"
@@ -56,10 +56,9 @@ export function DeleteConfirmDialog({
             size="sm"
             onClick={onConfirm}
             disabled={isLoading}
-            className="gap-1.5"
           >
             {isLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-            <span>Hapus Sekarang</span>
+            <span>Hapus</span>
           </Button>
         </DialogFooter>
       </DialogContent>
