@@ -27,7 +27,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
 import { supabase } from "@/lib/supabase"
@@ -38,7 +37,6 @@ interface NavItem {
   icon: React.ElementType
   badge?: string
   badgeVariant?: "default" | "warning" | "destructive" | "outline"
-  isComingSoon?: boolean
 }
 
 interface SecondaryNavItem {
@@ -54,7 +52,6 @@ export function BaseLayout() {
   const { user, profile, isAdmin, signOut } = useAuth()
   const [sidebarSearch, setSidebarSearch] = useState("")
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isPlannerModalOpen, setIsPlannerModalOpen] = useState(false)
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false)
 
   const [counts, setCounts] = useState({
@@ -63,16 +60,18 @@ export function BaseLayout() {
     activeBorrowings: 0,
     activeSubscriptions: 0,
     urgentReminders: 0,
+    activePlannerTasks: 0,
   })
 
   const loadCounts = useCallback(async () => {
     try {
-      const [invRes, pendingBorrowRes, activeBorrowRes, subRes, reminderRes] = await Promise.all([
+      const [invRes, pendingBorrowRes, activeBorrowRes, subRes, reminderRes, plannerRes] = await Promise.all([
         supabase.from("inventories").select("id", { count: "exact", head: true }),
         supabase.from("borrowings").select("id", { count: "exact", head: true }).eq("status", "Pending Approval"),
         supabase.from("borrowings").select("id", { count: "exact", head: true }).eq("status", "Borrowed"),
         supabase.from("subscriptions").select("id", { count: "exact", head: true }).eq("status", "Active"),
         supabase.from("reminders").select("id", { count: "exact", head: true }).neq("status", "Completed"),
+        supabase.from("planner_tasks").select("id", { count: "exact", head: true }).neq("status", "Completed"),
       ])
 
       setCounts({
@@ -81,6 +80,7 @@ export function BaseLayout() {
         activeBorrowings: activeBorrowRes.count ?? 0,
         activeSubscriptions: subRes.count ?? 0,
         urgentReminders: reminderRes.count ?? 0,
+        activePlannerTasks: plannerRes.error ? 0 : (plannerRes.count ?? 0),
       })
     } catch (err) {
       console.error("Gagal memuat counter sidebar:", err)
@@ -132,11 +132,10 @@ export function BaseLayout() {
     },
     {
       name: "Planner",
-      href: "#",
+      href: "/planner",
       icon: CalendarDays,
-      badge: "Segera",
+      badge: counts.activePlannerTasks > 0 ? String(counts.activePlannerTasks) : undefined,
       badgeVariant: "outline",
-      isComingSoon: true,
     },
   ]
 
@@ -175,6 +174,7 @@ export function BaseLayout() {
     if (location.pathname.startsWith("/borrowing")) return "Peminjaman"
     if (location.pathname.startsWith("/subscriptions")) return "Langganan"
     if (location.pathname.startsWith("/agenda") || location.pathname.startsWith("/reminders")) return "Agenda"
+    if (location.pathname.startsWith("/planner")) return "Planner"
     if (location.pathname.startsWith("/audit-logs")) return "Log Audit"
     if (location.pathname.startsWith("/settings")) return "Pengaturan"
     if (location.pathname.startsWith("/profile")) return "Profil"
@@ -226,27 +226,6 @@ export function BaseLayout() {
                 item.href !== "#" &&
                 location.pathname.startsWith(item.href))
             const Icon = item.icon
-
-            if (item.isComingSoon) {
-              return (
-                <Button
-                  key={item.name}
-                  type="button"
-                  variant="ghost"
-                  onClick={() => {
-                    setIsMobileMenuOpen(false)
-                    setIsPlannerModalOpen(true)
-                  }}
-                  className="relative h-auto min-h-[72px] flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-border bg-muted/30 p-3 text-muted-foreground hover:bg-accent hover:text-foreground"
-                >
-                  <Badge variant="outline" className="absolute top-1.5 right-1.5 h-4 px-1.5 text-[9px]">
-                    {item.badge}
-                  </Badge>
-                  <Icon className="h-4 w-4" />
-                  <span className="text-xs font-medium">{item.name}</span>
-                </Button>
-              )
-            }
 
             return (
               <Link
@@ -476,23 +455,6 @@ export function BaseLayout() {
           </Button>
         </div>
       </nav>
-
-      {/* Planner Coming Soon Dialog */}
-      <Dialog open={isPlannerModalOpen} onOpenChange={setIsPlannerModalOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Planner (Segera)</DialogTitle>
-            <DialogDescription>
-              Modul jadwal pengadaan, reservasi aset, dan kalender operasional sedang dalam pengembangan.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button size="sm" onClick={() => setIsPlannerModalOpen(false)}>
-              Tutup
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Help Dialog */}
       <Dialog open={isHelpModalOpen} onOpenChange={setIsHelpModalOpen}>

@@ -149,3 +149,71 @@ export interface AuditLog {
   created_at: string
   user?: UserProfile | null
 }
+
+export type PlannerTaskStatus = 'Not Started' | 'Pending' | 'Under Review' | 'Completed'
+export type PlannerTaskPriority = 'Low' | 'Medium' | 'Urgent'
+
+export interface PlannerTaskAssignee {
+  task_id: string
+  profile_id: string
+  assigned_at: string
+  profile?: UserProfile | null
+}
+
+export interface PlannerTaskComment {
+  id: string
+  task_id: string
+  author_id?: string | null
+  content: string
+  created_at: string
+  updated_at: string
+  author?: UserProfile | null
+}
+
+export interface PlannerTask {
+  id: string
+  task_code: string
+  title: string
+  subtitle?: string | null
+  description?: string | null
+  status: PlannerTaskStatus
+  priority: PlannerTaskPriority
+  position: number
+  start_date?: string | null
+  due_date?: string | null
+  channel?: string | null
+  tags: string[]
+  created_by?: string | null
+  created_at: string
+  updated_at: string
+  // Joined & aggregated fields
+  creator?: UserProfile | null
+  assignees?: PlannerTaskAssignee[]
+  comments_count?: number
+}
+
+export interface CreatePlannerTaskPayload {
+  task_code?: string
+  title: string
+  subtitle?: string | null
+  description?: string | null
+  status?: PlannerTaskStatus
+  priority?: PlannerTaskPriority
+  position?: number
+  start_date?: string | null
+  due_date?: string | null
+  channel?: string | null
+  tags?: string[]
+  assignee_ids?: string[]
+}
+
+export type UpdatePlannerTaskPayload = Partial<CreatePlannerTaskPayload>
+
+export interface PlannerSummaryStats {
+  totalTasks: number
+  inProgressTasks: number
+  urgentTasks: number
+  completedTasks: number
+  completionRate: number
+  byStatus: Record<PlannerTaskStatus, number>
+}

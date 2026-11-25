@@ -5,6 +5,7 @@ import { InventoryPage } from '@/pages/Inventory'
 import { BorrowingPage } from '@/pages/Borrowing'
 import { SubscriptionsPage } from '@/pages/Subscriptions'
 import { AgendaPage } from '@/pages/Agenda'
+import { PlannerPage } from '@/pages/Planner'
 import { LoginPage } from '@/pages/Login'
 import { RegisterPage } from '@/pages/Register'
 import { AuthProvider } from '@/context/AuthContext'
@@ -65,6 +66,14 @@ function App() {
                   } 
                 />
                 <Route path="reminders" element={<Navigate to="/agenda" replace />} />
+                <Route
+                  path="planner"
+                  element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                      <PlannerPage />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route 
                   path="audit-logs" 
                   element={
